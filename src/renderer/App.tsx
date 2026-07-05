@@ -81,6 +81,7 @@ function MainSurface() {
   const [tab, setTab] = useState<(typeof tabs)[number]>('General');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const refreshRef = useRef<() => void>(() => undefined);
 
   const selected = items.find((item) => item.id === selectedId) ?? items[0] ?? null;
   const pagedQuery = useMemo(() => ({ ...query, limit: pageSize, offset: (page - 1) * pageSize }), [page, pageSize, query]);
@@ -105,9 +106,30 @@ function MainSurface() {
   }, [page, pageSize, pagedQuery, query]);
 
   useEffect(() => {
-    void refresh();
-    return clipwheelClient.onItemsChanged(() => void refresh());
+    refreshRef.current = () => void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    refreshRef.current();
+    const refreshNow = () => refreshRef.current();
+    const refreshForClipboardItem = () => {
+      setPage(1);
+      window.setTimeout(refreshNow, 0);
+    };
+    const unlistenItemsChanged = clipwheelClient.onItemsChanged(refreshNow);
+    const unlistenClipboardItem = clipwheelClient.onClipboardItem(refreshForClipboardItem);
+    const visibilityHandler = () => {
+      if (!document.hidden) refreshNow();
+    };
+    window.addEventListener('focus', refreshNow);
+    document.addEventListener('visibilitychange', visibilityHandler);
+    return () => {
+      unlistenItemsChanged();
+      unlistenClipboardItem();
+      window.removeEventListener('focus', refreshNow);
+      document.removeEventListener('visibilitychange', visibilityHandler);
+    };
+  }, []);
 
   const updateSettings = async (patch: Partial<Settings>) => {
     const next = await clipwheelClient.updateSettings(patch);
@@ -129,7 +151,7 @@ function MainSurface() {
         <button type="button" className="nav-button" onClick={() => void clipwheelClient.showWindow('wheel')}><Command size={18} /> Open wheel</button>
         <div className="privacy-note">
           <Shield size={18} />
-          <p>No telemetry, cloud sync, or external services. Data stays in the Electron userData folder.</p>
+          <p>No telemetry, cloud sync, or external services. Data stays in the local Tauri app data folder.</p>
         </div>
       </aside>
 
@@ -514,6 +536,7 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
 function WheelSurface() {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const isShiftPressedRef = useRef(false);
+  const refreshRef = useRef<() => void>(() => undefined);
   const [items, setItems] = useState<ClipboardItem[]>([]);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -536,19 +559,39 @@ function WheelSurface() {
 
   const refresh = useCallback(async () => {
     const nextSettings = await clipwheelClient.getSettings();
+    const nextItems = await clipwheelClient.getRecentWheelItems(nextSettings.wheelItemCount);
     setSettings(nextSettings);
-    setItems(await clipwheelClient.getRecentWheelItems(nextSettings.wheelItemCount));
+    setItems(nextItems);
+    setActiveIndex((current) => Math.min(current, Math.max(0, nextItems.length - 1)));
   }, []);
 
   useEffect(() => {
-    void refresh();
+    refreshRef.current = () => void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    refreshRef.current();
     overlayRef.current?.focus();
+    const refreshNow = () => refreshRef.current();
     const unsub = clipwheelClient.onWheelOpened(() => {
-      void refresh();
+      refreshNow();
       window.setTimeout(() => overlayRef.current?.focus(), 0);
     });
-    return unsub;
-  }, [refresh]);
+    const unlistenItemsChanged = clipwheelClient.onItemsChanged(refreshNow);
+    const unlistenClipboardItem = clipwheelClient.onClipboardItem(refreshNow);
+    const visibilityHandler = () => {
+      if (!document.hidden) refreshNow();
+    };
+    window.addEventListener('focus', refreshNow);
+    document.addEventListener('visibilitychange', visibilityHandler);
+    return () => {
+      unsub();
+      unlistenItemsChanged();
+      unlistenClipboardItem();
+      window.removeEventListener('focus', refreshNow);
+      document.removeEventListener('visibilitychange', visibilityHandler);
+    };
+  }, []);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -658,6 +701,10 @@ function WheelQuickLook({ item, side }: { item: ClipboardItem; side: 'left' | 'r
     <aside className={`wheel-quicklook ${side}`}>
       <span className="type-chip">{labelForType(item.type)}</span>
       <strong>{item.title}</strong>
+      <time className="wheel-quicklook-created" dateTime={item.createdAt}>
+        <span>Created</span>
+        <strong>{formatDateTime(item.createdAt)}</strong>
+      </time>
       {item.type === 'image' && <WheelQuickLookImage item={item} />}
       <p>{item.previewText}</p>
       {item.url && <small>{item.url}</small>}

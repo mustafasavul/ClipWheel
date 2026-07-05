@@ -930,6 +930,30 @@ kbd {
   overflow-wrap: anywhere;
 }
 
+.wheel-quicklook-created {
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #dfe6d8;
+}
+
+.wheel-quicklook-created span {
+  color: #9fa89b;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.wheel-quicklook-created strong {
+  color: #f6faef;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
 .wheel-quicklook-image,
 .wheel-quicklook-image-state {
   width: 100%;

@@ -54,7 +54,7 @@ fn main() {
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir()?;
             let repository = ClipRepository::new(&app_data_dir)?;
-            let clipboard = ClipboardService::new(repository.clone(), app.handle().clone());
+            let clipboard = ClipboardService::new(repository.clone(), app.handle().clone(), app_data_dir.join("media"));
             let state = AppState { repository, clipboard: clipboard.clone() };
             app.manage(state);
             clipboard.start();
