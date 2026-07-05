@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   Braces,
@@ -440,12 +440,27 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
 }
 
 function WheelSurface() {
+  const overlayRef = useRef<HTMLDivElement | null>(null);
   const [items, setItems] = useState<ClipboardItem[]>([]);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isQuickLookVisible, setQuickLookVisible] = useState(false);
+  const [isShiftPressed, setShiftPressed] = useState(false);
   const count = settings.wheelItemCount;
   const wheelItems = items.slice(0, count);
   const activeItem = wheelItems[activeIndex] ?? null;
+  const segmentDeg = 360 / count;
+  const activeAngle = activeIndex * segmentDeg - 90;
+  const quickLookSide = Math.cos((activeAngle * Math.PI) / 180) >= 0 ? 'left' : 'right';
+
+  useEffect(() => {
+    document.documentElement.classList.add('wheel-html');
+    document.body.classList.add('wheel-body');
+    return () => {
+      document.documentElement.classList.remove('wheel-html');
+      document.body.classList.remove('wheel-body');
+    };
+  }, []);
 
   const refresh = useCallback(async () => {
     const nextSettings = await window.clipwheel.getSettings();
@@ -455,30 +470,74 @@ function WheelSurface() {
 
   useEffect(() => {
     void refresh();
-    const unsub = window.clipwheel.onWheelOpened(() => void refresh());
+    overlayRef.current?.focus();
+    const unsub = window.clipwheel.onWheelOpened(() => {
+      void refresh();
+      window.setTimeout(() => overlayRef.current?.focus(), 0);
+    });
     return unsub;
   }, [refresh]);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
+      if (isShiftEvent(event)) {
+        setShiftPressed(true);
+        setQuickLookVisible(true);
+      }
       if (event.key === 'Escape') void window.clipwheel.closeWheel();
       if (event.key === 'Enter' && activeItem) void window.clipwheel.copyItem(activeItem.id);
       const number = Number(event.key);
       if (number >= 1 && number <= count && wheelItems[number - 1]) void window.clipwheel.copyItem(wheelItems[number - 1].id);
     };
+    const upHandler = (event: KeyboardEvent) => {
+      if (isShiftEvent(event)) {
+        setShiftPressed(false);
+        setQuickLookVisible(false);
+      }
+    };
+    const blurHandler = () => {
+      setShiftPressed(false);
+      setQuickLookVisible(false);
+    };
     window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener('keyup', upHandler);
+    window.addEventListener('blur', blurHandler);
+    return () => {
+      window.removeEventListener('keydown', handler);
+      window.removeEventListener('keyup', upHandler);
+      window.removeEventListener('blur', blurHandler);
+    };
   }, [activeItem, count, wheelItems]);
 
   return (
     <div
+      ref={overlayRef}
       className="wheel-overlay"
+      tabIndex={-1}
+      onKeyDown={(event) => {
+        if (event.key === 'Shift' || event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
+          setShiftPressed(true);
+          setQuickLookVisible(true);
+        }
+      }}
+      onKeyUp={(event) => {
+        if (event.key === 'Shift' || event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
+          setShiftPressed(false);
+          setQuickLookVisible(false);
+        }
+      }}
       onMouseMove={(event) => {
         const rect = event.currentTarget.getBoundingClientRect();
         setActiveIndex(getSegmentIndex({ x: rect.width / 2, y: rect.height / 2 }, { x: event.clientX - rect.left, y: event.clientY - rect.top }, count));
+        setQuickLookVisible(event.shiftKey || event.getModifierState('Shift') || isShiftPressed);
+      }}
+      onMouseLeave={() => {
+        if (!isShiftPressed) setQuickLookVisible(false);
       }}
     >
-      <div className="wheel-ring">
+      <div className="wheel-ring" style={{ '--segment-deg': `${segmentDeg}deg` } as React.CSSProperties}>
+        <div className="wheel-active-slice" style={{ transform: `rotate(${activeIndex * segmentDeg}deg)` }} />
+        <div className="wheel-inner-border" />
         {Array.from({ length: count }).map((_, index) => {
           const item = wheelItems[index];
           return (
@@ -486,11 +545,11 @@ function WheelSurface() {
               type="button"
               key={index}
               className={`wheel-segment ${index === activeIndex ? 'active' : ''}`}
-              style={{ transform: getSegmentTransform(index, count, 205) }}
+              style={{ transform: getSegmentTransform(index, count, 250) }}
               onClick={() => item && void window.clipwheel.copyItem(item.id)}
             >
-              <span>{index + 1}</span>
-              {item ? iconForType(item.type) : <Clipboard size={22} />}
+              <span className="wheel-index">{index + 1}</span>
+              <span className="wheel-icon">{item ? iconForType(item.type) : <Clipboard size={22} />}</span>
               <small>{item ? item.title : 'Empty'}</small>
             </button>
           );
@@ -500,19 +559,65 @@ function WheelSurface() {
             <>
               <span className="type-chip">{labelForType(activeItem.type)}</span>
               <strong>{activeItem.title}</strong>
-              <p>{activeItem.previewText}</p>
+              <div className="wheel-hints"><span><kbd>Enter</kbd> Apply</span><span><kbd>Esc</kbd> Back</span><span><kbd>Shift</kbd> Quicklook</span></div>
             </>
           ) : (
             <>
               <Clipboard size={30} />
               <strong>No captures</strong>
-              <p>Copy something first.</p>
+              <div className="wheel-hints"><span><kbd>Esc</kbd> Back</span></div>
             </>
           )}
         </div>
+        {activeItem && isQuickLookVisible && <WheelQuickLook item={activeItem} side={quickLookSide} />}
       </div>
     </div>
   );
+}
+
+function isShiftEvent(event: KeyboardEvent): boolean {
+  return event.key === 'Shift' || event.code === 'ShiftLeft' || event.code === 'ShiftRight';
+}
+
+function WheelQuickLook({ item, side }: { item: ClipboardItem; side: 'left' | 'right' }) {
+  return (
+    <aside className={`wheel-quicklook ${side}`}>
+      <span className="type-chip">{labelForType(item.type)}</span>
+      <strong>{item.title}</strong>
+      {item.type === 'image' && <WheelQuickLookImage item={item} />}
+      <p>{item.previewText}</p>
+      {item.url && <small>{item.url}</small>}
+      {item.filePaths.length > 0 && <small>{item.filePaths.join('\n')}</small>}
+    </aside>
+  );
+}
+
+function WheelQuickLookImage({ item }: { item: ClipboardItem }) {
+  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let disposed = false;
+    setImageDataUrl(null);
+    setImageError(null);
+    void window.clipwheel.getImageDataUrl(item.id).then((dataUrl) => {
+      if (disposed) return;
+      if (dataUrl) {
+        setImageDataUrl(dataUrl);
+      } else {
+        setImageError('Image preview unavailable.');
+      }
+    }).catch((error: unknown) => {
+      if (!disposed) setImageError(error instanceof Error ? error.message : 'Unable to load image preview.');
+    });
+    return () => {
+      disposed = true;
+    };
+  }, [item.id]);
+
+  if (imageError) return <div className="wheel-quicklook-image-state">{imageError}</div>;
+  if (!imageDataUrl) return <div className="wheel-quicklook-image-state">Loading preview...</div>;
+  return <img className="wheel-quicklook-image" src={imageDataUrl} alt="Clipboard quicklook preview" />;
 }
 
 function SettingsGrid({ children }: { children: React.ReactNode }) {

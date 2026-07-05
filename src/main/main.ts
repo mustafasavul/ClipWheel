@@ -19,6 +19,10 @@ let mainWindow: BrowserWindow | null = null;
 let wheelWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let quitting = false;
+const wheelWindowWidth = 1360;
+const wheelWindowHeight = 760;
+const wheelWindowOffsetX = wheelWindowWidth / 2;
+const wheelWindowOffsetY = wheelWindowHeight / 2;
 
 const rendererUrl = typeof MAIN_WINDOW_VITE_DEV_SERVER_URL === 'string' ? MAIN_WINDOW_VITE_DEV_SERVER_URL : undefined;
 const preloadPath = path.join(__dirname, 'index.js');
@@ -52,8 +56,8 @@ async function createMainWindow(): Promise<BrowserWindow> {
 
 async function createWheelWindow(): Promise<BrowserWindow> {
   const window = new BrowserWindow({
-    width: 620,
-    height: 620,
+    width: wheelWindowWidth,
+    height: wheelWindowHeight,
     transparent: true,
     frame: false,
     resizable: false,
@@ -93,12 +97,12 @@ async function showWheel(): Promise<void> {
   const settings = repository.getSettings();
   if (settings.wheelPosition === 'center') {
     const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
-    const x = Math.round(display.workArea.x + display.workArea.width / 2 - 310);
-    const y = Math.round(display.workArea.y + display.workArea.height / 2 - 310);
+    const x = Math.round(display.workArea.x + display.workArea.width / 2 - wheelWindowOffsetX);
+    const y = Math.round(display.workArea.y + display.workArea.height / 2 - wheelWindowOffsetY);
     window.setPosition(x, y);
   } else {
     const point = screen.getCursorScreenPoint();
-    window.setPosition(point.x - 310, point.y - 310);
+    window.setPosition(point.x - wheelWindowOffsetX, point.y - wheelWindowOffsetY);
   }
   window.show();
   window.focus();
