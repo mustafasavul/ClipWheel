@@ -154,6 +154,19 @@ button:active {
   padding: 22px;
 }
 
+.settings-page {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 22px;
+}
+
+.settings-view {
+  max-width: 920px;
+  display: grid;
+  gap: 16px;
+}
+
 .history-pane,
 .detail-pane {
   min-width: 0;
@@ -505,7 +518,7 @@ textarea {
 }
 
 .settings-panel {
-  padding: 14px;
+  padding: 16px;
 }
 
 .tabs {
@@ -950,6 +963,10 @@ kbd {
 
   .workspace {
     grid-template-columns: 1fr;
+  }
+
+  .settings-page {
+    padding: 16px;
   }
 
   .filters,

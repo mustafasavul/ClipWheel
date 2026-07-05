@@ -65,6 +65,7 @@ function App() {
 }
 
 function MainSurface() {
+  const [view, setView] = useState<'history' | 'settings'>('history');
   const [items, setItems] = useState<ClipboardItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
@@ -118,8 +119,8 @@ function MainSurface() {
             <span>Local clipboard wheel</span>
           </div>
         </div>
-        <button type="button" className="nav-button active"><Clipboard size={18} /> History</button>
-        <button type="button" className="nav-button" onClick={() => setTab('General')}><SettingsIcon size={18} /> Settings</button>
+        <button type="button" className={`nav-button ${view === 'history' ? 'active' : ''}`} onClick={() => setView('history')}><Clipboard size={18} /> History</button>
+        <button type="button" className={`nav-button ${view === 'settings' ? 'active' : ''}`} onClick={() => setView('settings')}><SettingsIcon size={18} /> Settings</button>
         <button type="button" className="nav-button" onClick={() => void window.clipwheel.showWindow('wheel')}><Command size={18} /> Open wheel</button>
         <div className="privacy-note">
           <Shield size={18} />
@@ -127,37 +128,50 @@ function MainSurface() {
         </div>
       </aside>
 
-      <main className="workspace">
-        <section className="history-pane">
-          <header className="section-header">
-            <div>
-              <p className="eyebrow">Clipboard history</p>
-              <h1>Recent captures</h1>
-            </div>
-            <button type="button" className="primary-button" onClick={() => void window.clipwheel.showWindow('wheel')}><Command size={18} /> Wheel</button>
-          </header>
-          <Filters query={query} setQuery={setQuery} resetPage={() => setPage(1)} />
-          {error && <div className="error-state">{error}</div>}
-          {loading ? <SkeletonList /> : <HistoryList items={items} selectedId={selected?.id ?? null} onSelect={setSelectedId} onRefresh={refresh} />}
-          {!loading && totalItems > 0 && (
-            <Pagination
-              page={page}
-              pageSize={pageSize}
-              totalItems={totalItems}
-              totalPages={totalPages}
-              setPage={setPage}
-              setPageSize={(nextPageSize) => {
-                setPageSize(nextPageSize);
-                setPage(1);
-              }}
-            />
-          )}
-        </section>
+      <main className={view === 'settings' ? 'settings-page' : 'workspace'}>
+        {view === 'history' ? (
+          <>
+            <section className="history-pane">
+              <header className="section-header">
+                <div>
+                  <p className="eyebrow">Clipboard history</p>
+                  <h1>Recent captures</h1>
+                </div>
+                <button type="button" className="primary-button" onClick={() => void window.clipwheel.showWindow('wheel')}><Command size={18} /> Wheel</button>
+              </header>
+              <Filters query={query} setQuery={setQuery} resetPage={() => setPage(1)} />
+              {error && <div className="error-state">{error}</div>}
+              {loading ? <SkeletonList /> : <HistoryList items={items} selectedId={selected?.id ?? null} onSelect={setSelectedId} onRefresh={refresh} />}
+              {!loading && totalItems > 0 && (
+                <Pagination
+                  page={page}
+                  pageSize={pageSize}
+                  totalItems={totalItems}
+                  totalPages={totalPages}
+                  setPage={setPage}
+                  setPageSize={(nextPageSize) => {
+                    setPageSize(nextPageSize);
+                    setPage(1);
+                  }}
+                />
+              )}
+            </section>
 
-        <section className="detail-pane">
-          <PreviewPanel item={selected} onRefresh={refresh} />
-          <SettingsPanel settings={settings} updateSettings={updateSettings} activeTab={tab} setActiveTab={setTab} onRefresh={refresh} />
-        </section>
+            <section className="detail-pane">
+              <PreviewPanel item={selected} onRefresh={refresh} />
+            </section>
+          </>
+        ) : (
+          <section className="settings-view">
+            <header className="section-header">
+              <div>
+                <p className="eyebrow">Preferences</p>
+                <h1>Settings</h1>
+              </div>
+            </header>
+            <SettingsPanel settings={settings} updateSettings={updateSettings} activeTab={tab} setActiveTab={setTab} onRefresh={refresh} />
+          </section>
+        )}
       </main>
     </div>
   );
