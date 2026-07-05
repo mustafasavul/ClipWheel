@@ -54,6 +54,7 @@ const typeOptions: Array<ClipboardItemType | 'all'> = ['all', 'plain_text', 'ric
 const tabs = ['General', 'Clipboard', 'Privacy', 'Cleanup', 'Shortcuts', 'Advanced'] as const;
 const defaultPageSize = 10;
 const queryClient = new QueryClient();
+const openWheelShortcut = isMacPlatform() ? 'Cmd+Shift+V' : 'Ctrl+Shift+V';
 const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
   year: 'numeric',
   month: 'short',
@@ -486,7 +487,7 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
       )}
       {activeTab === 'Shortcuts' && (
         <div className="shortcut-list">
-          <span>Open radial wheel</span><kbd>{navigator.platform.includes('Mac') ? 'Cmd Shift V' : 'Ctrl Shift V'}</kbd>
+          <span>Open radial wheel</span><kbd>{openWheelShortcut}</kbd>
           <span>Select wheel item</span><kbd>1-8 / Enter</kbd>
           <span>Close wheel</span><kbd>Escape</kbd>
         </div>
@@ -816,6 +817,10 @@ function formatBytes(bytes: number): string {
 
 function formatDateTime(value: string): string {
   return dateTimeFormatter.format(new Date(value));
+}
+
+function isMacPlatform(): boolean {
+  return /Mac|iPhone|iPad|iPod/.test(navigator.platform);
 }
 
 createRoot(document.getElementById('root') as HTMLElement).render(

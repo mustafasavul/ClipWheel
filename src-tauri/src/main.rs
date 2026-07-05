@@ -90,7 +90,12 @@ pub fn show_window(app: &AppHandle, name: &str) -> Result<()> {
         return Ok(());
     };
     if label == "wheel" {
-        position_wheel_window(&window)?;
+        let wheel_position = app
+            .try_state::<AppState>()
+            .and_then(|state| state.repository.get_settings().ok())
+            .map(|settings| settings.wheel_position)
+            .unwrap_or_else(|| "center".into());
+        position_wheel_window(app, &window, &wheel_position)?;
         window.emit("wheel-opened", ())?;
     }
     window.show()?;
@@ -113,20 +118,49 @@ fn setup_windows(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-fn position_wheel_window(window: &WebviewWindow) -> Result<()> {
-    if let Some(monitor) = window.current_monitor()? {
+fn position_wheel_window(app: &AppHandle, window: &WebviewWindow, wheel_position: &str) -> Result<()> {
+    let window_size = window.outer_size()?;
+    let half_width = window_size.width as i32 / 2;
+    let half_height = window_size.height as i32 / 2;
+
+    let cursor = app.cursor_position()?;
+    let (x, y) = if wheel_position == "cursor" {
+        (cursor.x.round() as i32 - half_width, cursor.y.round() as i32 - half_height)
+    } else if let Some(monitor) = app.monitor_from_point(cursor.x, cursor.y)? {
         let size = monitor.size();
         let position = monitor.position();
-        let x = position.x + (size.width as i32 / 2) - 680;
-        let y = position.y + (size.height as i32 / 2) - 380;
-        window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }))?;
-    }
+        (
+            position.x + (size.width as i32 / 2) - half_width,
+            position.y + (size.height as i32 / 2) - half_height,
+        )
+    } else if let Some(monitor) = window.current_monitor()? {
+        let size = monitor.size();
+        let position = monitor.position();
+        (
+            position.x + (size.width as i32 / 2) - half_width,
+            position.y + (size.height as i32 / 2) - half_height,
+        )
+    } else {
+        return Ok(());
+    };
+
+    window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }))?;
     Ok(())
 }
 
 fn register_shortcut(app: &AppHandle) {
-    let shortcut = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyV);
+    let shortcut = Shortcut::new(Some(shortcut_modifiers()), Code::KeyV);
     if let Err(error) = app.global_shortcut().register(shortcut) {
         eprintln!("Unable to register ClipWheel shortcut: {error}");
     }
+}
+
+#[cfg(target_os = "macos")]
+fn shortcut_modifiers() -> Modifiers {
+    Modifiers::SUPER | Modifiers::SHIFT
+}
+
+#[cfg(not(target_os = "macos"))]
+fn shortcut_modifiers() -> Modifiers {
+    Modifiers::CONTROL | Modifiers::SHIFT
 }
