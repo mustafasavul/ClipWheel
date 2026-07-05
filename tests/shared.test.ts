@@ -51,7 +51,6 @@ describe('cleanup filters', () => {
     contentHash: 'hash',
     isPinned: true,
     isFavorite: false,
-    isSensitive: false,
     isDeleted: false,
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-01T00:00:00.000Z',

@@ -65,7 +65,6 @@ export class ClipboardService extends EventEmitter {
       sourceApp: null,
       sizeBytes: media.sizeBytes,
       contentHash: hash,
-      isSensitive: false,
     };
 
     const item = this.repository.createItem(input);

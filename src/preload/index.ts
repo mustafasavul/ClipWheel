@@ -15,7 +15,6 @@ const api: AppApi = {
   cleanup: (request: CleanupRequest) => ipcRenderer.invoke('cleanup:run', request),
   clearSystemClipboard: () => ipcRenderer.invoke('system:clear-clipboard') as Promise<void>,
   getImageDataUrl: (id: string) => ipcRenderer.invoke('image:data-url', id) as Promise<string | null>,
-  extractImageText: (id: string) => ipcRenderer.invoke('ocr:extract', id),
   showWindow: (name: 'history' | 'settings' | 'wheel') => ipcRenderer.invoke('window:show', name) as Promise<void>,
   closeWheel: () => ipcRenderer.invoke('wheel:close') as Promise<void>,
   onClipboardItem: (handler: (item: ClipboardItem) => void) => {

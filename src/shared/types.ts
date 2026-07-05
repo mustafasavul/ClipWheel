@@ -27,7 +27,6 @@ export interface ClipboardItem {
   contentHash: string;
   isPinned: boolean;
   isFavorite: boolean;
-  isSensitive: boolean;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -50,7 +49,6 @@ export interface ClipboardItemInput {
   sourceApp?: string | null;
   sizeBytes: number;
   contentHash: string;
-  isSensitive?: boolean;
 }
 
 export interface Settings {
@@ -72,7 +70,6 @@ export interface Settings {
   ignoredSourceApps: string[];
   clearClipboardOnQuit: boolean;
   autoPaste: boolean;
-  enableOcr: boolean;
 }
 
 export interface HistoryQuery {
@@ -126,7 +123,6 @@ export interface AppApi {
   cleanup(request: CleanupRequest): Promise<CleanupJob>;
   clearSystemClipboard(): Promise<void>;
   getImageDataUrl(id: string): Promise<string | null>;
-  extractImageText(id: string): Promise<{ text: string; available: boolean }>;
   showWindow(name: 'history' | 'settings' | 'wheel'): Promise<void>;
   closeWheel(): Promise<void>;
   onClipboardItem(handler: (item: ClipboardItem) => void): () => void;

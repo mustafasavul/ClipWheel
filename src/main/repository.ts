@@ -54,7 +54,7 @@ export class ClipRepository {
         ) VALUES (
           @id, @type, @title, @previewText, @contentText, @contentHtml, @contentRtf, @imagePath,
           @thumbnailPath, @filePathsJson, @url, @codeLanguage, @sourceApp, @sizeBytes, @contentHash,
-          0, 0, @isSensitive, 0, @createdAt, @updatedAt
+          0, 0, 0, 0, @createdAt, @updatedAt
         )`,
       )
       .run({
@@ -73,7 +73,6 @@ export class ClipRepository {
         sourceApp: input.sourceApp ?? null,
         sizeBytes: input.sizeBytes,
         contentHash: input.contentHash,
-        isSensitive: input.isSensitive ? 1 : 0,
         createdAt: now,
         updatedAt: now,
       });
@@ -298,7 +297,6 @@ function rowToItem(row: ClipboardRow): ClipboardItem {
     contentHash: row.content_hash,
     isPinned: Boolean(row.is_pinned),
     isFavorite: Boolean(row.is_favorite),
-    isSensitive: Boolean(row.is_sensitive),
     isDeleted: Boolean(row.is_deleted),
     createdAt: row.created_at,
     updatedAt: row.updated_at,

@@ -6,8 +6,18 @@ ClipWheel is a privacy-first desktop clipboard manager for macOS and Windows. It
 
 - Local-first storage only.
 - SQLite database and image assets live in Electron's `userData` folder.
-- No telemetry, analytics, accounts, cloud sync, or external OCR calls.
+- No telemetry, analytics, accounts, cloud sync, or external services.
 - Clipboard content is stored as copied; no cloud service, external classifier, or masking layer is applied.
+
+## Current Features
+
+- Radial wheel for recent captures with keyboard selection and Shift quicklook.
+- Quicklook image previews for copied screenshots and images.
+- Full history with search, type filters, date filters, scrolling, and pagination.
+- Right-side preview panel for text, code, rich text, URLs, images, and file references.
+- Item metadata including byte size, readable KB/MB size, text length, line count, file count, creation time, and last-used time.
+- Local image asset storage with thumbnails.
+- Text transformations, QR generation, pinning, favorites, and soft delete cleanup.
 
 ## Supported Clipboard Types
 
@@ -51,7 +61,6 @@ Electron Forge is configured for macOS DMG/ZIP and Windows Squirrel installer ou
 - Signed and notarized release builds
 - Configurable global shortcut recording
 - Native file clipboard restore
-- Pluggable local OCR engine integration
 - Import/export for local backups
 - More syntax languages and preview types
 
@@ -59,6 +68,5 @@ Electron Forge is configured for macOS DMG/ZIP and Windows Squirrel installer ou
 
 - Auto paste is present as a setting but disabled by default and not simulated yet.
 - File references initially restore as text paths.
-- OCR is a local-only foundation; no OCR engine is bundled.
 - Source app detection is a placeholder because cross-platform active-app APIs differ.
 - The first public builds are unsigned. macOS Gatekeeper and Windows SmartScreen may warn until signing is configured.

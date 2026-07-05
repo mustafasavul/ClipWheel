@@ -50,6 +50,13 @@ hljs.registerLanguage('python', python);
 const typeOptions: Array<ClipboardItemType | 'all'> = ['all', 'plain_text', 'rich_text', 'code', 'url', 'image', 'file_reference', 'command'];
 const tabs = ['General', 'Clipboard', 'Privacy', 'Cleanup', 'Shortcuts', 'Advanced'] as const;
 const defaultPageSize = 10;
+const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
 
 function App() {
   const params = new URLSearchParams(window.location.search);
@@ -116,7 +123,7 @@ function MainSurface() {
         <button type="button" className="nav-button" onClick={() => void window.clipwheel.showWindow('wheel')}><Command size={18} /> Open wheel</button>
         <div className="privacy-note">
           <Shield size={18} />
-          <p>No telemetry, cloud sync, or external OCR calls. Data stays in the Electron userData folder.</p>
+          <p>No telemetry, cloud sync, or external services. Data stays in the Electron userData folder.</p>
         </div>
       </aside>
 
@@ -250,7 +257,6 @@ function HistoryList({ items, selectedId, onSelect, onRefresh }: { items: Clipbo
 
 function PreviewPanel({ item, onRefresh }: { item: ClipboardItem | null; onRefresh: () => Promise<void> }) {
   const [qr, setQr] = useState<{ itemId: string; value: string } | null>(null);
-  const [ocrText, setOcrText] = useState<{ itemId: string; value: string } | null>(null);
   const [regexPattern, setRegexPattern] = useState('');
   const [regexReplacement, setRegexReplacement] = useState('');
 
@@ -259,14 +265,13 @@ function PreviewPanel({ item, onRefresh }: { item: ClipboardItem | null; onRefre
       <div className="preview-panel empty-state">
         <Eye size={34} />
         <h2>Select an item</h2>
-        <p>The detail panel shows sanitized previews, transformations, QR, and local OCR actions.</p>
+        <p>The detail panel shows sanitized previews, metadata, transformations, and QR actions.</p>
       </div>
     );
   }
 
   const text = item.contentText ?? item.url ?? item.previewText;
   const currentQr = qr?.itemId === item.id ? qr.value : null;
-  const currentOcrText = ocrText?.itemId === item.id ? ocrText.value : null;
   const canTransform = ['plain_text', 'code', 'url', 'command', 'rich_text'].includes(item.type);
   const createQr = async () => {
     setQr({ itemId: item.id, value: await QRCode.toDataURL(text, { margin: 1, width: 320, color: { dark: '#1f2520', light: '#f4f6f2' } }) });
@@ -287,6 +292,7 @@ function PreviewPanel({ item, onRefresh }: { item: ClipboardItem | null; onRefre
         <button type="button" className="primary-button" onClick={() => void window.clipwheel.copyItem(item.id)}><Copy size={17} /> Copy</button>
       </header>
       <PreviewContent item={item} />
+      <ItemMetadata item={item} />
       {canTransform && (
         <div className="tool-strip">
           <IconButton label="Uppercase" onClick={() => void applyAction({ type: 'uppercase' }, 'Uppercase transform')}><Type size={16} /></IconButton>
@@ -307,10 +313,6 @@ function PreviewPanel({ item, onRefresh }: { item: ClipboardItem | null; onRefre
           <button type="button" onClick={() => void applyAction({ type: 'regex_replace', pattern: regexPattern, replacement: regexReplacement }, 'Regex transform')}>Save</button>
         </div>
       )}
-      {item.type === 'image' && (
-        <button type="button" className="secondary-button" onClick={async () => setOcrText({ itemId: item.id, value: (await window.clipwheel.extractImageText(item.id)).text })}>Extract text</button>
-      )}
-      {currentOcrText && <div className="notice">{currentOcrText}</div>}
       {currentQr && (
         <div className="modal-layer">
           <button type="button" className="modal-backdrop" aria-label="Close QR modal" onClick={() => setQr(null)} />
@@ -321,6 +323,30 @@ function PreviewPanel({ item, onRefresh }: { item: ClipboardItem | null; onRefre
         </div>
       )}
     </div>
+  );
+}
+
+function ItemMetadata({ item }: { item: ClipboardItem }) {
+  const length = getContentLength(item);
+  const lines = getLineCount(item);
+  const details = [
+    { label: 'Size', value: formatBytes(item.sizeBytes) },
+    { label: 'Length', value: length === null ? 'N/A' : `${length.toLocaleString()} chars` },
+    { label: 'Lines', value: lines === null ? 'N/A' : lines.toLocaleString() },
+    { label: 'Files', value: item.filePaths.length.toLocaleString() },
+    { label: 'Created', value: formatDateTime(item.createdAt) },
+    { label: 'Last used', value: item.lastUsedAt ? formatDateTime(item.lastUsedAt) : 'Never' },
+  ];
+
+  return (
+    <dl className="metadata-grid">
+      {details.map((detail) => (
+        <div key={detail.label}>
+          <dt>{detail.label}</dt>
+          <dd>{detail.value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -432,7 +458,6 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
       {activeTab === 'Advanced' && (
         <SettingsGrid>
           <Toggle label="Auto paste after restore" value={settings.autoPaste} onChange={(value) => updateSettings({ autoPaste: value })} />
-          <Toggle label="Enable OCR foundation" value={settings.enableOcr} onChange={(value) => updateSettings({ enableOcr: value })} />
         </SettingsGrid>
       )}
     </div>
@@ -441,11 +466,11 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
 
 function WheelSurface() {
   const overlayRef = useRef<HTMLDivElement | null>(null);
+  const isShiftPressedRef = useRef(false);
   const [items, setItems] = useState<ClipboardItem[]>([]);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isQuickLookVisible, setQuickLookVisible] = useState(false);
-  const [isShiftPressed, setShiftPressed] = useState(false);
   const count = settings.wheelItemCount;
   const wheelItems = items.slice(0, count);
   const activeItem = wheelItems[activeIndex] ?? null;
@@ -481,7 +506,7 @@ function WheelSurface() {
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (isShiftEvent(event)) {
-        setShiftPressed(true);
+        isShiftPressedRef.current = true;
         setQuickLookVisible(true);
       }
       if (event.key === 'Escape') void window.clipwheel.closeWheel();
@@ -491,12 +516,12 @@ function WheelSurface() {
     };
     const upHandler = (event: KeyboardEvent) => {
       if (isShiftEvent(event)) {
-        setShiftPressed(false);
+        isShiftPressedRef.current = false;
         setQuickLookVisible(false);
       }
     };
     const blurHandler = () => {
-      setShiftPressed(false);
+      isShiftPressedRef.current = false;
       setQuickLookVisible(false);
     };
     window.addEventListener('keydown', handler);
@@ -513,26 +538,28 @@ function WheelSurface() {
     <div
       ref={overlayRef}
       className="wheel-overlay"
+      role="application"
+      aria-label="ClipWheel radial clipboard wheel"
       tabIndex={-1}
       onKeyDown={(event) => {
         if (event.key === 'Shift' || event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
-          setShiftPressed(true);
+          isShiftPressedRef.current = true;
           setQuickLookVisible(true);
         }
       }}
       onKeyUp={(event) => {
         if (event.key === 'Shift' || event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
-          setShiftPressed(false);
+          isShiftPressedRef.current = false;
           setQuickLookVisible(false);
         }
       }}
       onMouseMove={(event) => {
         const rect = event.currentTarget.getBoundingClientRect();
         setActiveIndex(getSegmentIndex({ x: rect.width / 2, y: rect.height / 2 }, { x: event.clientX - rect.left, y: event.clientY - rect.top }, count));
-        setQuickLookVisible(event.shiftKey || event.getModifierState('Shift') || isShiftPressed);
+        setQuickLookVisible(event.shiftKey || event.getModifierState('Shift') || isShiftPressedRef.current);
       }}
       onMouseLeave={() => {
-        if (!isShiftPressed) setQuickLookVisible(false);
+        if (!isShiftPressedRef.current) setQuickLookVisible(false);
       }}
     >
       <div className="wheel-ring" style={{ '--segment-deg': `${segmentDeg}deg` } as React.CSSProperties}>
@@ -672,6 +699,36 @@ function safeDomain(url: string): string {
   } catch {
     return url;
   }
+}
+
+function getContentLength(item: ClipboardItem): number | null {
+  if (item.type === 'image') return null;
+  if (item.type === 'file_reference') return item.filePaths.join('\n').length;
+  return (item.contentText ?? item.url ?? item.previewText).length;
+}
+
+function getLineCount(item: ClipboardItem): number | null {
+  if (item.type === 'image') return null;
+  const value = item.type === 'file_reference' ? item.filePaths.join('\n') : item.contentText ?? item.url ?? item.previewText;
+  if (!value) return 0;
+  return value.split(/\r\n|\r|\n/).length;
+}
+
+function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return 'N/A';
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let value = bytes / 1024;
+  let unitIndex = 0;
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+  return `${value.toLocaleString(undefined, { maximumFractionDigits: value >= 10 ? 1 : 2 })} ${units[unitIndex]}`;
+}
+
+function formatDateTime(value: string): string {
+  return dateTimeFormatter.format(new Date(value));
 }
 
 createRoot(document.getElementById('root') as HTMLElement).render(<App />);

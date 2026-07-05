@@ -19,5 +19,4 @@ export const defaultSettings: Settings = {
   ignoredSourceApps: ['1Password', 'Bitwarden', 'KeePass', 'Dashlane', 'LastPass'],
   clearClipboardOnQuit: false,
   autoPaste: false,
-  enableOcr: false,
 };

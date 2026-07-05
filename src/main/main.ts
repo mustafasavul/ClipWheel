@@ -6,7 +6,6 @@ import type { ClipboardItem, CleanupRequest, HistoryQuery, Settings } from '../s
 import { ClipRepository } from './repository';
 import { ClipboardService } from './clipboardService';
 import { CleanupService } from './cleanupService';
-import { OCRService } from './ocrService';
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
 declare const MAIN_WINDOW_VITE_NAME: string;
@@ -14,7 +13,6 @@ declare const MAIN_WINDOW_VITE_NAME: string;
 let repository: ClipRepository;
 let clipboardService: ClipboardService;
 let cleanupService: CleanupService;
-let ocrService: OCRService;
 let mainWindow: BrowserWindow | null = null;
 let wheelWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -224,7 +222,6 @@ function registerIpc(): void {
     if (!imagePath || !fs.existsSync(imagePath)) return null;
     return `data:image/png;base64,${fs.readFileSync(imagePath).toString('base64')}`;
   });
-  ipcMain.handle('ocr:extract', (_event, id: string) => ocrService.extractText(id));
   ipcMain.handle('window:show', (_event, name: 'history' | 'settings' | 'wheel') => (name === 'wheel' ? showWheel() : showMain()));
   ipcMain.handle('wheel:close', () => wheelWindow?.hide());
 }
@@ -237,7 +234,6 @@ app.whenReady().then(async () => {
   repository = new ClipRepository();
   clipboardService = new ClipboardService(repository);
   cleanupService = new CleanupService(repository);
-  ocrService = new OCRService(repository);
   registerIpc();
   clipboardService.on('captured', (item: ClipboardItem) => {
     BrowserWindow.getAllWindows().forEach((window) => window.webContents.send('clipboard-item', item));

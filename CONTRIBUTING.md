@@ -18,5 +18,5 @@ pnpm test
 ## Pull Requests
 
 - Keep main-process OS access out of the renderer.
-- Add tests for shared detection, privacy, cleanup, or repository behavior when changed.
+- Add tests for shared detection, cleanup, metadata, or repository behavior when changed.
 - Document new settings in the README when they affect user behavior.
