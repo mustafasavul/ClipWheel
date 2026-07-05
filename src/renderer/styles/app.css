@@ -614,6 +614,20 @@ textarea {
   align-items: start;
 }
 
+.app-version-card {
+  align-content: center;
+  gap: 4px;
+}
+
+.app-version-card strong {
+  color: #f1f5ec;
+  font-size: 20px;
+}
+
+.app-version-card small {
+  color: #9fa49a;
+}
+
 .setting-field.wide {
   grid-column: 1 / -1;
 }

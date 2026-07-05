@@ -1,8 +1,8 @@
 # Agent Notes
 
-- Keep Electron OS access in `src/main`.
+- Keep Tauri/Rust OS access in `src-tauri/src`.
 - Keep renderer free of direct Node.js APIs.
-- Use `src/preload/index.ts` for typed IPC additions.
+- Use `src/renderer/api/clipwheelClient.ts` for typed Tauri command/event additions.
 - Prefer shared pure utilities in `src/shared` when behavior needs tests.
 - Do not add telemetry, analytics, cloud sync, accounts, or external services.
 - Do not reintroduce content masking or image text extraction UI without an explicit product decision.

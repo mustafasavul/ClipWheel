@@ -3,5 +3,6 @@ node_modules
 out
 dist
 coverage
+src-tauri/target
 *.log
 .DS_Store

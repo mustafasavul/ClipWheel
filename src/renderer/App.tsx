@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   Braces,
   Clipboard,
@@ -34,8 +35,10 @@ import sanitizeHtml from 'sanitize-html';
 import QRCode from 'qrcode';
 import type { ClipboardItem, ClipboardItemType, HistoryQuery, Settings } from '../shared/types';
 import { defaultSettings } from '../shared/settings';
+import { appVersion } from '../shared/version';
 import { getSegmentIndex, getSegmentTransform } from '../shared/radialGeometry';
 import { transformText, type TextAction } from '../shared/textActions';
+import { clipwheelClient } from './api/clipwheelClient';
 import './styles/app.css';
 import 'highlight.js/styles/atom-one-dark.css';
 
@@ -50,6 +53,7 @@ hljs.registerLanguage('python', python);
 const typeOptions: Array<ClipboardItemType | 'all'> = ['all', 'plain_text', 'rich_text', 'code', 'url', 'image', 'file_reference', 'command'];
 const tabs = ['General', 'Clipboard', 'Privacy', 'Cleanup', 'Shortcuts', 'Advanced'] as const;
 const defaultPageSize = 10;
+const queryClient = new QueryClient();
 const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
   year: 'numeric',
   month: 'short',
@@ -84,7 +88,7 @@ function MainSurface() {
   const refresh = useCallback(async () => {
     try {
       setError(null);
-      const [nextItems, nextSettings, nextTotal] = await Promise.all([window.clipwheel.getItems(pagedQuery), window.clipwheel.getSettings(), window.clipwheel.countItems(query)]);
+      const [nextItems, nextSettings, nextTotal] = await Promise.all([clipwheelClient.getItems(pagedQuery), clipwheelClient.getSettings(), clipwheelClient.countItems(query)]);
       setItems(nextItems);
       setSettings(nextSettings);
       setTotalItems(nextTotal);
@@ -101,11 +105,11 @@ function MainSurface() {
 
   useEffect(() => {
     void refresh();
-    return window.clipwheel.onItemsChanged(() => void refresh());
+    return clipwheelClient.onItemsChanged(() => void refresh());
   }, [refresh]);
 
   const updateSettings = async (patch: Partial<Settings>) => {
-    const next = await window.clipwheel.updateSettings(patch);
+    const next = await clipwheelClient.updateSettings(patch);
     setSettings(next);
   };
 
@@ -121,7 +125,7 @@ function MainSurface() {
         </div>
         <button type="button" className={`nav-button ${view === 'history' ? 'active' : ''}`} onClick={() => setView('history')}><Clipboard size={18} /> History</button>
         <button type="button" className={`nav-button ${view === 'settings' ? 'active' : ''}`} onClick={() => setView('settings')}><SettingsIcon size={18} /> Settings</button>
-        <button type="button" className="nav-button" onClick={() => void window.clipwheel.showWindow('wheel')}><Command size={18} /> Open wheel</button>
+        <button type="button" className="nav-button" onClick={() => void clipwheelClient.showWindow('wheel')}><Command size={18} /> Open wheel</button>
         <div className="privacy-note">
           <Shield size={18} />
           <p>No telemetry, cloud sync, or external services. Data stays in the Electron userData folder.</p>
@@ -137,7 +141,7 @@ function MainSurface() {
                   <p className="eyebrow">Clipboard history</p>
                   <h1>Recent captures</h1>
                 </div>
-                <button type="button" className="primary-button" onClick={() => void window.clipwheel.showWindow('wheel')}><Command size={18} /> Wheel</button>
+                <button type="button" className="primary-button" onClick={() => void clipwheelClient.showWindow('wheel')}><Command size={18} /> Wheel</button>
               </header>
               <Filters query={query} setQuery={setQuery} resetPage={() => setPage(1)} />
               {error && <div className="error-state">{error}</div>}
@@ -258,10 +262,10 @@ function HistoryList({ items, selectedId, onSelect, onRefresh }: { items: Clipbo
             <small>{item.previewText}</small>
           </span>
           <span className="row-actions" onClick={(event) => event.stopPropagation()}>
-            <IconButton label="Copy" onClick={async () => { await window.clipwheel.copyItem(item.id); await onRefresh(); }}><Copy size={16} /></IconButton>
-            <IconButton label={item.isPinned ? 'Unpin' : 'Pin'} onClick={async () => { await window.clipwheel.togglePin(item.id); await onRefresh(); }}>{item.isPinned ? <PinOff size={16} /> : <Pin size={16} />}</IconButton>
-            <IconButton label={item.isFavorite ? 'Unfavorite' : 'Favorite'} onClick={async () => { await window.clipwheel.toggleFavorite(item.id); await onRefresh(); }}><Heart size={16} fill={item.isFavorite ? 'currentColor' : 'none'} /></IconButton>
-            <IconButton label="Delete" onClick={async () => { await window.clipwheel.deleteItem(item.id); await onRefresh(); }}><Trash2 size={16} /></IconButton>
+            <IconButton label="Copy" onClick={async () => { await clipwheelClient.copyItem(item.id); await onRefresh(); }}><Copy size={16} /></IconButton>
+            <IconButton label={item.isPinned ? 'Unpin' : 'Pin'} onClick={async () => { await clipwheelClient.togglePin(item.id); await onRefresh(); }}>{item.isPinned ? <PinOff size={16} /> : <Pin size={16} />}</IconButton>
+            <IconButton label={item.isFavorite ? 'Unfavorite' : 'Favorite'} onClick={async () => { await clipwheelClient.toggleFavorite(item.id); await onRefresh(); }}><Heart size={16} fill={item.isFavorite ? 'currentColor' : 'none'} /></IconButton>
+            <IconButton label="Delete" onClick={async () => { await clipwheelClient.deleteItem(item.id); await onRefresh(); }}><Trash2 size={16} /></IconButton>
           </span>
         </button>
       ))}
@@ -292,7 +296,7 @@ function PreviewPanel({ item, onRefresh }: { item: ClipboardItem | null; onRefre
   };
   const applyAction = async (action: TextAction, title: string) => {
     const result = transformText(text, action);
-    await window.clipwheel.saveTransformedItem(item.id, result, title);
+    await clipwheelClient.saveTransformedItem(item.id, result, title);
     await onRefresh();
   };
 
@@ -303,7 +307,7 @@ function PreviewPanel({ item, onRefresh }: { item: ClipboardItem | null; onRefre
           <p className="eyebrow">{labelForType(item.type)}</p>
           <h2>{item.title}</h2>
         </div>
-        <button type="button" className="primary-button" onClick={() => void window.clipwheel.copyItem(item.id)}><Copy size={17} /> Copy</button>
+        <button type="button" className="primary-button" onClick={() => void clipwheelClient.copyItem(item.id)}><Copy size={17} /> Copy</button>
       </header>
       <PreviewContent item={item} />
       <ItemMetadata item={item} />
@@ -393,7 +397,7 @@ function PreviewContent({ item }: { item: ClipboardItem }) {
     if (item.type !== 'image') return () => {
       disposed = true;
     };
-    void window.clipwheel.getImageDataUrl(item.id).then((dataUrl) => {
+    void clipwheelClient.getImageDataUrl(item.id).then((dataUrl) => {
       if (disposed) return;
       if (dataUrl) {
         setImageDataUrl(dataUrl);
@@ -475,9 +479,9 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
       {activeTab === 'Cleanup' && (
         <SettingsGrid>
           <NumberSetting label="Auto delete after days" value={settings.autoDeleteAfterDays} onChange={(value) => updateSettings({ autoDeleteAfterDays: value })} />
-          <button type="button" className="danger-button" onClick={async () => { if (confirm('Clear all unpinned history?')) { await window.clipwheel.cleanup({ mode: 'unpinned' }); await onRefresh(); } }}>Clear unpinned</button>
-          <button type="button" className="danger-button" onClick={async () => { if (confirm('Clear all history, excluding pinned items?')) { await window.clipwheel.cleanup({ mode: 'all' }); await onRefresh(); } }}>Clear history</button>
-          <button type="button" className="danger-button" onClick={async () => { if (confirm('Permanently purge soft-deleted items?')) { await window.clipwheel.cleanup({ mode: 'purge_deleted' }); await onRefresh(); } }}>Purge deleted</button>
+          <button type="button" className="danger-button" onClick={async () => { if (confirm('Clear all unpinned history?')) { await clipwheelClient.cleanup({ mode: 'unpinned' }); await onRefresh(); } }}>Clear unpinned</button>
+          <button type="button" className="danger-button" onClick={async () => { if (confirm('Clear all history, excluding pinned items?')) { await clipwheelClient.cleanup({ mode: 'all' }); await onRefresh(); } }}>Clear history</button>
+          <button type="button" className="danger-button" onClick={async () => { if (confirm('Permanently purge soft-deleted items?')) { await clipwheelClient.cleanup({ mode: 'purge_deleted' }); await onRefresh(); } }}>Purge deleted</button>
         </SettingsGrid>
       )}
       {activeTab === 'Shortcuts' && (
@@ -490,6 +494,16 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
       {activeTab === 'Advanced' && (
         <SettingsGrid>
           <Toggle label="Auto paste after restore" value={settings.autoPaste} onChange={(value) => updateSettings({ autoPaste: value })} />
+          <div className="setting-field app-version-card">
+            <span>App version</span>
+            <strong>{appVersion.version}</strong>
+            <small>{appVersion.channel} channel</small>
+          </div>
+          <div className="setting-field app-version-card">
+            <span>Updates</span>
+            <strong>{labelFromToken(appVersion.updateMode)}</strong>
+            <small>Install newer local releases over this app.</small>
+          </div>
         </SettingsGrid>
       )}
     </div>
@@ -520,15 +534,15 @@ function WheelSurface() {
   }, []);
 
   const refresh = useCallback(async () => {
-    const nextSettings = await window.clipwheel.getSettings();
+    const nextSettings = await clipwheelClient.getSettings();
     setSettings(nextSettings);
-    setItems(await window.clipwheel.getRecentWheelItems(nextSettings.wheelItemCount));
+    setItems(await clipwheelClient.getRecentWheelItems(nextSettings.wheelItemCount));
   }, []);
 
   useEffect(() => {
     void refresh();
     overlayRef.current?.focus();
-    const unsub = window.clipwheel.onWheelOpened(() => {
+    const unsub = clipwheelClient.onWheelOpened(() => {
       void refresh();
       window.setTimeout(() => overlayRef.current?.focus(), 0);
     });
@@ -541,10 +555,10 @@ function WheelSurface() {
         isShiftPressedRef.current = true;
         setQuickLookVisible(true);
       }
-      if (event.key === 'Escape') void window.clipwheel.closeWheel();
-      if (event.key === 'Enter' && activeItem) void window.clipwheel.copyItem(activeItem.id);
+      if (event.key === 'Escape') void clipwheelClient.closeWheel();
+      if (event.key === 'Enter' && activeItem) void clipwheelClient.copyItem(activeItem.id);
       const number = Number(event.key);
-      if (number >= 1 && number <= count && wheelItems[number - 1]) void window.clipwheel.copyItem(wheelItems[number - 1].id);
+      if (number >= 1 && number <= count && wheelItems[number - 1]) void clipwheelClient.copyItem(wheelItems[number - 1].id);
     };
     const upHandler = (event: KeyboardEvent) => {
       if (isShiftEvent(event)) {
@@ -605,7 +619,7 @@ function WheelSurface() {
               key={index}
               className={`wheel-segment ${index === activeIndex ? 'active' : ''}`}
               style={{ transform: getSegmentTransform(index, count, 250) }}
-              onClick={() => item && void window.clipwheel.copyItem(item.id)}
+              onClick={() => item && void clipwheelClient.copyItem(item.id)}
             >
               <span className="wheel-index">{index + 1}</span>
               <span className="wheel-icon">{item ? iconForType(item.type) : <Clipboard size={22} />}</span>
@@ -659,7 +673,7 @@ function WheelQuickLookImage({ item }: { item: ClipboardItem }) {
     let disposed = false;
     setImageDataUrl(null);
     setImageError(null);
-    void window.clipwheel.getImageDataUrl(item.id).then((dataUrl) => {
+    void clipwheelClient.getImageDataUrl(item.id).then((dataUrl) => {
       if (disposed) return;
       if (dataUrl) {
         setImageDataUrl(dataUrl);
@@ -804,4 +818,8 @@ function formatDateTime(value: string): string {
   return dateTimeFormatter.format(new Date(value));
 }
 
-createRoot(document.getElementById('root') as HTMLElement).render(<App />);
+createRoot(document.getElementById('root') as HTMLElement).render(
+  <QueryClientProvider client={queryClient}>
+    <App />
+  </QueryClientProvider>,
+);

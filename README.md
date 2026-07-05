@@ -5,7 +5,7 @@ ClipWheel is a privacy-first desktop clipboard manager for macOS and Windows. It
 ## Privacy Model
 
 - Local-first storage only.
-- SQLite database and image assets live in Electron's `userData` folder.
+- SQLite database and image assets live in the local Tauri app data folder.
 - No telemetry, analytics, accounts, cloud sync, or external services.
 - Clipboard content is stored as copied; no cloud service, external classifier, or masking layer is applied.
 
@@ -36,18 +36,31 @@ pnpm install
 pnpm dev
 ```
 
-The renderer uses React and Vite. Electron main owns OS APIs, global shortcuts, tray, clipboard polling, SQLite, cleanup, and restore-to-clipboard behavior. Renderer code talks to main through a typed preload bridge with `contextIsolation: true` and `nodeIntegration: false`.
+The renderer uses React and Vite. Tauri/Rust owns OS APIs, global shortcuts, tray behavior, clipboard polling, SQLite, cleanup, and restore-to-clipboard behavior. Renderer code talks to Rust through the typed Tauri client in `src/renderer/api/clipwheelClient.ts`.
 
 ## Build
 
 ```bash
 pnpm lint
 pnpm typecheck
+pnpm version:check
 pnpm test
-pnpm make
+pnpm tauri build
 ```
 
-Electron Forge is configured for macOS DMG/ZIP and Windows Squirrel installer outputs. CI runs install, lint, typecheck, test, make, and uploads build artifacts. Tag pushes matching `v*` are prepared for release builds.
+Tauri is configured for local desktop bundle outputs. CI should run install, lint, typecheck, version check, test, and Tauri build before publishing artifacts.
+
+## Versioning
+
+Current app version: `0.1.0`
+
+Version sources are kept in sync across `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json`, and `src/shared/version.ts`.
+
+```bash
+pnpm version:check
+```
+
+Updates are manual local release installs for now. ClipWheel does not use an external auto-update service, telemetry, accounts, or cloud checks.
 
 ## Shortcuts
 

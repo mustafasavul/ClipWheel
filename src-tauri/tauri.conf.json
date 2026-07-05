@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "ClipWheel",
+  "version": "0.1.0",
+  "identifier": "app.clipwheel.local",
+  "build": {
+    "beforeDevCommand": "pnpm dev:renderer",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "pnpm build:renderer",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "ClipWheel",
+        "width": 1160,
+        "height": 760,
+        "minWidth": 960,
+        "minHeight": 620,
+        "visible": false,
+        "backgroundColor": "#111214"
+      },
+      {
+        "label": "wheel",
+        "title": "ClipWheel Wheel",
+        "url": "/?surface=wheel",
+        "width": 1360,
+        "height": 760,
+        "visible": false,
+        "transparent": true,
+        "decorations": false,
+        "resizable": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "backgroundColor": "#00000000"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": []
+  }
+}
