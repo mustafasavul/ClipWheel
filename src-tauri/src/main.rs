@@ -124,28 +124,50 @@ fn position_wheel_window(app: &AppHandle, window: &WebviewWindow, wheel_position
     let half_height = window_size.height as i32 / 2;
 
     let cursor = app.cursor_position()?;
+    let monitor = app.monitor_from_point(cursor.x, cursor.y)?.or(window.current_monitor()?);
+    let Some(monitor) = monitor else {
+        return Ok(());
+    };
+
+    let monitor_size = monitor.size();
+    let monitor_position = monitor.position();
     let (x, y) = if wheel_position == "cursor" {
-        (cursor.x.round() as i32 - half_width, cursor.y.round() as i32 - half_height)
-    } else if let Some(monitor) = app.monitor_from_point(cursor.x, cursor.y)? {
-        let size = monitor.size();
-        let position = monitor.position();
-        (
-            position.x + (size.width as i32 / 2) - half_width,
-            position.y + (size.height as i32 / 2) - half_height,
-        )
-    } else if let Some(monitor) = window.current_monitor()? {
-        let size = monitor.size();
-        let position = monitor.position();
-        (
-            position.x + (size.width as i32 / 2) - half_width,
-            position.y + (size.height as i32 / 2) - half_height,
+        clamp_window_position(
+            cursor.x.round() as i32 - half_width,
+            cursor.y.round() as i32 - half_height,
+            window_size.width as i32,
+            window_size.height as i32,
+            monitor_position.x,
+            monitor_position.y,
+            monitor_size.width as i32,
+            monitor_size.height as i32,
         )
     } else {
-        return Ok(());
+        (
+            monitor_position.x + (monitor_size.width as i32 / 2) - half_width,
+            monitor_position.y + (monitor_size.height as i32 / 2) - half_height,
+        )
     };
 
     window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }))?;
     Ok(())
+}
+
+fn clamp_window_position(
+    x: i32,
+    y: i32,
+    window_width: i32,
+    window_height: i32,
+    monitor_x: i32,
+    monitor_y: i32,
+    monitor_width: i32,
+    monitor_height: i32,
+) -> (i32, i32) {
+    let max_x = monitor_x + monitor_width - window_width;
+    let max_y = monitor_y + monitor_height - window_height;
+    let clamped_x = if max_x < monitor_x { monitor_x } else { x.clamp(monitor_x, max_x) };
+    let clamped_y = if max_y < monitor_y { monitor_y } else { y.clamp(monitor_y, max_y) };
+    (clamped_x, clamped_y)
 }
 
 fn register_shortcut(app: &AppHandle) {
@@ -163,4 +185,21 @@ fn shortcut_modifiers() -> Modifiers {
 #[cfg(not(target_os = "macos"))]
 fn shortcut_modifiers() -> Modifiers {
     Modifiers::CONTROL | Modifiers::SHIFT
+}
+
+#[cfg(test)]
+mod tests {
+    use super::clamp_window_position;
+
+    #[test]
+    fn keeps_cursor_window_inside_monitor_bounds() {
+        assert_eq!(clamp_window_position(100, 80, 400, 300, 0, 0, 1440, 900), (100, 80));
+        assert_eq!(clamp_window_position(-120, -90, 400, 300, 0, 0, 1440, 900), (0, 0));
+        assert_eq!(clamp_window_position(1300, 820, 400, 300, 0, 0, 1440, 900), (1040, 600));
+    }
+
+    #[test]
+    fn pins_oversized_window_to_monitor_origin() {
+        assert_eq!(clamp_window_position(40, 50, 1600, 1000, 100, 200, 1440, 900), (100, 200));
+    }
 }
