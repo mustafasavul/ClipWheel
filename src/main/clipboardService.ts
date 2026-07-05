@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events';
 import fs from 'node:fs';
 import path from 'node:path';
 import { app, clipboard, nativeImage } from 'electron';
-import { detectClipboardType } from '../shared/detection';
+import { detectClipboardType, detectContentSignals, normalizeClipboardFormats } from '../shared/detection';
 import { hashContent, normalizeContent } from '../shared/hash';
 import type { ClipboardItem, ClipboardItemInput, Settings } from '../shared/types';
 import type { ClipRepository } from './repository';
@@ -30,12 +30,22 @@ export class ClipboardService extends EventEmitter {
     const settings = this.repository.getSettings();
     if (settings.pauseCapture) return null;
 
+    const rawFormats = clipboard.availableFormats();
     const text = clipboard.readText();
     const html = clipboard.readHTML();
     const rtf = clipboard.readRTF();
     const image = clipboard.readImage();
     const hasImage = !image.isEmpty();
     const filePaths = settings.captureFiles ? detectFilePaths(text) : [];
+    const formatInfo = normalizeClipboardFormats({
+      rawFormats,
+      hasText: Boolean(text),
+      hasHtml: Boolean(html),
+      hasRtf: Boolean(rtf),
+      hasImage,
+      hasFiles: filePaths.length > 0,
+      platform: process.platform,
+    });
     const normalizedText = normalizeContent(text);
     const hash = hashContent([normalizedText, html, rtf, hasImage ? image.toPNG() : null, filePaths.join('\n')]);
     if (hash === this.lastHash) return null;
@@ -45,6 +55,7 @@ export class ClipboardService extends EventEmitter {
     }
 
     const typeInfo = detectClipboardType({ text, html, rtf, hasImage, filePaths });
+    const contentSignals = detectContentSignals({ text, html, rtf, hasImage, filePaths, codeLanguage: typeInfo.codeLanguage });
     if (!shouldCaptureType(typeInfo.type, settings)) return null;
 
     const media = hasImage && settings.captureImages ? saveImageAssets(image, settings.maxImageSizeMb) : { imagePath: null, thumbnailPath: null, sizeBytes: Buffer.byteLength(text) };
@@ -60,6 +71,8 @@ export class ClipboardService extends EventEmitter {
       imagePath: media.imagePath,
       thumbnailPath: media.thumbnailPath,
       filePaths,
+      formatInfo,
+      contentSignals,
       url: typeInfo.url,
       codeLanguage: typeInfo.codeLanguage,
       sourceApp: null,

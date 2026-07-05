@@ -343,24 +343,42 @@ function PreviewPanel({ item, onRefresh }: { item: ClipboardItem | null; onRefre
 function ItemMetadata({ item }: { item: ClipboardItem }) {
   const length = getContentLength(item);
   const lines = getLineCount(item);
+  const formatLabels = formatInfoLabels(item);
+  const signalLabels = item.contentSignals.map(labelForSignal);
   const details = [
     { label: 'Size', value: formatBytes(item.sizeBytes) },
     { label: 'Length', value: length === null ? 'N/A' : `${length.toLocaleString()} chars` },
     { label: 'Lines', value: lines === null ? 'N/A' : lines.toLocaleString() },
     { label: 'Files', value: item.filePaths.length.toLocaleString() },
+    { label: 'Clipboard formats', value: formatLabels.length ? formatLabels.join(', ') : 'Unknown' },
+    { label: 'Detected content', value: signalLabels.length ? signalLabels.join(', ') : 'None' },
     { label: 'Created', value: formatDateTime(item.createdAt) },
     { label: 'Last used', value: item.lastUsedAt ? formatDateTime(item.lastUsedAt) : 'Never' },
   ];
 
   return (
-    <dl className="metadata-grid">
-      {details.map((detail) => (
-        <div key={detail.label}>
-          <dt>{detail.label}</dt>
-          <dd>{detail.value}</dd>
+    <div className="metadata-stack">
+      <dl className="metadata-grid">
+        {details.map((detail) => (
+          <div key={detail.label}>
+            <dt>{detail.label}</dt>
+            <dd title={detail.value}>{detail.value}</dd>
+          </div>
+        ))}
+      </dl>
+      {(formatLabels.length > 0 || signalLabels.length > 0) && (
+        <div className="metadata-badges" aria-label="Clipboard metadata">
+          {formatLabels.map((label) => <span key={`format-${label}`}>{label}</span>)}
+          {signalLabels.map((label) => <span key={`signal-${label}`}>{label}</span>)}
         </div>
-      ))}
-    </dl>
+      )}
+      {item.formatInfo.rawFormats.length > 0 && (
+        <details className="raw-formats">
+          <summary>Raw clipboard formats</summary>
+          <code>{item.formatInfo.rawFormats.join(', ')}</code>
+        </details>
+      )}
+    </div>
   );
 }
 
@@ -704,7 +722,48 @@ function iconForType(type: ClipboardItemType) {
 }
 
 function labelForType(type: ClipboardItemType | 'all'): string {
-  return type.split('_').map((part) => part[0].toUpperCase() + part.slice(1)).join(' ');
+  return labelFromToken(type);
+}
+
+function formatInfoLabels(item: ClipboardItem): string[] {
+  const labels: string[] = [];
+  if (item.formatInfo.hasText) labels.push('Plain text');
+  if (item.formatInfo.hasHtml) labels.push('HTML');
+  if (item.formatInfo.hasRtf) labels.push('RTF');
+  if (item.formatInfo.hasImage) labels.push('Image');
+  if (item.formatInfo.hasFiles) labels.push('Files');
+  return labels;
+}
+
+function labelForSignal(signal: ClipboardItem['contentSignals'][number]): string {
+  switch (signal.kind) {
+    case 'json':
+      return 'JSON';
+    case 'json_fragment':
+      return 'JSON fragment';
+    case 'html':
+      return 'HTML';
+    case 'url':
+      return 'URL';
+    case 'email':
+      return 'Email';
+    case 'hex_color':
+      return signal.metadata?.value ? `Hex ${signal.metadata.value}` : 'Hex color';
+    case 'markdown':
+      return 'Markdown';
+    case 'code':
+      return signal.language && signal.language !== 'unknown' ? labelFromToken(signal.language) : 'Code';
+    case 'code_block':
+      return 'Code block';
+    case 'shell':
+      return 'Shell';
+    default:
+      return signal.kind;
+  }
+}
+
+function labelFromToken(value: string): string {
+  return value.split('_').map((part) => part[0].toUpperCase() + part.slice(1)).join(' ');
 }
 
 function safeDomain(url: string): string {

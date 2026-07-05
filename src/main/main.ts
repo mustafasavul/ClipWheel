@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { app, BrowserWindow, clipboard, dialog, globalShortcut, ipcMain, Menu, nativeImage, screen, Tray } from 'electron';
 import type { ClipboardItem, CleanupRequest, HistoryQuery, Settings } from '../shared/types';
+import { detectClipboardType, detectContentSignals, normalizeClipboardFormats } from '../shared/detection';
 import { ClipRepository } from './repository';
 import { ClipboardService } from './clipboardService';
 import { CleanupService } from './cleanupService';
@@ -197,11 +198,16 @@ function registerIpc(): void {
   });
   ipcMain.handle('items:save-transformed', (_event, id: string, text: string, title: string) => {
     const source = repository.getItem(id);
+    const typeInfo = detectClipboardType({ text });
     const item = repository.createItem({
-      type: source.type === 'url' ? 'url' : source.type === 'command' ? 'command' : 'plain_text',
+      type: source.type === 'url' ? 'url' : source.type === 'command' ? 'command' : typeInfo.type === 'code' ? 'code' : 'plain_text',
       title,
       previewText: text.slice(0, 600),
       contentText: text,
+      formatInfo: normalizeClipboardFormats({ rawFormats: ['text/plain'], hasText: true, platform: process.platform }),
+      contentSignals: detectContentSignals({ text, codeLanguage: typeInfo.codeLanguage }),
+      url: typeInfo.url,
+      codeLanguage: typeInfo.codeLanguage,
       sizeBytes: Buffer.byteLength(text),
       contentHash: `${source.contentHash}:${Date.now()}`,
     });

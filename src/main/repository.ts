@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { app } from 'electron';
 import { defaultSettings } from '../shared/settings';
-import type { CleanupJob, CleanupRequest, ClipboardItem, ClipboardItemInput, HistoryQuery, Settings } from '../shared/types';
+import type { CleanupJob, CleanupRequest, ClipboardFormatInfo, ClipboardItem, ClipboardItemInput, ContentSignal, HistoryQuery, Settings } from '../shared/types';
 
 interface ClipboardRow {
   id: string;
@@ -16,6 +16,8 @@ interface ClipboardRow {
   image_path: string | null;
   thumbnail_path: string | null;
   file_paths_json: string | null;
+  formats_json: string | null;
+  content_signals_json: string | null;
   url: string | null;
   code_language: ClipboardItem['codeLanguage'];
   source_app: string | null;
@@ -49,11 +51,11 @@ export class ClipRepository {
       .prepare(
         `INSERT INTO clipboard_items (
           id, type, title, preview_text, content_text, content_html, content_rtf, image_path,
-          thumbnail_path, file_paths_json, url, code_language, source_app, size_bytes, content_hash,
+          thumbnail_path, file_paths_json, formats_json, content_signals_json, url, code_language, source_app, size_bytes, content_hash,
           is_pinned, is_favorite, is_sensitive, is_deleted, created_at, updated_at
         ) VALUES (
           @id, @type, @title, @previewText, @contentText, @contentHtml, @contentRtf, @imagePath,
-          @thumbnailPath, @filePathsJson, @url, @codeLanguage, @sourceApp, @sizeBytes, @contentHash,
+          @thumbnailPath, @filePathsJson, @formatsJson, @contentSignalsJson, @url, @codeLanguage, @sourceApp, @sizeBytes, @contentHash,
           0, 0, 0, 0, @createdAt, @updatedAt
         )`,
       )
@@ -68,6 +70,8 @@ export class ClipRepository {
         imagePath: input.imagePath ?? null,
         thumbnailPath: input.thumbnailPath ?? null,
         filePathsJson: JSON.stringify(input.filePaths ?? []),
+        formatsJson: JSON.stringify(input.formatInfo ?? defaultFormatInfo()),
+        contentSignalsJson: JSON.stringify(input.contentSignals ?? []),
         url: input.url ?? null,
         codeLanguage: input.codeLanguage ?? null,
         sourceApp: input.sourceApp ?? null,
@@ -228,6 +232,8 @@ export class ClipRepository {
         image_path TEXT,
         thumbnail_path TEXT,
         file_paths_json TEXT,
+        formats_json TEXT,
+        content_signals_json TEXT,
         url TEXT,
         code_language TEXT,
         source_app TEXT,
@@ -273,8 +279,16 @@ export class ClipRepository {
         created_at TEXT NOT NULL
       );
     `);
+    this.addColumnIfMissing('clipboard_items', 'formats_json', 'TEXT');
+    this.addColumnIfMissing('clipboard_items', 'content_signals_json', 'TEXT');
     const now = new Date().toISOString();
     this.db.prepare("UPDATE clipboard_items SET is_deleted = 1, deleted_at = COALESCE(deleted_at, ?), updated_at = ? WHERE is_deleted = 0 AND (type = 'sensitive' OR is_sensitive = 1)").run(now, now);
+  }
+
+  private addColumnIfMissing(table: string, column: string, definition: string): void {
+    const rows = this.db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+    if (rows.some((row) => row.name === column)) return;
+    this.db.prepare(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`).run();
   }
 }
 
@@ -290,6 +304,8 @@ function rowToItem(row: ClipboardRow): ClipboardItem {
     imagePath: row.image_path,
     thumbnailPath: row.thumbnail_path,
     filePaths: row.file_paths_json ? (JSON.parse(row.file_paths_json) as string[]) : [],
+    formatInfo: parseFormatInfo(row.formats_json),
+    contentSignals: parseContentSignals(row.content_signals_json),
     url: row.url,
     codeLanguage: row.code_language,
     sourceApp: row.source_app,
@@ -303,4 +319,36 @@ function rowToItem(row: ClipboardRow): ClipboardItem {
     lastUsedAt: row.last_used_at,
     deletedAt: row.deleted_at,
   };
+}
+
+function defaultFormatInfo(): ClipboardFormatInfo {
+  return {
+    rawFormats: [],
+    normalizedFormats: [],
+    hasText: false,
+    hasHtml: false,
+    hasRtf: false,
+    hasImage: false,
+    hasFiles: false,
+    platform: 'unknown',
+  };
+}
+
+function parseFormatInfo(value: string | null): ClipboardFormatInfo {
+  if (!value) return defaultFormatInfo();
+  try {
+    return { ...defaultFormatInfo(), ...(JSON.parse(value) as Partial<ClipboardFormatInfo>) };
+  } catch {
+    return defaultFormatInfo();
+  }
+}
+
+function parseContentSignals(value: string | null): ContentSignal[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? (parsed as ContentSignal[]) : [];
+  } catch {
+    return [];
+  }
 }

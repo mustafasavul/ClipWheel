@@ -9,6 +9,39 @@ export type ClipboardItemType =
 
 export type CodeLanguage = 'javascript' | 'typescript' | 'json' | 'html' | 'css' | 'shell' | 'python' | 'unknown';
 
+export type ClipboardPlatform = 'darwin' | 'win32' | 'linux' | 'unknown';
+
+export interface ClipboardFormatInfo {
+  rawFormats: string[];
+  normalizedFormats: string[];
+  hasText: boolean;
+  hasHtml: boolean;
+  hasRtf: boolean;
+  hasImage: boolean;
+  hasFiles: boolean;
+  platform: ClipboardPlatform;
+}
+
+export type ContentSignalKind =
+  | 'json'
+  | 'json_fragment'
+  | 'html'
+  | 'url'
+  | 'email'
+  | 'hex_color'
+  | 'markdown'
+  | 'code'
+  | 'code_block'
+  | 'shell';
+
+export interface ContentSignal {
+  kind: ContentSignalKind;
+  confidence: 'high' | 'medium' | 'low';
+  language?: CodeLanguage;
+  range?: { start: number; end: number };
+  metadata?: Record<string, string | number | boolean>;
+}
+
 export interface ClipboardItem {
   id: string;
   type: ClipboardItemType;
@@ -20,6 +53,8 @@ export interface ClipboardItem {
   imagePath: string | null;
   thumbnailPath: string | null;
   filePaths: string[];
+  formatInfo: ClipboardFormatInfo;
+  contentSignals: ContentSignal[];
   url: string | null;
   codeLanguage: CodeLanguage | null;
   sourceApp: string | null;
@@ -44,6 +79,8 @@ export interface ClipboardItemInput {
   imagePath?: string | null;
   thumbnailPath?: string | null;
   filePaths?: string[];
+  formatInfo?: ClipboardFormatInfo;
+  contentSignals?: ContentSignal[];
   url?: string | null;
   codeLanguage?: CodeLanguage | null;
   sourceApp?: string | null;

@@ -460,6 +460,11 @@ textarea {
   margin: 0;
 }
 
+.metadata-stack {
+  display: grid;
+  gap: 10px;
+}
+
 .metadata-grid div {
   min-width: 0;
   padding: 10px;
@@ -484,6 +489,48 @@ textarea {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.metadata-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.metadata-badges span {
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0 9px;
+  background: rgba(212, 231, 184, 0.14);
+  border: 1px solid rgba(212, 231, 184, 0.22);
+  color: #e4edd6;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.raw-formats {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 9px 10px;
+  color: #aeb5aa;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.raw-formats summary {
+  cursor: pointer;
+  color: #d8ddd3;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.raw-formats code {
+  display: block;
+  margin-top: 8px;
+  color: #cbd3c4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .tool-strip {

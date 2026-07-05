@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { matchesCleanupRequest } from '../src/shared/cleanupFilters';
-import { detectClipboardType, detectCodeLanguage, isUrl } from '../src/shared/detection';
+import { detectClipboardType, detectCodeLanguage, detectContentSignals, isUrl, normalizeClipboardFormats } from '../src/shared/detection';
 import { hashContent, normalizeContent } from '../src/shared/hash';
 import { getSegmentIndex } from '../src/shared/radialGeometry';
 import type { ClipboardItem } from '../src/shared/types';
@@ -27,8 +27,36 @@ describe('type detection', () => {
     expect(detectCodeLanguage('def run():\n    print("ok")')).toBe('python');
   });
 
+  it('keeps mixed JSON as text but adds a JSON fragment signal', () => {
+    const text = 'Config follows:\n{"ok": true}\nUse carefully.';
+    expect(detectClipboardType({ text }).type).toBe('plain_text');
+    expect(detectContentSignals({ text }).some((signal) => signal.kind === 'json_fragment')).toBe(true);
+  });
+
+  it('detects rich text from clipboard formats after stronger text classifications', () => {
+    expect(detectClipboardType({ text: 'Hello', html: '<b>Hello</b>' }).type).toBe('rich_text');
+    expect(detectClipboardType({ text: '{"ok": true}', html: '<b>{"ok": true}</b>' })).toMatchObject({ type: 'code', codeLanguage: 'json' });
+  });
+
+  it('adds URL signals only for embedded links', () => {
+    const text = 'Read https://example.com/docs before shipping.';
+    expect(detectClipboardType({ text }).type).toBe('plain_text');
+    expect(detectContentSignals({ text }).some((signal) => signal.kind === 'url')).toBe(true);
+  });
+
   it('detects terminal commands', () => {
     expect(detectClipboardType({ text: 'pnpm install' }).type).toBe('command');
+    expect(detectClipboardType({ text: 'Run this command:\npnpm install\nthen continue.' }).type).toBe('plain_text');
+    expect(detectContentSignals({ text: 'pnpm install' }).some((signal) => signal.kind === 'shell')).toBe(true);
+  });
+
+  it('normalizes common platform clipboard formats', () => {
+    const mac = normalizeClipboardFormats({ rawFormats: ['public.utf8-plain-text', 'public.html', 'public.png'], platform: 'darwin' });
+    expect(mac).toMatchObject({ hasText: true, hasHtml: true, hasImage: true, platform: 'darwin' });
+    const windows = normalizeClipboardFormats({ rawFormats: ['CF_UNICODETEXT', 'HTML Format', 'CF_HDROP'], platform: 'win32' });
+    expect(windows).toMatchObject({ hasText: true, hasHtml: true, hasFiles: true, platform: 'win32' });
+    const linux = normalizeClipboardFormats({ rawFormats: ['text/plain;charset=utf-8', 'text/uri-list'], platform: 'linux' });
+    expect(linux).toMatchObject({ hasText: true, hasFiles: true, platform: 'linux' });
   });
 });
 
@@ -44,6 +72,17 @@ describe('cleanup filters', () => {
     imagePath: null,
     thumbnailPath: null,
     filePaths: [],
+    formatInfo: {
+      rawFormats: [],
+      normalizedFormats: [],
+      hasText: false,
+      hasHtml: false,
+      hasRtf: false,
+      hasImage: false,
+      hasFiles: false,
+      platform: 'unknown',
+    },
+    contentSignals: [],
     url: null,
     codeLanguage: null,
     sourceApp: null,
