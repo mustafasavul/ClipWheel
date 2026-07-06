@@ -5,7 +5,7 @@ export const defaultSettings: Settings = {
   showTrayIcon: true,
   wheelPosition: 'center',
   wheelItemCount: 8,
-  theme: 'dark',
+  theme: 'system',
   capturePlainText: true,
   captureRichText: true,
   captureImages: true,

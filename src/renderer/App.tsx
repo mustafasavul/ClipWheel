@@ -11,6 +11,10 @@ import {
   Heart,
   Image,
   Link,
+  LogIn,
+  Monitor,
+  Moon,
+  MousePointer2,
   Pin,
   PinOff,
   QrCode,
@@ -18,6 +22,7 @@ import {
   Settings as SettingsIcon,
   Shield,
   Star,
+  Sun,
   Trash2,
   Type,
   Wand2,
@@ -38,6 +43,7 @@ import { defaultSettings } from '../shared/settings';
 import { appVersion } from '../shared/version';
 import { getSegmentIndex, getSegmentTransform } from '../shared/radialGeometry';
 import { transformText, type TextAction } from '../shared/textActions';
+import { qrColorsForTheme, resolveTheme, type ResolvedTheme } from '../shared/theme';
 import { clipwheelClient } from './api/clipwheelClient';
 import './styles/app.css';
 import 'highlight.js/styles/atom-one-dark.css';
@@ -86,6 +92,9 @@ function MainSurface() {
   const selected = items.find((item) => item.id === selectedId) ?? items[0] ?? null;
   const pagedQuery = useMemo(() => ({ ...query, limit: pageSize, offset: (page - 1) * pageSize }), [page, pageSize, query]);
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const resolvedTheme = useResolvedTheme(settings.theme);
+
+  useApplyTheme(resolvedTheme);
 
   const refresh = useCallback(async () => {
     try {
@@ -153,6 +162,10 @@ function MainSurface() {
           <Shield size={18} />
           <p>No telemetry, cloud sync, or external services. Data stays in the local Tauri app data folder.</p>
         </div>
+        <div className="sidebar-version">
+          <span>App Version</span>
+          <strong>{appVersion.version}</strong>
+        </div>
       </aside>
 
       <main className={view === 'settings' ? 'settings-page' : 'workspace'}>
@@ -185,7 +198,7 @@ function MainSurface() {
             </section>
 
             <section className="detail-pane">
-              <PreviewPanel item={selected} onRefresh={refresh} />
+              <PreviewPanel item={selected} onRefresh={refresh} resolvedTheme={resolvedTheme} />
             </section>
           </>
         ) : (
@@ -296,7 +309,7 @@ function HistoryList({ items, selectedId, onSelect, onRefresh }: { items: Clipbo
   );
 }
 
-function PreviewPanel({ item, onRefresh }: { item: ClipboardItem | null; onRefresh: () => Promise<void> }) {
+function PreviewPanel({ item, onRefresh, resolvedTheme }: { item: ClipboardItem | null; onRefresh: () => Promise<void>; resolvedTheme: ResolvedTheme }) {
   const [qr, setQr] = useState<{ itemId: string; value: string } | null>(null);
   const [regexPattern, setRegexPattern] = useState('');
   const [regexReplacement, setRegexReplacement] = useState('');
@@ -315,7 +328,7 @@ function PreviewPanel({ item, onRefresh }: { item: ClipboardItem | null; onRefre
   const currentQr = qr?.itemId === item.id ? qr.value : null;
   const canTransform = ['plain_text', 'code', 'url', 'command', 'rich_text'].includes(item.type);
   const createQr = async () => {
-    setQr({ itemId: item.id, value: await QRCode.toDataURL(text, { margin: 1, width: 320, color: { dark: '#1f2520', light: '#f4f6f2' } }) });
+    setQr({ itemId: item.id, value: await QRCode.toDataURL(text, { margin: 1, width: 320, color: qrColorsForTheme(resolvedTheme) }) });
   };
   const applyAction = async (action: TextAction, title: string) => {
     const result = transformText(text, action);
@@ -471,29 +484,29 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
       <div className="tabs">{tabs.map((entry) => <button type="button" className={entry === activeTab ? 'active' : ''} key={entry} onClick={() => setActiveTab(entry)}>{entry}</button>)}</div>
       {activeTab === 'General' && (
         <SettingsGrid>
-          <Toggle label="Start at login" value={settings.startAtLogin} onChange={(value) => updateSettings({ startAtLogin: value })} />
-          <Toggle label="Show tray icon" value={settings.showTrayIcon} onChange={(value) => updateSettings({ showTrayIcon: value })} />
-          <SelectSetting label="Wheel position" value={settings.wheelPosition} options={['center', 'cursor']} onChange={(value) => updateSettings({ wheelPosition: value as Settings['wheelPosition'] })} />
-          <SelectSetting label="Theme" value={settings.theme} options={['system', 'dark', 'light']} onChange={(value) => updateSettings({ theme: value as Settings['theme'] })} />
+          <Toggle icon={<LogIn size={18} />} label="Start At Login" value={settings.startAtLogin} onChange={(value) => updateSettings({ startAtLogin: value })} />
+          <Toggle icon={<Monitor size={18} />} label="Show Tray Icon" value={settings.showTrayIcon} onChange={(value) => updateSettings({ showTrayIcon: value })} />
+          <SelectSetting icon={<MousePointer2 size={18} />} label="Wheel Position" value={settings.wheelPosition} options={['center', 'cursor']} onChange={(value) => updateSettings({ wheelPosition: value as Settings['wheelPosition'] })} />
+          <SelectSetting icon={settings.theme === 'light' ? <Sun size={18} /> : settings.theme === 'dark' ? <Moon size={18} /> : <Monitor size={18} />} label="Theme" value={settings.theme} options={['system', 'dark', 'light']} onChange={(value) => updateSettings({ theme: value as Settings['theme'] })} />
         </SettingsGrid>
       )}
       {activeTab === 'Clipboard' && (
         <SettingsGrid>
-          <Toggle label="Capture plain text" value={settings.capturePlainText} onChange={(value) => updateSettings({ capturePlainText: value })} />
-          <Toggle label="Capture rich text" value={settings.captureRichText} onChange={(value) => updateSettings({ captureRichText: value })} />
-          <Toggle label="Capture images" value={settings.captureImages} onChange={(value) => updateSettings({ captureImages: value })} />
-          <Toggle label="Capture files" value={settings.captureFiles} onChange={(value) => updateSettings({ captureFiles: value })} />
-          <Toggle label="Capture code" value={settings.captureCode} onChange={(value) => updateSettings({ captureCode: value })} />
-          <Toggle label="Ignore duplicates" value={settings.ignoreDuplicates} onChange={(value) => updateSettings({ ignoreDuplicates: value })} />
-          <NumberSetting label="Max history items" value={settings.maxHistoryItems} onChange={(value) => updateSettings({ maxHistoryItems: value })} />
-          <NumberSetting label="Max image size MB" value={settings.maxImageSizeMb} onChange={(value) => updateSettings({ maxImageSizeMb: value })} />
+          <Toggle icon={<Type size={18} />} label="Capture Plain Text" value={settings.capturePlainText} onChange={(value) => updateSettings({ capturePlainText: value })} />
+          <Toggle icon={<Star size={18} />} label="Capture Rich Text" value={settings.captureRichText} onChange={(value) => updateSettings({ captureRichText: value })} />
+          <Toggle icon={<Image size={18} />} label="Capture Images" value={settings.captureImages} onChange={(value) => updateSettings({ captureImages: value })} />
+          <Toggle icon={<File size={18} />} label="Capture Files" value={settings.captureFiles} onChange={(value) => updateSettings({ captureFiles: value })} />
+          <Toggle icon={<Braces size={18} />} label="Capture Code" value={settings.captureCode} onChange={(value) => updateSettings({ captureCode: value })} />
+          <Toggle icon={<Copy size={18} />} label="Ignore Duplicates" value={settings.ignoreDuplicates} onChange={(value) => updateSettings({ ignoreDuplicates: value })} />
+          <NumberSetting label="Max History Items" value={settings.maxHistoryItems} onChange={(value) => updateSettings({ maxHistoryItems: value })} />
+          <NumberSetting label="Max Image Size MB" value={settings.maxImageSizeMb} onChange={(value) => updateSettings({ maxImageSizeMb: value })} />
         </SettingsGrid>
       )}
       {activeTab === 'Privacy' && (
         <SettingsGrid>
-          <Toggle label="Pause capture" value={settings.pauseCapture} onChange={(value) => updateSettings({ pauseCapture: value })} />
-          <Toggle label="Clear clipboard on quit" value={settings.clearClipboardOnQuit} onChange={(value) => updateSettings({ clearClipboardOnQuit: value })} />
-          <label className="setting-field wide"><span>Ignored source apps</span><textarea value={settings.ignoredSourceApps.join('\n')} onChange={(event) => updateSettings({ ignoredSourceApps: event.target.value.split('\n').flatMap((line) => {
+          <Toggle icon={<Shield size={18} />} label="Pause Capture" value={settings.pauseCapture} onChange={(value) => updateSettings({ pauseCapture: value })} />
+          <Toggle icon={<Trash2 size={18} />} label="Clear Clipboard On Quit" value={settings.clearClipboardOnQuit} onChange={(value) => updateSettings({ clearClipboardOnQuit: value })} />
+          <label className="setting-field wide"><span className="setting-label"><span className="setting-icon"><Shield size={18} /></span>Ignored Source Apps</span><textarea value={settings.ignoredSourceApps.join('\n')} onChange={(event) => updateSettings({ ignoredSourceApps: event.target.value.split('\n').flatMap((line) => {
             const trimmed = line.trim();
             return trimmed ? [trimmed] : [];
           }) })} /></label>
@@ -501,10 +514,10 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
       )}
       {activeTab === 'Cleanup' && (
         <SettingsGrid>
-          <NumberSetting label="Auto delete after days" value={settings.autoDeleteAfterDays} onChange={(value) => updateSettings({ autoDeleteAfterDays: value })} />
-          <button type="button" className="danger-button" onClick={async () => { if (confirm('Clear all unpinned history?')) { await clipwheelClient.cleanup({ mode: 'unpinned' }); await onRefresh(); } }}>Clear unpinned</button>
-          <button type="button" className="danger-button" onClick={async () => { if (confirm('Clear all history, excluding pinned items?')) { await clipwheelClient.cleanup({ mode: 'all' }); await onRefresh(); } }}>Clear history</button>
-          <button type="button" className="danger-button" onClick={async () => { if (confirm('Permanently purge soft-deleted items?')) { await clipwheelClient.cleanup({ mode: 'purge_deleted' }); await onRefresh(); } }}>Purge deleted</button>
+          <NumberSetting label="Auto Delete After Days" value={settings.autoDeleteAfterDays} onChange={(value) => updateSettings({ autoDeleteAfterDays: value })} />
+          <button type="button" className="danger-button" onClick={async () => { if (confirm('Clear all unpinned history?')) { await clipwheelClient.cleanup({ mode: 'unpinned' }); await onRefresh(); } }}>Clear Unpinned</button>
+          <button type="button" className="danger-button" onClick={async () => { if (confirm('Clear all history, excluding pinned items?')) { await clipwheelClient.cleanup({ mode: 'all' }); await onRefresh(); } }}>Clear History</button>
+          <button type="button" className="danger-button" onClick={async () => { if (confirm('Permanently purge soft-deleted items?')) { await clipwheelClient.cleanup({ mode: 'purge_deleted' }); await onRefresh(); } }}>Purge Deleted</button>
         </SettingsGrid>
       )}
       {activeTab === 'Shortcuts' && (
@@ -516,12 +529,7 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
       )}
       {activeTab === 'Advanced' && (
         <SettingsGrid>
-          <Toggle label="Auto paste after restore" value={settings.autoPaste} onChange={(value) => updateSettings({ autoPaste: value })} />
-          <div className="setting-field app-version-card">
-            <span>App version</span>
-            <strong>{appVersion.version}</strong>
-            <small>{appVersion.channel} channel</small>
-          </div>
+          <Toggle icon={<Clipboard size={18} />} label="Auto Paste After Restore" value={settings.autoPaste} onChange={(value) => updateSettings({ autoPaste: value })} />
           <div className="setting-field app-version-card">
             <span>Updates</span>
             <strong>{labelFromToken(appVersion.updateMode)}</strong>
@@ -547,6 +555,9 @@ function WheelSurface() {
   const segmentDeg = 360 / count;
   const activeAngle = activeIndex * segmentDeg - 90;
   const quickLookSide = Math.cos((activeAngle * Math.PI) / 180) >= 0 ? 'left' : 'right';
+  const resolvedTheme = useResolvedTheme(settings.theme);
+
+  useApplyTheme(resolvedTheme);
 
   useEffect(() => {
     document.documentElement.classList.add('wheel-html');
@@ -696,6 +707,27 @@ function isShiftEvent(event: KeyboardEvent): boolean {
   return event.key === 'Shift' || event.code === 'ShiftLeft' || event.code === 'ShiftRight';
 }
 
+function useResolvedTheme(theme: Settings['theme']): ResolvedTheme {
+  const [prefersDark, setPrefersDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => setPrefersDark(media.matches);
+    handleChange();
+    media.addEventListener('change', handleChange);
+    return () => media.removeEventListener('change', handleChange);
+  }, []);
+
+  return resolveTheme(theme, prefersDark);
+}
+
+function useApplyTheme(theme: ResolvedTheme) {
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
+}
+
 function WheelQuickLook({ item, side }: { item: ClipboardItem; side: 'left' | 'right' }) {
   return (
     <aside className={`wheel-quicklook ${side}`}>
@@ -745,21 +777,21 @@ function SettingsGrid({ children }: { children: React.ReactNode }) {
   return <div className="settings-grid">{children}</div>;
 }
 
-function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (value: boolean) => void }) {
+function Toggle({ icon, label, value, onChange }: { icon: React.ReactNode; label: string; value: boolean; onChange: (value: boolean) => void }) {
   return (
     <label className="toggle-row">
-      <span>{label}</span>
+      <span className="setting-label"><span className="setting-icon">{icon}</span>{label}</span>
       <input type="checkbox" checked={value} onChange={(event) => onChange(event.target.checked)} />
     </label>
   );
 }
 
 function NumberSetting({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
-  return <label className="setting-field"><span>{label}</span><input type="number" value={value} onChange={(event) => onChange(Number(event.target.value))} /></label>;
+  return <label className="setting-field"><span className="setting-label">{label}</span><input type="number" value={value} onChange={(event) => onChange(Number(event.target.value))} /></label>;
 }
 
-function SelectSetting({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
-  return <label className="setting-field"><span>{label}</span><select value={value} onChange={(event) => onChange(event.target.value)}>{options.map((option) => <option key={option}>{option}</option>)}</select></label>;
+function SelectSetting({ icon, label, value, options, onChange }: { icon: React.ReactNode; label: string; value: string; options: string[]; onChange: (value: string) => void }) {
+  return <label className="setting-field"><span className="setting-label"><span className="setting-icon">{icon}</span>{label}</span><select value={value} onChange={(event) => onChange(event.target.value)}>{options.map((option) => <option key={option} value={option}>{labelFromToken(option)}</option>)}</select></label>;
 }
 
 function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {

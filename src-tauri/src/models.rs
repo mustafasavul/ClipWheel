@@ -104,7 +104,7 @@ impl Default for Settings {
             show_tray_icon: true,
             wheel_position: "center".into(),
             wheel_item_count: 8,
-            theme: "dark".into(),
+            theme: "system".into(),
             capture_plain_text: true,
             capture_rich_text: true,
             capture_images: true,

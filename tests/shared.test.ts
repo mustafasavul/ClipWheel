@@ -3,6 +3,7 @@ import { matchesCleanupRequest } from '../src/shared/cleanupFilters';
 import { detectClipboardType, detectCodeLanguage, detectContentSignals, isUrl, normalizeClipboardFormats } from '../src/shared/detection';
 import { hashContent, normalizeContent } from '../src/shared/hash';
 import { getSegmentIndex } from '../src/shared/radialGeometry';
+import { qrColorsForTheme, resolveTheme } from '../src/shared/theme';
 import type { ClipboardItem } from '../src/shared/types';
 
 describe('normalization and hashing', () => {
@@ -109,5 +110,22 @@ describe('radial wheel geometry', () => {
     expect(getSegmentIndex(center, { x: 100, y: 0 }, 8)).toBe(0);
     expect(getSegmentIndex(center, { x: 200, y: 100 }, 8)).toBe(2);
     expect(getSegmentIndex(center, { x: 100, y: 200 }, 8)).toBe(4);
+  });
+});
+
+describe('theme resolution', () => {
+  it('resolves explicit themes before system preference', () => {
+    expect(resolveTheme('dark', false)).toBe('dark');
+    expect(resolveTheme('light', true)).toBe('light');
+  });
+
+  it('resolves system theme from the device preference', () => {
+    expect(resolveTheme('system', true)).toBe('dark');
+    expect(resolveTheme('system', false)).toBe('light');
+  });
+
+  it('keeps QR colors high contrast for both themes', () => {
+    expect(qrColorsForTheme('dark')).toMatchObject({ dark: '#182018', light: '#f4f7ef' });
+    expect(qrColorsForTheme('light')).toMatchObject({ dark: '#172018', light: '#fbfcf8' });
   });
 });
