@@ -42,6 +42,22 @@ The renderer uses React and Vite. Tauri/Rust owns OS APIs, global shortcuts, tra
 
 Theme resolution is renderer-owned and testable through shared utilities in `src/shared/theme.ts`. The CSS theme system uses semantic tokens in `src/renderer/styles/app.css`; avoid hard-coded one-off dark or light colors when adding UI.
 
+## Tech Stack
+
+- Desktop runtime: Tauri v2
+- Native backend: Rust
+- Database: SQLite with Diesel ORM and Diesel migrations
+- Frontend: React 19, TypeScript, Vite
+- Server state / async state: TanStack React Query
+- Desktop API bridge: `@tauri-apps/api` through `src/renderer/api/clipwheelClient.ts`
+- UI icons: `lucide-react`
+- Code highlighting: `highlight.js`
+- QR generation: `qrcode`
+- HTML sanitization: `sanitize-html`
+- Testing: Vitest
+- Linting and type checks: ESLint, TypeScript
+- Packaging: Tauri CLI
+
 ## Build
 
 ```bash
