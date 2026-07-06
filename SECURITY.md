@@ -8,4 +8,6 @@ Open a private security advisory or email the maintainer with reproduction steps
 
 ## Clipboard Data
 
-ClipWheel stores clipboard content as copied. It does not apply a masking layer or external classification. Do not include real secrets or private clipboard data in vulnerability reports.
+ClipWheel stores clipboard content as copied. It does not apply a masking layer or external classification. Type detection, metadata badges, QR generation, syntax highlighting, and preview rendering happen locally in the app. Do not include real secrets or private clipboard data in vulnerability reports.
+
+Renderer code must stay free of direct Node.js APIs. Desktop OS access, clipboard polling, restore behavior, global shortcuts, tray integration, SQLite access, cleanup, and migrations belong in `src-tauri/src`.

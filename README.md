@@ -1,6 +1,6 @@
 # ClipWheel
 
-ClipWheel is a privacy-first desktop clipboard manager for macOS and Windows. It captures copied text, code, URLs, images, and file references locally, then lets you restore recent items through a GTA-style radial clipboard wheel or a full history window.
+ClipWheel is a privacy-first desktop clipboard manager for macOS and Windows. It captures copied text, code, URLs, images, and file references locally, then lets you restore recent items through a radial clipboard wheel or a full history window.
 
 ## Privacy Model
 
@@ -18,6 +18,8 @@ ClipWheel is a privacy-first desktop clipboard manager for macOS and Windows. It
 - Item metadata including byte size, readable KB/MB size, text length, line count, file count, creation time, and last-used time.
 - Local image asset storage with thumbnails.
 - Text transformations, QR generation, pinning, favorites, and soft delete cleanup.
+- System, dark, and light theme support. New installs default to the operating system theme, and users can override the theme in Settings.
+- Modern Settings UI with icon-backed controls and the app version shown in the sidebar footer.
 
 ## Supported Clipboard Types
 
@@ -37,6 +39,8 @@ pnpm dev
 ```
 
 The renderer uses React and Vite. Tauri/Rust owns OS APIs, global shortcuts, tray behavior, clipboard polling, SQLite, cleanup, and restore-to-clipboard behavior. Renderer code talks to Rust through the typed Tauri client in `src/renderer/api/clipwheelClient.ts`.
+
+Theme resolution is renderer-owned and testable through shared utilities in `src/shared/theme.ts`. The CSS theme system uses semantic tokens in `src/renderer/styles/app.css`; avoid hard-coded one-off dark or light colors when adding UI.
 
 ## Build
 
@@ -69,6 +73,14 @@ Updates are manual local release installs for now. ClipWheel does not use an ext
 - Wheel selection: number keys `1-8` or `Enter`
 - Close wheel: `Escape`
 
+## Settings
+
+- Theme: `System`, `Dark`, or `Light`. `System` follows the current operating system color scheme.
+- Wheel position: center of the screen or cursor position.
+- Capture controls for plain text, rich text, images, file references, code, and duplicate handling.
+- Privacy controls for pause capture, ignored source apps, and clear-on-quit behavior.
+- Cleanup actions use soft delete by default, with explicit purge for deleted records.
+
 ## Roadmap
 
 - Signed and notarized release builds
@@ -82,4 +94,5 @@ Updates are manual local release installs for now. ClipWheel does not use an ext
 - Auto paste is present as a setting but disabled by default and not simulated yet.
 - File references initially restore as text paths.
 - Source app detection is a placeholder because cross-platform active-app APIs differ.
+- Existing installs that already saved `dark` or `light` keep that user choice. New default settings use `system`.
 - The first public builds are unsigned. macOS Gatekeeper and Windows SmartScreen may warn until signing is configured.

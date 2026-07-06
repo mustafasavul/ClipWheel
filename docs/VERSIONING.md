@@ -8,6 +8,7 @@ Current versions:
 - Package version: `0.1.0`
 - Rust crate version: `0.1.0`
 - Tauri bundle version: `0.1.0`
+- Release date: `2026-07-06`
 - Update mode: manual local release install
 
 ## Version Sources
@@ -25,6 +26,8 @@ Run this before building a release:
 ```bash
 pnpm version:check
 ```
+
+The sidebar app version shown in the renderer is sourced from `src/shared/version.ts`.
 
 ## Release Rules
 
