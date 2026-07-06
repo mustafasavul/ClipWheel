@@ -82,6 +82,7 @@ pub struct Settings {
     pub wheel_position: String,
     pub wheel_item_count: i64,
     pub theme: String,
+    pub wheel_appearance: WheelAppearanceSettings,
     pub capture_plain_text: bool,
     pub capture_rich_text: bool,
     pub capture_images: bool,
@@ -97,6 +98,47 @@ pub struct Settings {
     pub auto_paste: bool,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WheelAppearanceSettings {
+    #[serde(default = "default_wheel_color_mode")]
+    pub color_mode: String,
+    #[serde(alias = "backgroundColor")]
+    pub segment_color: String,
+    #[serde(alias = "backgroundOpacity")]
+    pub segment_opacity: f64,
+    pub active_color: String,
+    pub active_opacity: f64,
+    pub active_line_color: String,
+    pub ring_line_color: String,
+    pub panel_color: String,
+    pub panel_opacity: f64,
+    pub icon_background_color: String,
+    pub label_color: String,
+}
+
+fn default_wheel_color_mode() -> String {
+    "palette".into()
+}
+
+impl Default for WheelAppearanceSettings {
+    fn default() -> Self {
+        Self {
+            color_mode: "palette".into(),
+            segment_color: "#1f2a1d".into(),
+            segment_opacity: 0.86,
+            active_color: "#c8df9f".into(),
+            active_opacity: 0.34,
+            active_line_color: "#d8ecb8".into(),
+            ring_line_color: "#20272a".into(),
+            panel_color: "#11171a".into(),
+            panel_opacity: 0.94,
+            icon_background_color: "#151c1f".into(),
+            label_color: "#eef4e9".into(),
+        }
+    }
+}
+
 impl Default for Settings {
     fn default() -> Self {
         Self {
@@ -105,6 +147,7 @@ impl Default for Settings {
             wheel_position: "center".into(),
             wheel_item_count: 8,
             theme: "system".into(),
+            wheel_appearance: WheelAppearanceSettings::default(),
             capture_plain_text: true,
             capture_rich_text: true,
             capture_images: true,

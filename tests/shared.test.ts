@@ -5,6 +5,7 @@ import { hashContent, normalizeContent } from '../src/shared/hash';
 import { getSegmentIndex } from '../src/shared/radialGeometry';
 import { qrColorsForTheme, resolveTheme } from '../src/shared/theme';
 import type { ClipboardItem } from '../src/shared/types';
+import { defaultWheelAppearance, normalizeOpacity, wheelAppearanceStyle, wheelSegmentStyle } from '../src/shared/wheelAppearance';
 
 describe('normalization and hashing', () => {
   it('normalizes trailing whitespace and line endings', () => {
@@ -127,5 +128,30 @@ describe('theme resolution', () => {
   it('keeps QR colors high contrast for both themes', () => {
     expect(qrColorsForTheme('dark')).toMatchObject({ dark: '#182018', light: '#f4f7ef' });
     expect(qrColorsForTheme('light')).toMatchObject({ dark: '#172018', light: '#fbfcf8' });
+  });
+});
+
+describe('wheel appearance', () => {
+  it('normalizes opacity values into the CSS range', () => {
+    expect(normalizeOpacity(-1)).toBe(0);
+    expect(normalizeOpacity(0.42)).toBe(0.42);
+    expect(normalizeOpacity(2)).toBe(1);
+  });
+
+  it('converts saved wheel colors into CSS variables', () => {
+    expect(wheelAppearanceStyle(defaultWheelAppearance)).toMatchObject({
+      '--wheel-active': 'rgba(200, 223, 159, 0.34)',
+      '--wheel-icon-bg': '#151c1f',
+    });
+  });
+
+  it('uses palette colors by default and single color when requested', () => {
+    expect(wheelSegmentStyle(1, 8, defaultWheelAppearance)).toMatchObject({
+      '--wheel-segment-fill': 'rgba(219, 114, 24, 0.86)',
+      '--wheel-segment-rotation': '45deg',
+    });
+    expect(wheelSegmentStyle(1, 8, { ...defaultWheelAppearance, colorMode: 'single', segmentColor: '#123456', segmentOpacity: 0.5 })).toMatchObject({
+      '--wheel-segment-fill': 'rgba(18, 52, 86, 0.5)',
+    });
   });
 });

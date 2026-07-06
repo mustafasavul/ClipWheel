@@ -1,4 +1,5 @@
 import type { Settings } from './types';
+import { defaultWheelAppearance } from './wheelAppearance';
 
 export const defaultSettings: Settings = {
   startAtLogin: false,
@@ -6,6 +7,7 @@ export const defaultSettings: Settings = {
   wheelPosition: 'center',
   wheelItemCount: 8,
   theme: 'system',
+  wheelAppearance: defaultWheelAppearance,
   capturePlainText: true,
   captureRichText: true,
   captureImages: true,

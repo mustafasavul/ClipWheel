@@ -15,6 +15,7 @@ import {
   Monitor,
   Moon,
   MousePointer2,
+  Palette,
   Pin,
   PinOff,
   QrCode,
@@ -41,9 +42,10 @@ import QRCode from 'qrcode';
 import type { ClipboardItem, ClipboardItemType, HistoryQuery, Settings } from '../shared/types';
 import { defaultSettings } from '../shared/settings';
 import { appVersion } from '../shared/version';
-import { getSegmentIndex, getSegmentTransform } from '../shared/radialGeometry';
+import { getSegmentIndex } from '../shared/radialGeometry';
 import { transformText, type TextAction } from '../shared/textActions';
 import { qrColorsForTheme, resolveTheme, type ResolvedTheme } from '../shared/theme';
+import { defaultWheelAppearance, normalizeOpacity, wheelAppearanceStyle, wheelSegmentStyle } from '../shared/wheelAppearance';
 import { clipwheelClient } from './api/clipwheelClient';
 import './styles/app.css';
 import 'highlight.js/styles/atom-one-dark.css';
@@ -57,7 +59,7 @@ hljs.registerLanguage('shell', bash);
 hljs.registerLanguage('python', python);
 
 const typeOptions: Array<ClipboardItemType | 'all'> = ['all', 'plain_text', 'rich_text', 'code', 'url', 'image', 'file_reference', 'command'];
-const tabs = ['General', 'Clipboard', 'Privacy', 'Cleanup', 'Shortcuts', 'Advanced'] as const;
+const tabs = ['General', 'Appearance', 'Clipboard', 'Privacy', 'Cleanup', 'Shortcuts', 'Advanced'] as const;
 const defaultPageSize = 10;
 const queryClient = new QueryClient();
 const openWheelShortcut = isMacPlatform() ? 'Cmd+Shift+V' : 'Ctrl+Shift+V';
@@ -490,6 +492,25 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
           <SelectSetting icon={settings.theme === 'light' ? <Sun size={18} /> : settings.theme === 'dark' ? <Moon size={18} /> : <Monitor size={18} />} label="Theme" value={settings.theme} options={['system', 'dark', 'light']} onChange={(value) => updateSettings({ theme: value as Settings['theme'] })} />
         </SettingsGrid>
       )}
+      {activeTab === 'Appearance' && (
+        <div className="appearance-settings">
+          <WheelAppearancePreview appearance={settings.wheelAppearance} />
+          <SettingsGrid>
+            <SelectSetting icon={<Palette size={18} />} label="Color Mode" value={settings.wheelAppearance.colorMode} options={['palette', 'single']} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, colorMode: value as Settings['wheelAppearance']['colorMode'] } })} />
+            <ColorSetting label="Segment Color" value={settings.wheelAppearance.segmentColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, segmentColor: value } })} />
+            <RangeSetting label="Segment Opacity" value={settings.wheelAppearance.segmentOpacity} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, segmentOpacity: value } })} />
+            <ColorSetting label="Active Slice" value={settings.wheelAppearance.activeColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, activeColor: value } })} />
+            <RangeSetting label="Active Opacity" value={settings.wheelAppearance.activeOpacity} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, activeOpacity: value } })} />
+            <ColorSetting label="Active Lines" value={settings.wheelAppearance.activeLineColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, activeLineColor: value } })} />
+            <ColorSetting label="Ring Lines" value={settings.wheelAppearance.ringLineColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, ringLineColor: value } })} />
+            <ColorSetting label="Center Panel" value={settings.wheelAppearance.panelColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, panelColor: value } })} />
+            <RangeSetting label="Panel Opacity" value={settings.wheelAppearance.panelOpacity} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, panelOpacity: value } })} />
+            <ColorSetting label="Icon Background" value={settings.wheelAppearance.iconBackgroundColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, iconBackgroundColor: value } })} />
+            <ColorSetting label="Label Color" value={settings.wheelAppearance.labelColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, labelColor: value } })} />
+            <button type="button" className="secondary-button" onClick={() => updateSettings({ wheelAppearance: defaultWheelAppearance })}><Palette size={17} /> Reset Appearance</button>
+          </SettingsGrid>
+        </div>
+      )}
       {activeTab === 'Clipboard' && (
         <SettingsGrid>
           <Toggle icon={<Type size={18} />} label="Capture Plain Text" value={settings.capturePlainText} onChange={(value) => updateSettings({ capturePlainText: value })} />
@@ -639,6 +660,7 @@ function WheelSurface() {
     <div
       ref={overlayRef}
       className="wheel-overlay"
+      style={wheelAppearanceStyle(settings.wheelAppearance)}
       role="application"
       aria-label="ClipWheel radial clipboard wheel"
       tabIndex={-1}
@@ -673,12 +695,15 @@ function WheelSurface() {
               type="button"
               key={index}
               className={`wheel-segment ${index === activeIndex ? 'active' : ''}`}
-              style={{ transform: getSegmentTransform(index, count, 250) }}
+              style={wheelSegmentStyle(index, count, settings.wheelAppearance)}
               onClick={() => item && void clipwheelClient.copyItem(item.id)}
             >
-              <span className="wheel-index">{index + 1}</span>
-              <span className="wheel-icon">{item ? iconForType(item.type) : <Clipboard size={22} />}</span>
-              <small>{item ? item.title : 'Empty'}</small>
+              <span className="wheel-segment-content">
+                <span className="wheel-index">{index + 1}</span>
+                <span className="wheel-icon">{item ? iconForType(item.type) : <Clipboard size={22} />}</span>
+                <strong>{item ? item.title : 'Empty'}</strong>
+                <small>{item ? wheelSegmentMeta(item) : 'No item'}</small>
+              </span>
             </button>
           );
         })}
@@ -703,8 +728,40 @@ function WheelSurface() {
   );
 }
 
+function WheelAppearancePreview({ appearance }: { appearance: Settings['wheelAppearance'] }) {
+  const count = 8;
+  const segmentDeg = 360 / count;
+  return (
+    <div className="wheel-preview-shell" style={wheelAppearanceStyle(appearance)}>
+      <div className="wheel-preview-ring" style={{ '--segment-deg': `${segmentDeg}deg` } as React.CSSProperties}>
+        <div className="wheel-active-slice" />
+        <div className="wheel-inner-border" />
+        {Array.from({ length: count }).map((_, index) => (
+          <span className={`wheel-segment wheel-preview-segment ${index === 0 ? 'active' : ''}`} style={wheelSegmentStyle(index, count, appearance)} key={index}>
+            <span className="wheel-segment-content">
+              <span className="wheel-index">{index + 1}</span>
+              <span className="wheel-icon">{index % 3 === 0 ? <Image size={16} /> : <Type size={16} />}</span>
+              <strong>{index === 0 ? 'Selected Clip' : 'Clipboard'}</strong>
+              <small>{index === 0 ? 'Text • now' : 'Item • 5m ago'}</small>
+            </span>
+          </span>
+        ))}
+        <div className="wheel-center">
+          <span className="type-chip">Plain Text</span>
+          <strong>Live Preview</strong>
+          <div className="wheel-hints"><span><kbd>Enter</kbd> Apply</span><span><kbd>Esc</kbd> Back</span></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function isShiftEvent(event: KeyboardEvent): boolean {
   return event.key === 'Shift' || event.code === 'ShiftLeft' || event.code === 'ShiftRight';
+}
+
+function wheelSegmentMeta(item: ClipboardItem): string {
+  return `${labelForType(item.type)} • ${formatRelativeTime(item.createdAt)}`;
 }
 
 function useResolvedTheme(theme: Settings['theme']): ResolvedTheme {
@@ -788,6 +845,28 @@ function Toggle({ icon, label, value, onChange }: { icon: React.ReactNode; label
 
 function NumberSetting({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
   return <label className="setting-field"><span className="setting-label">{label}</span><input type="number" value={value} onChange={(event) => onChange(Number(event.target.value))} /></label>;
+}
+
+function RangeSetting({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+  return (
+    <label className="setting-field">
+      <span className="setting-label">{label}<strong>{Math.round(normalizeOpacity(value) * 100)}%</strong></span>
+      <input type="range" min="0" max="1" step="0.01" value={normalizeOpacity(value)} onChange={(event) => onChange(normalizeOpacity(Number(event.target.value)))} />
+    </label>
+  );
+}
+
+function ColorSetting({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  const colorValue = /^#[0-9a-fA-F]{6}$/.test(value) ? value : '#000000';
+  return (
+    <label className="setting-field color-setting">
+      <span className="setting-label">{label}</span>
+      <span className="color-setting-control">
+        <input type="color" value={colorValue} onChange={(event) => onChange(event.target.value)} />
+        <input type="text" value={value} onChange={(event) => onChange(event.target.value)} />
+      </span>
+    </label>
+  );
 }
 
 function SelectSetting({ icon, label, value, options, onChange }: { icon: React.ReactNode; label: string; value: string; options: string[]; onChange: (value: string) => void }) {
@@ -896,6 +975,16 @@ function formatBytes(bytes: number): string {
 
 function formatDateTime(value: string): string {
   return dateTimeFormatter.format(new Date(value));
+}
+
+function formatRelativeTime(value: string): string {
+  const deltaSeconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+  if (deltaSeconds < 60) return 'now';
+  const deltaMinutes = Math.floor(deltaSeconds / 60);
+  if (deltaMinutes < 60) return `${deltaMinutes}m ago`;
+  const deltaHours = Math.floor(deltaMinutes / 60);
+  if (deltaHours < 24) return `${deltaHours}h ago`;
+  return `${Math.floor(deltaHours / 24)}d ago`;
 }
 
 function isMacPlatform(): boolean {

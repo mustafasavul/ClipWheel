@@ -38,6 +38,7 @@
   --wheel-active-line: rgba(216, 236, 184, 0.88);
   --wheel-label: #eef4e9;
   --wheel-panel: rgba(21, 25, 22, 0.9);
+  --wheel-icon-bg: var(--surface-solid);
   background: var(--bg);
   color: var(--text);
 }
@@ -79,6 +80,7 @@
   --wheel-active-line: rgba(66, 92, 51, 0.74);
   --wheel-label: #1d241d;
   --wheel-panel: rgba(255, 255, 251, 0.92);
+  --wheel-icon-bg: var(--surface-solid);
 }
 
 @media (prefers-color-scheme: light) {
@@ -119,6 +121,7 @@
     --wheel-active-line: rgba(66, 92, 51, 0.74);
     --wheel-label: #1d241d;
     --wheel-panel: rgba(255, 255, 251, 0.92);
+    --wheel-icon-bg: var(--surface-solid);
   }
 }
 
@@ -838,6 +841,117 @@ textarea {
   gap: 10px;
 }
 
+.appearance-settings {
+  display: grid;
+  gap: 16px;
+}
+
+.wheel-preview-shell {
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background:
+    linear-gradient(45deg, rgba(var(--bg-rgb), 0.2) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(var(--bg-rgb), 0.2) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(var(--bg-rgb), 0.2) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(var(--bg-rgb), 0.2) 75%),
+    var(--surface-muted);
+  background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+  background-size: 24px 24px;
+}
+
+.wheel-preview-ring {
+  --segment-deg: 45deg;
+  position: relative;
+  width: min(310px, 82vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(var(--bg-rgb), 0.18);
+  border: 2px solid var(--wheel-ring-line);
+  overflow: visible;
+  transform: translateZ(0);
+}
+
+.wheel-preview-segment {
+  font-size: 9px;
+}
+
+.wheel-preview-segment .wheel-icon {
+  width: 34px;
+  height: 34px;
+}
+
+.wheel-preview-segment .wheel-segment-content {
+  top: 13%;
+  width: 108px;
+  gap: 3px;
+}
+
+.wheel-preview-segment .wheel-index {
+  position: static;
+  min-width: 20px;
+  height: 20px;
+  font-size: 11px;
+  transform: none;
+}
+
+.wheel-preview-segment strong {
+  max-width: 98px;
+  font-size: 10px;
+}
+
+.wheel-preview-segment small {
+  max-width: 98px;
+  font-size: 8px;
+}
+
+.wheel-preview-ring .wheel-center {
+  padding: 16px;
+  gap: 6px;
+}
+
+.wheel-preview-ring .wheel-center strong {
+  max-width: 108px;
+  font-size: 12px;
+}
+
+.wheel-preview-ring .type-chip {
+  font-size: 9px;
+  padding: 4px 8px;
+}
+
+.wheel-preview-ring .wheel-hints {
+  gap: 3px;
+  margin-top: 0;
+  font-size: 9px;
+}
+
+.wheel-preview-ring .wheel-hints span {
+  grid-template-columns: 34px 1fr;
+  gap: 4px;
+}
+
+.wheel-preview-ring .wheel-hints kbd {
+  min-width: 30px;
+  padding: 2px 4px;
+  font-size: 8px;
+}
+
+.color-setting-control {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 8px;
+}
+
+.color-setting input[type="color"] {
+  width: 42px;
+  height: 38px;
+  padding: 3px;
+}
+
 .toggle-row,
 .setting-field {
   display: flex;
@@ -995,7 +1109,7 @@ kbd {
   height: 100vh;
   display: grid;
   place-items: center;
-  padding: 34px;
+  padding: 12px;
   background: transparent;
   user-select: none;
   outline: none;
@@ -1004,22 +1118,22 @@ kbd {
 .wheel-ring {
   --segment-deg: 45deg;
   position: relative;
-  width: min(680px, calc(100vmin - 68px));
+  width: min(840px, calc(100vmin - 24px));
   aspect-ratio: 1;
   border-radius: 50%;
   overflow: visible;
   isolation: isolate;
-  background: repeating-conic-gradient(from calc(var(--segment-deg) / -2), var(--wheel-ring-line) 0 1px, transparent 1px var(--segment-deg));
+  background: rgba(var(--bg-rgb), 0.16);
   border: 2px solid var(--wheel-ring-line);
-  box-shadow: none;
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.28), inset 0 0 0 8px rgba(255, 255, 255, 0.025);
 }
 
 .wheel-active-slice {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   border-radius: 50%;
-  background: conic-gradient(from calc(var(--segment-deg) / -2), var(--wheel-active) 0 var(--segment-deg), transparent var(--segment-deg) 360deg);
+  background: conic-gradient(from calc(var(--segment-deg) / -2), rgba(255, 255, 255, 0.18) 0 var(--segment-deg), transparent var(--segment-deg) 360deg);
   -webkit-mask: radial-gradient(circle, transparent 0 31%, #000 31.5% 100%);
   mask: radial-gradient(circle, transparent 0 31%, #000 31.5% 100%);
   pointer-events: none;
@@ -1045,70 +1159,94 @@ kbd {
 
 .wheel-segment {
   position: absolute;
-  z-index: 2;
-  left: calc(50% - 44px);
-  top: calc(50% - 44px);
-  width: 88px;
-  height: 88px;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 5px;
+  inset: 0;
+  z-index: 1;
   border: 0;
   border-radius: 50%;
-  background: transparent;
+  background: radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--wheel-segment-fill) 78%, white 22%), var(--wheel-segment-fill) 74%);
+  -webkit-mask:
+    radial-gradient(circle, transparent 0 31%, #000 31.8% 100%),
+    conic-gradient(from calc(var(--segment-deg) / -2), #000 0 calc(var(--segment-deg) - 2.5deg), transparent calc(var(--segment-deg) - 2.5deg) 360deg);
+  -webkit-mask-composite: source-in;
+  mask:
+    radial-gradient(circle, transparent 0 31%, #000 31.8% 100%),
+    conic-gradient(from calc(var(--segment-deg) / -2), #000 0 calc(var(--segment-deg) - 2.5deg), transparent calc(var(--segment-deg) - 2.5deg) 360deg);
+  mask-composite: intersect;
   color: var(--wheel-label);
-  transition: transform .18s ease, filter .18s ease, color .18s ease;
+  transform: rotate(var(--wheel-segment-rotation));
+  transform-origin: 50% 50%;
+  transition: filter .18s ease, opacity .18s ease;
 }
 
 .wheel-segment.active {
-  color: var(--accent-text);
-  filter: saturate(1.08);
+  z-index: 2;
+  filter: brightness(1.22) saturate(1.18) drop-shadow(0 0 18px color-mix(in srgb, var(--wheel-segment-fill) 58%, transparent));
+}
+
+.wheel-segment-content {
+  position: absolute;
+  top: 13%;
+  left: 50%;
+  width: 208px;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  transform: translate(-50%, -50%) rotate(var(--wheel-segment-content-rotation));
+  text-align: center;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.54);
 }
 
 .wheel-index {
-  position: absolute;
-  top: -14px;
-  left: 4px;
-  min-width: 18px;
-  height: 18px;
+  position: static;
+  min-width: 28px;
+  height: 28px;
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-solid) 74%, transparent);
-  border: 1px solid var(--border-strong);
-  color: var(--text);
-  font-size: 11px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--wheel-label);
+  font-size: 16px;
+  font-weight: 760;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 5px 14px rgba(0, 0, 0, 0.22);
 }
 
 .wheel-icon {
-  width: 62px;
-  height: 62px;
+  width: 54px;
+  height: 54px;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  background: var(--surface-solid);
-  border: 1px solid var(--border-strong);
-  box-shadow: var(--shadow-inset), 0 10px 26px rgba(var(--bg-rgb), 0.28);
-  color: var(--text);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--wheel-label);
 }
 
 .wheel-segment.active .wheel-icon {
-  background: var(--accent);
-  color: var(--accent-text);
-  border-color: var(--accent-border);
+  background: transparent;
+  color: var(--wheel-label);
+}
+
+.wheel-segment-content strong {
+  max-width: 204px;
+  overflow: hidden;
+  color: var(--wheel-label);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.12;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .wheel-segment small {
-  width: 132px;
+  max-width: 204px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-align: center;
-  color: var(--wheel-label);
-  font-weight: 650;
-  font-size: 12px;
-  text-shadow: 0 1px 8px rgba(var(--bg-rgb), 0.55);
+  color: color-mix(in srgb, var(--wheel-label) 82%, transparent);
+  font-weight: 620;
+  font-size: 13px;
+  line-height: 1.1;
 }
 
 .wheel-segment.active small {

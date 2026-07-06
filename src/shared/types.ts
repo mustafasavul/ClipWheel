@@ -94,6 +94,7 @@ export interface Settings {
   wheelPosition: 'center' | 'cursor';
   wheelItemCount: 6 | 8 | 10 | 12;
   theme: 'system' | 'dark' | 'light';
+  wheelAppearance: WheelAppearanceSettings;
   capturePlainText: boolean;
   captureRichText: boolean;
   captureImages: boolean;
@@ -107,6 +108,20 @@ export interface Settings {
   ignoredSourceApps: string[];
   clearClipboardOnQuit: boolean;
   autoPaste: boolean;
+}
+
+export interface WheelAppearanceSettings {
+  colorMode: 'palette' | 'single';
+  segmentColor: string;
+  segmentOpacity: number;
+  activeColor: string;
+  activeOpacity: number;
+  activeLineColor: string;
+  ringLineColor: string;
+  panelColor: string;
+  panelOpacity: number;
+  iconBackgroundColor: string;
+  labelColor: string;
 }
 
 export interface HistoryQuery {
