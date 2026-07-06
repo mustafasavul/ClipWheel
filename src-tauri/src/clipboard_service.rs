@@ -63,7 +63,13 @@ impl ClipboardService {
             Err(_) => return Ok(None),
         };
         let text = clipboard.get_text().unwrap_or_default();
-        let image = if settings.capture_images { clipboard.get_image().ok() } else { None };
+        let (image, image_format) = if settings.capture_images {
+            clipboard.get_image().ok().map(|image| (image, "image".to_string()))
+                .or_else(|| platform_image_fallback().map(|image| (image, "public.png".to_string())))
+                .map_or((None, None), |(image, format)| (Some(image), Some(format)))
+        } else {
+            (None, None)
+        };
         let file_paths = if settings.capture_files { detect_file_paths(&text) } else { Vec::new() };
         let file_paths_text = file_paths.join("\n");
         let image_bytes = image.as_ref().map(|image| image.bytes.as_ref());
@@ -94,7 +100,7 @@ impl ClipboardService {
             return Ok(None);
         }
 
-        let raw_formats = if has_image { vec!["image".into()] } else { vec!["text/plain".into()] };
+        let raw_formats = if has_image { vec![image_format.unwrap_or_else(|| "image".into())] } else { vec!["text/plain".into()] };
         let format_info = normalize_formats(raw_formats, !text.is_empty(), false, false, has_image, !file_paths.is_empty());
         let item = self.repository.create_item(ClipboardItemInput {
             item_type: type_info.item_type.clone(),
@@ -225,6 +231,33 @@ fn save_image_assets(media_dir: &Path, image: &ImageData<'_>, max_image_size_mb:
         thumbnail_path: Some(thumbnail_path.to_string_lossy().to_string()),
         size_bytes: Some(size_bytes),
     })
+}
+
+#[cfg(target_os = "macos")]
+fn platform_image_fallback() -> Option<ImageData<'static>> {
+    use objc2::{msg_send, rc::{autoreleasepool, Retained}, ClassType};
+    use objc2_app_kit::{NSPasteboard, NSPasteboardTypePNG};
+
+    let png_bytes = autoreleasepool(|_| {
+        let pasteboard: Option<Retained<NSPasteboard>> = unsafe { msg_send![NSPasteboard::class(), generalPasteboard] };
+        let pasteboard = pasteboard?;
+        let data = unsafe { pasteboard.dataForType(NSPasteboardTypePNG) }?;
+        Some(unsafe { data.as_bytes_unchecked() }.to_vec())
+    })?;
+
+    let image = image::load_from_memory_with_format(&png_bytes, image::ImageFormat::Png).ok()?.to_rgba8();
+    let width = image.width() as usize;
+    let height = image.height() as usize;
+    Some(ImageData {
+        width,
+        height,
+        bytes: image.into_raw().into(),
+    })
+}
+
+#[cfg(not(target_os = "macos"))]
+fn platform_image_fallback() -> Option<ImageData<'static>> {
+    None
 }
 
 fn rgba_image_from_clipboard(image: &ImageData<'_>) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>> {
