@@ -730,6 +730,7 @@ function WheelSurface() {
             <>
               <span className="type-chip">{labelForType(activeItem.type)}</span>
               <strong>{activeItem.title}</strong>
+              <small className="wheel-center-meta">{wheelSegmentMeta(activeItem)}</small>
               <div className="wheel-hints"><span><kbd>Enter</kbd> Apply</span><span><kbd>Esc</kbd> Back</span><span><kbd>Shift</kbd> Quicklook</span></div>
             </>
           ) : (
@@ -767,6 +768,7 @@ function WheelAppearancePreview({ appearance }: { appearance: Settings['wheelApp
         <div className="wheel-center">
           <span className="type-chip">Plain Text</span>
           <strong>Live Preview</strong>
+          <small className="wheel-center-meta">Plain Text • now</small>
           <div className="wheel-hints"><span><kbd>Enter</kbd> Apply</span><span><kbd>Esc</kbd> Back</span></div>
         </div>
       </div>

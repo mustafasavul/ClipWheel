@@ -921,6 +921,11 @@ textarea {
   font-size: 10px;
 }
 
+.wheel-preview-ring .wheel-center-meta {
+  max-width: 94px;
+  font-size: 7px;
+}
+
 .wheel-preview-ring .type-chip {
   font-size: 8px;
   padding: 3px 7px;
@@ -1367,6 +1372,17 @@ kbd {
   color: var(--text-strong);
   font-size: 18px;
   line-height: 1.12;
+}
+
+.wheel-center-meta {
+  max-width: 220px;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--text-muted) 88%, var(--wheel-label));
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .wheel-hints {
