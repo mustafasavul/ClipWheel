@@ -103,6 +103,8 @@ pub struct Settings {
 pub struct WheelAppearanceSettings {
     #[serde(default = "default_wheel_color_mode")]
     pub color_mode: String,
+    #[serde(default = "default_wheel_palette_colors")]
+    pub palette_colors: Vec<String>,
     #[serde(alias = "backgroundColor")]
     pub segment_color: String,
     #[serde(alias = "backgroundOpacity")]
@@ -121,10 +123,24 @@ fn default_wheel_color_mode() -> String {
     "palette".into()
 }
 
+fn default_wheel_palette_colors() -> Vec<String> {
+    vec![
+        "#b22f2b".into(),
+        "#db7218".into(),
+        "#d6ad14".into(),
+        "#3f963f".into(),
+        "#0b8977".into(),
+        "#2569b8".into(),
+        "#554192".into(),
+        "#8b3fa1".into(),
+    ]
+}
+
 impl Default for WheelAppearanceSettings {
     fn default() -> Self {
         Self {
             color_mode: "palette".into(),
+            palette_colors: default_wheel_palette_colors(),
             segment_color: "#1f2a1d".into(),
             segment_opacity: 0.86,
             active_color: "#c8df9f".into(),

@@ -45,7 +45,7 @@ import { appVersion } from '../shared/version';
 import { getSegmentIndex } from '../shared/radialGeometry';
 import { transformText, type TextAction } from '../shared/textActions';
 import { qrColorsForTheme, resolveTheme, type ResolvedTheme } from '../shared/theme';
-import { defaultWheelAppearance, normalizeOpacity, wheelAppearanceStyle, wheelSegmentStyle } from '../shared/wheelAppearance';
+import { applyWheelAppearancePreset, defaultWheelAppearance, normalizeOpacity, wheelAppearancePresets, wheelAppearanceStyle, wheelSegmentStyle } from '../shared/wheelAppearance';
 import { clipwheelClient } from './api/clipwheelClient';
 import './styles/app.css';
 import 'highlight.js/styles/atom-one-dark.css';
@@ -495,6 +495,24 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
       {activeTab === 'Appearance' && (
         <div className="appearance-settings">
           <WheelAppearancePreview appearance={settings.wheelAppearance} />
+          <div className="preset-panel">
+            <span className="setting-label"><span className="setting-icon"><Palette size={18} /></span>Color Presets</span>
+            <div className="preset-grid">
+              {wheelAppearancePresets.map((preset) => (
+                <button
+                  type="button"
+                  className="preset-button"
+                  key={preset.id}
+                  onClick={() => updateSettings({ wheelAppearance: applyWheelAppearancePreset(settings.wheelAppearance, preset) })}
+                >
+                  <span className="preset-swatches" aria-hidden="true">
+                    {preset.colors.slice(0, 8).map((color, index) => <span key={`${preset.id}-${color}-${index}`} style={{ background: color }} />)}
+                  </span>
+                  <strong>{preset.label}</strong>
+                </button>
+              ))}
+            </div>
+          </div>
           <SettingsGrid>
             <SelectSetting icon={<Palette size={18} />} label="Color Mode" value={settings.wheelAppearance.colorMode} options={['palette', 'single']} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, colorMode: value as Settings['wheelAppearance']['colorMode'] } })} />
             <ColorSetting label="Segment Color" value={settings.wheelAppearance.segmentColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, segmentColor: value } })} />
@@ -862,7 +880,7 @@ function ColorSetting({ label, value, onChange }: { label: string; value: string
     <label className="setting-field color-setting">
       <span className="setting-label">{label}</span>
       <span className="color-setting-control">
-        <input type="color" value={colorValue} onChange={(event) => onChange(event.target.value)} />
+        <input type="color" aria-label={`${label} color picker`} title={`${label} color picker`} value={colorValue} onChange={(event) => onChange(event.target.value)} />
         <input type="text" value={value} onChange={(event) => onChange(event.target.value)} />
       </span>
     </label>

@@ -112,6 +112,7 @@ export interface Settings {
 
 export interface WheelAppearanceSettings {
   colorMode: 'palette' | 'single';
+  paletteColors: string[];
   segmentColor: string;
   segmentOpacity: number;
   activeColor: string;

@@ -1,6 +1,13 @@
 import type { CSSProperties } from 'react';
 import type { WheelAppearanceSettings } from './types';
 
+export interface WheelAppearancePreset {
+  id: string;
+  label: string;
+  colors: string[];
+  values: Pick<WheelAppearanceSettings, 'colorMode' | 'paletteColors' | 'segmentColor' | 'activeColor' | 'activeLineColor' | 'ringLineColor' | 'panelColor' | 'iconBackgroundColor' | 'labelColor'>;
+}
+
 export const wheelPalette = [
   '#b22f2b',
   '#db7218',
@@ -14,6 +21,7 @@ export const wheelPalette = [
 
 export const defaultWheelAppearance: WheelAppearanceSettings = {
   colorMode: 'palette',
+  paletteColors: [...wheelPalette],
   segmentColor: '#1f2a1d',
   segmentOpacity: 0.86,
   activeColor: '#c8df9f',
@@ -25,6 +33,76 @@ export const defaultWheelAppearance: WheelAppearanceSettings = {
   iconBackgroundColor: '#151c1f',
   labelColor: '#eef4e9',
 };
+
+export const wheelAppearancePresets: WheelAppearancePreset[] = [
+  createPreset('rainbow', 'Rainbow', [...wheelPalette], {
+    colorMode: 'palette',
+    segmentColor: '#1f2a1d',
+    activeColor: '#c8df9f',
+    activeLineColor: '#d8ecb8',
+    ringLineColor: '#20272a',
+    panelColor: '#11171a',
+    iconBackgroundColor: '#151c1f',
+    labelColor: '#eef4e9',
+  }),
+  createPreset('warm', 'Warm', ['#a92929', '#d95c20', '#e08824', '#d2a414', '#bf7a22', '#984429', '#7d2d35', '#b35045'], {
+    colorMode: 'palette',
+    segmentColor: '#9a3a20',
+    activeColor: '#ffd08a',
+    activeLineColor: '#ffe2a8',
+    ringLineColor: '#261914',
+    panelColor: '#15100d',
+    iconBackgroundColor: '#211511',
+    labelColor: '#fff4e4',
+  }),
+  createPreset('cool', 'Cool', ['#235d9f', '#1c7e9e', '#15918b', '#2b9b6b', '#4d86c7', '#3f5bb2', '#5b4bad', '#227c92'], {
+    colorMode: 'palette',
+    segmentColor: '#1f667d',
+    activeColor: '#9ee7ff',
+    activeLineColor: '#c5f1ff',
+    ringLineColor: '#15222a',
+    panelColor: '#0f171d',
+    iconBackgroundColor: '#14222a',
+    labelColor: '#eefaff',
+  }),
+  createPreset('forest', 'Forest', ['#456b2f', '#5f7f2f', '#7a8b32', '#3f7c4a', '#2f7d64', '#36715d', '#566b3a', '#6b6e32'], {
+    colorMode: 'palette',
+    segmentColor: '#456b2f',
+    activeColor: '#c8df9f',
+    activeLineColor: '#d8ecb8',
+    ringLineColor: '#1e2718',
+    panelColor: '#11170f',
+    iconBackgroundColor: '#182112',
+    labelColor: '#f0f7e6',
+  }),
+  createPreset('mono-lime', 'Mono Lime', ['#c8df9f'], {
+    colorMode: 'single',
+    segmentColor: '#c8df9f',
+    activeColor: '#e1f4bf',
+    activeLineColor: '#eefbd5',
+    ringLineColor: '#26321f',
+    panelColor: '#11170f',
+    iconBackgroundColor: '#182112',
+    labelColor: '#172114',
+  }),
+  createPreset('mono-slate', 'Mono Slate', ['#6f7d89'], {
+    colorMode: 'single',
+    segmentColor: '#6f7d89',
+    activeColor: '#c3d0dc',
+    activeLineColor: '#dce7f0',
+    ringLineColor: '#20272d',
+    panelColor: '#101519',
+    iconBackgroundColor: '#182027',
+    labelColor: '#f1f6fb',
+  }),
+];
+
+export function applyWheelAppearancePreset(appearance: WheelAppearanceSettings, preset: WheelAppearancePreset): WheelAppearanceSettings {
+  return {
+    ...appearance,
+    ...preset.values,
+  };
+}
 
 export function wheelAppearanceStyle(appearance: WheelAppearanceSettings): CSSProperties {
   return {
@@ -41,7 +119,8 @@ export function wheelSegmentStyle(index: number, count: number, appearance: Whee
   const segmentDeg = 360 / count;
   const rotation = index * segmentDeg;
   const halfWidth = Math.min(29, Math.max(13, 168 / count));
-  const color = appearance.colorMode === 'palette' ? wheelPalette[index % wheelPalette.length] : appearance.segmentColor;
+  const palette = appearance.paletteColors.length > 0 ? appearance.paletteColors : wheelPalette;
+  const color = appearance.colorMode === 'palette' ? palette[index % palette.length] : appearance.segmentColor;
   return {
     '--wheel-segment-rotation': `${rotation}deg`,
     '--wheel-segment-content-rotation': `${-rotation}deg`,
@@ -54,6 +133,23 @@ export function wheelSegmentStyle(index: number, count: number, appearance: Whee
 export function normalizeOpacity(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.min(1, Math.max(0, value));
+}
+
+function createPreset(
+  id: string,
+  label: string,
+  colors: string[],
+  values: Omit<WheelAppearancePreset['values'], 'paletteColors'>,
+): WheelAppearancePreset {
+  return {
+    id,
+    label,
+    colors,
+    values: {
+      ...values,
+      paletteColors: values.colorMode === 'palette' ? colors : [...wheelPalette],
+    },
+  };
 }
 
 function hexToRgba(hex: string, opacity: number): string {

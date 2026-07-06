@@ -5,7 +5,7 @@ import { hashContent, normalizeContent } from '../src/shared/hash';
 import { getSegmentIndex } from '../src/shared/radialGeometry';
 import { qrColorsForTheme, resolveTheme } from '../src/shared/theme';
 import type { ClipboardItem } from '../src/shared/types';
-import { defaultWheelAppearance, normalizeOpacity, wheelAppearanceStyle, wheelSegmentStyle } from '../src/shared/wheelAppearance';
+import { applyWheelAppearancePreset, defaultWheelAppearance, normalizeOpacity, wheelAppearancePresets, wheelAppearanceStyle, wheelSegmentStyle } from '../src/shared/wheelAppearance';
 
 describe('normalization and hashing', () => {
   it('normalizes trailing whitespace and line endings', () => {
@@ -153,5 +153,19 @@ describe('wheel appearance', () => {
     expect(wheelSegmentStyle(1, 8, { ...defaultWheelAppearance, colorMode: 'single', segmentColor: '#123456', segmentOpacity: 0.5 })).toMatchObject({
       '--wheel-segment-fill': 'rgba(18, 52, 86, 0.5)',
     });
+  });
+
+  it('applies preset palette and mono values', () => {
+    const cool = wheelAppearancePresets.find((preset) => preset.id === 'cool');
+    expect(cool).toBeDefined();
+    const coolAppearance = applyWheelAppearancePreset(defaultWheelAppearance, cool!);
+    expect(coolAppearance.colorMode).toBe('palette');
+    expect(wheelSegmentStyle(1, 8, coolAppearance)).toMatchObject({
+      '--wheel-segment-fill': 'rgba(28, 126, 158, 0.86)',
+    });
+
+    const mono = wheelAppearancePresets.find((preset) => preset.id === 'mono-slate');
+    expect(mono).toBeDefined();
+    expect(applyWheelAppearancePreset(defaultWheelAppearance, mono!).colorMode).toBe('single');
   });
 });
