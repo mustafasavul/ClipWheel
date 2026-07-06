@@ -1,8 +1,39 @@
-node_modules
-.vite
-out
-dist
-coverage
-src-tauri/target
+# Dependencies
+node_modules/
+
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.mobileprovision
+*.provisionprofile
+*.cer
+*.cert
+
+# Tauri signing keys
+src-tauri/*.key
+src-tauri/*.pem
+src-tauri/*.p12
+
+# Build and test output
+.vite/
+out/
+dist/
+coverage/
+src-tauri/target/
+src-tauri/binaries/
+
+# Local app data and logs
 *.log
+*.db
+*.sqlite
+*.sqlite3
+
+# OS and editor noise
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
