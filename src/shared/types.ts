@@ -8,7 +8,32 @@ export type ClipboardItemType =
   | 'command';
 
 export type CodeLanguage = 'javascript' | 'typescript' | 'json' | 'html' | 'css' | 'shell' | 'python' | 'unknown';
-export type LanguageSetting = 'system' | 'en' | 'tr';
+export type LanguageSetting =
+  | 'system'
+  | 'en'
+  | 'zh-Hans'
+  | 'es'
+  | 'ar'
+  | 'hi'
+  | 'fr'
+  | 'ru'
+  | 'pt-BR'
+  | 'de'
+  | 'ja'
+  | 'id'
+  | 'tr'
+  | 'bn'
+  | 'fa'
+  | 'vi'
+  | 'ko'
+  | 'it'
+  | 'pl'
+  | 'uk'
+  | 'th'
+  | 'ro'
+  | 'nl'
+  | 'cs'
+  | 'sv';
 
 export type ClipboardPlatform = 'darwin' | 'win32' | 'linux' | 'unknown';
 

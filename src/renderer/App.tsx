@@ -42,7 +42,21 @@ import sanitizeHtml from 'sanitize-html';
 import QRCode from 'qrcode';
 import type { ClipboardItem, ClipboardItemType, HistoryQuery, Settings } from '../shared/types';
 import { defaultSettings } from '../shared/settings';
-import { createTranslator, getLanguageLocale, languageOptions, resolveLanguage, type I18nKey, type LanguageCode, type Translator } from '../shared/i18n';
+import {
+  createTranslator,
+  fallbackMessages,
+  getLanguageDirection,
+  getLanguageLocale,
+  languageMetadata,
+  languageOptions,
+  loadLocaleMessages,
+  resolveLanguage,
+  type I18nKey,
+  type LanguageCode,
+  type LanguageDirection,
+  type LocaleMessages,
+  type Translator,
+} from '../shared/i18n';
 import { appVersion } from '../shared/version';
 import { getSegmentIndex } from '../shared/radialGeometry';
 import { transformText, type TextAction } from '../shared/textActions';
@@ -75,21 +89,64 @@ const defaultPageSize = 10;
 const queryClient = new QueryClient();
 const openWheelShortcut = isMacPlatform() ? 'Cmd+Shift+V' : 'Ctrl+Shift+V';
 const dateTimeFormatters = new Map<string, Intl.DateTimeFormat>();
+const relativeTimeFormatters = new Map<string, Intl.RelativeTimeFormat>();
 
 interface I18nView {
   language: LanguageCode;
   locale: string;
+  direction: LanguageDirection;
   t: Translator;
 }
 
 const I18nContext = React.createContext<I18nView>({
   language: 'en',
   locale: 'en-US',
-  t: createTranslator('en'),
+  direction: 'ltr',
+  t: createTranslator(fallbackMessages),
 });
 
 function useI18n(): I18nView {
   return use(I18nContext);
+}
+
+function useLocale(language: LanguageCode): I18nView {
+  const [localeState, setLocaleState] = useState<{ language: LanguageCode; messages: LocaleMessages }>({
+    language: 'en',
+    messages: fallbackMessages,
+  });
+
+  if (localeState.language !== language) {
+    setLocaleState({ language, messages: fallbackMessages });
+  }
+
+  useEffect(() => {
+    let disposed = false;
+    if (language === 'en') {
+      return () => {
+        disposed = true;
+      };
+    }
+    void loadLocaleMessages(language).then((nextMessages) => {
+      if (!disposed) {
+        setLocaleState((current) => current.language === language ? { language, messages: nextMessages } : current);
+      }
+    }).catch(() => {
+      if (!disposed) {
+        setLocaleState((current) => current.language === language ? { language, messages: fallbackMessages } : current);
+      }
+    });
+    return () => {
+      disposed = true;
+    };
+  }, [language]);
+
+  const messages = localeState.language === language ? localeState.messages : fallbackMessages;
+  return useMemo<I18nView>(() => ({
+    language,
+    locale: getLanguageLocale(language),
+    direction: getLanguageDirection(language),
+    t: createTranslator(messages),
+  }), [language, messages]);
 }
 
 function App() {
@@ -117,11 +174,11 @@ function MainSurface() {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const resolvedTheme = useResolvedTheme(settings.theme);
   const language = resolveLanguage(settings.language);
-  const i18n = useMemo<I18nView>(() => ({ language, locale: getLanguageLocale(language), t: createTranslator(language) }), [language]);
+  const i18n = useLocale(language);
   const { t } = i18n;
 
   useApplyTheme(resolvedTheme);
-  useApplyLanguage(language);
+  useApplyLanguage(i18n.language, i18n.direction);
 
   const refresh = useCallback(async () => {
     try {
@@ -639,11 +696,11 @@ function WheelSurface() {
   const quickLookSide = Math.cos((activeAngle * Math.PI) / 180) >= 0 ? 'left' : 'right';
   const resolvedTheme = useResolvedTheme(settings.theme);
   const language = resolveLanguage(settings.language);
-  const i18n = useMemo<I18nView>(() => ({ language, locale: getLanguageLocale(language), t: createTranslator(language) }), [language]);
+  const i18n = useLocale(language);
   const { t } = i18n;
 
   useApplyTheme(resolvedTheme);
-  useApplyLanguage(language);
+  useApplyLanguage(i18n.language, i18n.direction);
 
   useEffect(() => {
     document.documentElement.classList.add('wheel-html');
@@ -833,7 +890,7 @@ function isShiftEvent(event: KeyboardEvent): boolean {
 }
 
 function wheelSegmentMeta(item: ClipboardItem, i18n: I18nView): string {
-  return `${labelForType(item.type, i18n.t)} • ${formatRelativeTime(item.createdAt, i18n.language, i18n.t)}`;
+  return `${labelForType(item.type, i18n.t)} • ${formatRelativeTime(item.createdAt, i18n.locale, i18n.t)}`;
 }
 
 function useResolvedTheme(theme: Settings['theme']): ResolvedTheme {
@@ -856,10 +913,11 @@ function useApplyTheme(theme: ResolvedTheme) {
   }, [theme]);
 }
 
-function useApplyLanguage(language: LanguageCode) {
+function useApplyLanguage(language: LanguageCode, direction: LanguageDirection) {
   useEffect(() => {
     document.documentElement.lang = language;
-  }, [language]);
+    document.documentElement.dir = direction;
+  }, [direction, language]);
 }
 
 function WheelQuickLook({ item, side }: { item: ClipboardItem; side: 'left' | 'right' }) {
@@ -1059,9 +1117,8 @@ function settingOptionLabel(value: string, t: Translator): string {
 }
 
 function languageOptionLabel(value: string, t: Translator): string {
-  if (value === 'en') return t('english');
-  if (value === 'tr') return t('turkish');
-  return t('system');
+  if (value === 'system') return t('system');
+  return languageMetadata[value as LanguageCode]?.nativeName ?? value;
 }
 
 function safeDomain(url: string): string {
@@ -1113,15 +1170,25 @@ function formatDateTime(value: string, locale: string): string {
   return formatter.format(new Date(value));
 }
 
-function formatRelativeTime(value: string, language: LanguageCode, t: Translator): string {
+function formatRelativeTime(value: string, locale: string, t: Translator): string {
   const deltaSeconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
   if (deltaSeconds < 60) return t('now');
   const deltaMinutes = Math.floor(deltaSeconds / 60);
-  if (deltaMinutes < 60) return language === 'tr' ? `${deltaMinutes} dk önce` : `${deltaMinutes}m ago`;
+  const formatter = getRelativeTimeFormatter(locale);
+  if (deltaMinutes < 60) return formatter.format(-deltaMinutes, 'minute');
   const deltaHours = Math.floor(deltaMinutes / 60);
-  if (deltaHours < 24) return language === 'tr' ? `${deltaHours} sa önce` : `${deltaHours}h ago`;
+  if (deltaHours < 24) return formatter.format(-deltaHours, 'hour');
   const deltaDays = Math.floor(deltaHours / 24);
-  return language === 'tr' ? `${deltaDays} gün önce` : `${deltaDays}d ago`;
+  return formatter.format(-deltaDays, 'day');
+}
+
+function getRelativeTimeFormatter(locale: string): Intl.RelativeTimeFormat {
+  let formatter = relativeTimeFormatters.get(locale);
+  if (!formatter) {
+    formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'short' });
+    relativeTimeFormatters.set(locale, formatter);
+  }
+  return formatter;
 }
 
 function isMacPlatform(): boolean {

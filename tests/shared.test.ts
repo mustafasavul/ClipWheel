@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { matchesCleanupRequest } from '../src/shared/cleanupFilters';
 import { detectClipboardType, detectCodeLanguage, detectContentSignals, isUrl, normalizeClipboardFormats } from '../src/shared/detection';
 import { hashContent, normalizeContent } from '../src/shared/hash';
-import { createTranslator, resolveLanguage } from '../src/shared/i18n';
+import { createTranslator, getLanguageDirection, languageMetadata, languageOptions, loadLocaleMessages, resolveLanguage, supportedLanguages } from '../src/shared/i18n';
 import { getSegmentIndex } from '../src/shared/radialGeometry';
 import { defaultSettings } from '../src/shared/settings';
 import { qrColorsForTheme, resolveTheme } from '../src/shared/theme';
@@ -137,13 +137,25 @@ describe('localization', () => {
   it('defaults language selection to system and resolves supported locales', () => {
     expect(defaultSettings.language).toBe('system');
     expect(resolveLanguage('system', 'tr-TR')).toBe('tr');
-    expect(resolveLanguage('system', 'de-DE')).toBe('en');
+    expect(resolveLanguage('system', 'de-DE')).toBe('de');
+    expect(resolveLanguage('system', 'zh-CN')).toBe('zh-Hans');
+    expect(resolveLanguage('system', 'pt-PT')).toBe('pt-BR');
+    expect(resolveLanguage('system', 'zz-ZZ')).toBe('en');
     expect(resolveLanguage('en', 'tr-TR')).toBe('en');
   });
 
-  it('translates app-owned labels in English and Turkish', () => {
-    expect(createTranslator('en')('wheelAppearance')).toBe('Wheel Appearance');
-    expect(createTranslator('tr')('customizeWheel')).toBe('Tekerleği Özelleştir');
+  it('loads supported locales and translates app-owned labels', async () => {
+    expect(languageOptions).toHaveLength(25);
+    expect(supportedLanguages).toHaveLength(24);
+    expect(Object.keys(languageMetadata)).toHaveLength(24);
+    const tr = createTranslator(await loadLocaleMessages('tr'));
+    const ar = createTranslator(await loadLocaleMessages('ar'));
+    expect(tr('wheelAppearance')).toBe('Tekerlek Görünümü');
+    expect(tr('quicklook')).toBe('Hızlı Önizleme');
+    expect(ar('settings')).toBe('الإعدادات');
+    expect(getLanguageDirection('ar')).toBe('rtl');
+    expect(getLanguageDirection('fa')).toBe('rtl');
+    expect(getLanguageDirection('tr')).toBe('ltr');
   });
 });
 
