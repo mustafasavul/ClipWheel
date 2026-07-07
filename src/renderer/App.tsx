@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -8,6 +8,7 @@ import {
   Copy,
   Eye,
   File,
+  Globe2,
   Heart,
   Image,
   Link,
@@ -41,6 +42,7 @@ import sanitizeHtml from 'sanitize-html';
 import QRCode from 'qrcode';
 import type { ClipboardItem, ClipboardItemType, HistoryQuery, Settings } from '../shared/types';
 import { defaultSettings } from '../shared/settings';
+import { createTranslator, getLanguageLocale, languageOptions, resolveLanguage, type I18nKey, type LanguageCode, type Translator } from '../shared/i18n';
 import { appVersion } from '../shared/version';
 import { getSegmentIndex } from '../shared/radialGeometry';
 import { transformText, type TextAction } from '../shared/textActions';
@@ -59,17 +61,36 @@ hljs.registerLanguage('shell', bash);
 hljs.registerLanguage('python', python);
 
 const typeOptions: Array<ClipboardItemType | 'all'> = ['all', 'plain_text', 'rich_text', 'code', 'url', 'image', 'file_reference', 'command'];
-const tabs = ['General', 'Appearance', 'Clipboard', 'Privacy', 'Cleanup', 'Shortcuts', 'Advanced'] as const;
+const settingsTabs = [
+  { id: 'general', labelKey: 'general' },
+  { id: 'wheelAppearance', labelKey: 'wheelAppearance' },
+  { id: 'clipboard', labelKey: 'clipboard' },
+  { id: 'privacy', labelKey: 'privacy' },
+  { id: 'cleanup', labelKey: 'cleanup' },
+  { id: 'shortcuts', labelKey: 'shortcuts' },
+  { id: 'advanced', labelKey: 'advanced' },
+] as const;
+type SettingsTabId = (typeof settingsTabs)[number]['id'];
 const defaultPageSize = 10;
 const queryClient = new QueryClient();
 const openWheelShortcut = isMacPlatform() ? 'Cmd+Shift+V' : 'Ctrl+Shift+V';
-const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
+const dateTimeFormatters = new Map<string, Intl.DateTimeFormat>();
+
+interface I18nView {
+  language: LanguageCode;
+  locale: string;
+  t: Translator;
+}
+
+const I18nContext = React.createContext<I18nView>({
+  language: 'en',
+  locale: 'en-US',
+  t: createTranslator('en'),
 });
+
+function useI18n(): I18nView {
+  return use(I18nContext);
+}
 
 function App() {
   const params = new URLSearchParams(window.location.search);
@@ -86,7 +107,7 @@ function MainSurface() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [totalItems, setTotalItems] = useState(0);
-  const [tab, setTab] = useState<(typeof tabs)[number]>('General');
+  const [tab, setTab] = useState<SettingsTabId>('general');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const refreshRef = useRef<() => void>(() => undefined);
@@ -95,8 +116,12 @@ function MainSurface() {
   const pagedQuery = useMemo(() => ({ ...query, limit: pageSize, offset: (page - 1) * pageSize }), [page, pageSize, query]);
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const resolvedTheme = useResolvedTheme(settings.theme);
+  const language = resolveLanguage(settings.language);
+  const i18n = useMemo<I18nView>(() => ({ language, locale: getLanguageLocale(language), t: createTranslator(language) }), [language]);
+  const { t } = i18n;
 
   useApplyTheme(resolvedTheme);
+  useApplyLanguage(language);
 
   const refresh = useCallback(async () => {
     try {
@@ -110,11 +135,11 @@ function MainSurface() {
       }
       setSelectedId((current) => current && nextItems.some((item) => item.id === current) ? current : nextItems[0]?.id ?? null);
     } catch (refreshError) {
-      setError(refreshError instanceof Error ? refreshError.message : 'Unable to load ClipWheel data.');
+      setError(refreshError instanceof Error ? refreshError.message : t('unableToLoadClipWheelData'));
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, pagedQuery, query]);
+  }, [page, pageSize, pagedQuery, query, t]);
 
   useEffect(() => {
     refreshRef.current = () => void refresh();
@@ -147,25 +172,31 @@ function MainSurface() {
     setSettings(next);
   };
 
+  const openWheelAppearanceSettings = () => {
+    setView('settings');
+    setTab('wheelAppearance');
+  };
+
   return (
+    <I18nContext.Provider value={i18n}>
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand-mark">
           <div className="brand-wheel"><Clipboard size={21} /></div>
           <div>
             <strong>ClipWheel</strong>
-            <span>Local clipboard wheel</span>
+            <span>{t('localClipboardWheel')}</span>
           </div>
         </div>
-        <button type="button" className={`nav-button ${view === 'history' ? 'active' : ''}`} onClick={() => setView('history')}><Clipboard size={18} /> History</button>
-        <button type="button" className={`nav-button ${view === 'settings' ? 'active' : ''}`} onClick={() => setView('settings')}><SettingsIcon size={18} /> Settings</button>
-        <button type="button" className="nav-button" onClick={() => void clipwheelClient.showWindow('wheel')}><Command size={18} /> Open wheel</button>
+        <button type="button" className={`nav-button ${view === 'history' ? 'active' : ''}`} onClick={() => setView('history')}><Clipboard size={18} /> {t('history')}</button>
+        <button type="button" className={`nav-button ${view === 'settings' ? 'active' : ''}`} onClick={() => setView('settings')}><SettingsIcon size={18} /> {t('settings')}</button>
+        <button type="button" className="nav-button" onClick={() => void clipwheelClient.showWindow('wheel')}><Command size={18} /> {t('openWheel')}</button>
         <div className="privacy-note">
           <Shield size={18} />
-          <p>No telemetry, cloud sync, or external services. Data stays in the local Tauri app data folder.</p>
+          <p>{t('privacyNote')}</p>
         </div>
         <div className="sidebar-version">
-          <span>App Version</span>
+          <span>{t('appVersion')}</span>
           <strong>{appVersion.version}</strong>
         </div>
       </aside>
@@ -176,10 +207,13 @@ function MainSurface() {
             <section className="history-pane">
               <header className="section-header">
                 <div>
-                  <p className="eyebrow">Clipboard history</p>
-                  <h1>Recent captures</h1>
+                  <p className="eyebrow">{t('clipboardHistory')}</p>
+                  <h1>{t('recentCaptures')}</h1>
                 </div>
-                <button type="button" className="primary-button" onClick={() => void clipwheelClient.showWindow('wheel')}><Command size={18} /> Wheel</button>
+                <div className="header-actions">
+                  <button type="button" className="secondary-button" onClick={openWheelAppearanceSettings}><Palette size={18} /> {t('customizeWheel')}</button>
+                  <button type="button" className="primary-button" onClick={() => void clipwheelClient.showWindow('wheel')}><Command size={18} /> {t('wheel')}</button>
+                </div>
               </header>
               <Filters query={query} setQuery={setQuery} resetPage={() => setPage(1)} />
               {error && <div className="error-state">{error}</div>}
@@ -207,8 +241,8 @@ function MainSurface() {
           <section className="settings-view">
             <header className="section-header">
               <div>
-                <p className="eyebrow">Preferences</p>
-                <h1>Settings</h1>
+                <p className="eyebrow">{t('preferences')}</p>
+                <h1>{t('settings')}</h1>
               </div>
             </header>
             <SettingsPanel settings={settings} updateSettings={updateSettings} activeTab={tab} setActiveTab={setTab} onRefresh={refresh} />
@@ -216,10 +250,12 @@ function MainSurface() {
         )}
       </main>
     </div>
+    </I18nContext.Provider>
   );
 }
 
 function Filters({ query, setQuery, resetPage }: { query: HistoryQuery; setQuery: React.Dispatch<React.SetStateAction<HistoryQuery>>; resetPage: () => void }) {
+  const { t } = useI18n();
   const updateQuery = (patch: Partial<HistoryQuery>) => {
     resetPage();
     setQuery((current) => ({ ...current, ...patch }));
@@ -229,22 +265,22 @@ function Filters({ query, setQuery, resetPage }: { query: HistoryQuery; setQuery
     <div className="filters">
       <label className="search-field">
         <Search size={17} />
-        <input value={query.search ?? ''} onChange={(event) => updateQuery({ search: event.target.value })} placeholder="Search title, preview, URL" />
+        <input value={query.search ?? ''} onChange={(event) => updateQuery({ search: event.target.value })} placeholder={t('searchPlaceholder')} />
       </label>
-      <select aria-label="Clipboard type filter" value={query.type ?? 'all'} onChange={(event) => updateQuery({ type: event.target.value as ClipboardItemType | 'all' })}>
-        {typeOptions.map((type) => <option key={type} value={type}>{labelForType(type)}</option>)}
+      <select aria-label={t('clipboard')} value={query.type ?? 'all'} onChange={(event) => updateQuery({ type: event.target.value as ClipboardItemType | 'all' })}>
+        {typeOptions.map((type) => <option key={type} value={type}>{labelForType(type, t)}</option>)}
       </select>
-      <select aria-label="Clipboard date filter" value={query.dateFilter ?? 'all'} onChange={(event) => updateQuery({ dateFilter: event.target.value as HistoryQuery['dateFilter'] })}>
-        <option value="all">All dates</option>
-        <option value="today">Today</option>
-        <option value="last7">Last 7 days</option>
-        <option value="last30">Last 30 days</option>
-        <option value="custom">Custom</option>
+      <select aria-label={t('allDates')} value={query.dateFilter ?? 'all'} onChange={(event) => updateQuery({ dateFilter: event.target.value as HistoryQuery['dateFilter'] })}>
+        <option value="all">{t('allDates')}</option>
+        <option value="today">{t('today')}</option>
+        <option value="last7">{t('last7Days')}</option>
+        <option value="last30">{t('last30Days')}</option>
+        <option value="custom">{t('custom')}</option>
       </select>
       {query.dateFilter === 'custom' && (
         <>
-          <input aria-label="Start date" type="date" onChange={(event) => updateQuery({ startDate: new Date(event.target.value).toISOString() })} />
-          <input aria-label="End date" type="date" onChange={(event) => updateQuery({ endDate: new Date(event.target.value).toISOString() })} />
+          <input aria-label={t('startDate')} type="date" onChange={(event) => updateQuery({ startDate: new Date(event.target.value).toISOString() })} />
+          <input aria-label={t('endDate')} type="date" onChange={(event) => updateQuery({ endDate: new Date(event.target.value).toISOString() })} />
         </>
       )}
     </div>
@@ -259,34 +295,36 @@ function Pagination({ page, pageSize, totalItems, totalPages, setPage, setPageSi
   setPage: React.Dispatch<React.SetStateAction<number>>;
   setPageSize: (pageSize: number) => void;
 }) {
+  const { t } = useI18n();
   const start = (page - 1) * pageSize + 1;
   const end = Math.min(totalItems, page * pageSize);
   return (
     <div className="pagination-bar">
       <span>{start}-{end} / {totalItems}</span>
       <div className="pagination-controls">
-        <select aria-label="Items per page" value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
+        <select aria-label={t('itemsPerPage')} value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
           <option value={10}>10</option>
           <option value={25}>25</option>
           <option value={50}>50</option>
         </select>
-        <button type="button" onClick={() => setPage(1)} disabled={page === 1}>First</button>
-        <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1}>Prev</button>
+        <button type="button" onClick={() => setPage(1)} disabled={page === 1}>{t('first')}</button>
+        <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1}>{t('prev')}</button>
         <strong>{page} / {totalPages}</strong>
-        <button type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page === totalPages}>Next</button>
-        <button type="button" onClick={() => setPage(totalPages)} disabled={page === totalPages}>Last</button>
+        <button type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page === totalPages}>{t('next')}</button>
+        <button type="button" onClick={() => setPage(totalPages)} disabled={page === totalPages}>{t('last')}</button>
       </div>
     </div>
   );
 }
 
 function HistoryList({ items, selectedId, onSelect, onRefresh }: { items: ClipboardItem[]; selectedId: string | null; onSelect: (id: string) => void; onRefresh: () => Promise<void> }) {
+  const { t } = useI18n();
   if (!items.length) {
     return (
       <div className="empty-state">
         <Clipboard size={38} />
-        <h2>No clipboard items yet</h2>
-        <p>Copy text, code, a URL, a screenshot, or a file path. Captures appear here automatically.</p>
+        <h2>{t('noClipboardItems')}</h2>
+        <p>{t('noClipboardItemsDescription')}</p>
       </div>
     );
   }
@@ -300,10 +338,10 @@ function HistoryList({ items, selectedId, onSelect, onRefresh }: { items: Clipbo
             <small>{item.previewText}</small>
           </span>
           <span className="row-actions" onClick={(event) => event.stopPropagation()}>
-            <IconButton label="Copy" onClick={async () => { await clipwheelClient.copyItem(item.id); await onRefresh(); }}><Copy size={16} /></IconButton>
-            <IconButton label={item.isPinned ? 'Unpin' : 'Pin'} onClick={async () => { await clipwheelClient.togglePin(item.id); await onRefresh(); }}>{item.isPinned ? <PinOff size={16} /> : <Pin size={16} />}</IconButton>
-            <IconButton label={item.isFavorite ? 'Unfavorite' : 'Favorite'} onClick={async () => { await clipwheelClient.toggleFavorite(item.id); await onRefresh(); }}><Heart size={16} fill={item.isFavorite ? 'currentColor' : 'none'} /></IconButton>
-            <IconButton label="Delete" onClick={async () => { await clipwheelClient.deleteItem(item.id); await onRefresh(); }}><Trash2 size={16} /></IconButton>
+            <IconButton label={t('copy')} onClick={async () => { await clipwheelClient.copyItem(item.id); await onRefresh(); }}><Copy size={16} /></IconButton>
+            <IconButton label={item.isPinned ? t('unpin') : t('pin')} onClick={async () => { await clipwheelClient.togglePin(item.id); await onRefresh(); }}>{item.isPinned ? <PinOff size={16} /> : <Pin size={16} />}</IconButton>
+            <IconButton label={item.isFavorite ? t('unfavorite') : t('favorite')} onClick={async () => { await clipwheelClient.toggleFavorite(item.id); await onRefresh(); }}><Heart size={16} fill={item.isFavorite ? 'currentColor' : 'none'} /></IconButton>
+            <IconButton label={t('delete')} onClick={async () => { await clipwheelClient.deleteItem(item.id); await onRefresh(); }}><Trash2 size={16} /></IconButton>
           </span>
         </button>
       ))}
@@ -312,6 +350,7 @@ function HistoryList({ items, selectedId, onSelect, onRefresh }: { items: Clipbo
 }
 
 function PreviewPanel({ item, onRefresh, resolvedTheme }: { item: ClipboardItem | null; onRefresh: () => Promise<void>; resolvedTheme: ResolvedTheme }) {
+  const { t } = useI18n();
   const [qr, setQr] = useState<{ itemId: string; value: string } | null>(null);
   const [regexPattern, setRegexPattern] = useState('');
   const [regexReplacement, setRegexReplacement] = useState('');
@@ -320,8 +359,8 @@ function PreviewPanel({ item, onRefresh, resolvedTheme }: { item: ClipboardItem 
     return (
       <div className="preview-panel empty-state">
         <Eye size={34} />
-        <h2>Select an item</h2>
-        <p>The detail panel shows sanitized previews, metadata, transformations, and QR actions.</p>
+        <h2>{t('selectAnItem')}</h2>
+        <p>{t('selectAnItemDescription')}</p>
       </div>
     );
   }
@@ -342,39 +381,39 @@ function PreviewPanel({ item, onRefresh, resolvedTheme }: { item: ClipboardItem 
     <div className="preview-panel">
       <header className="preview-header">
         <div>
-          <p className="eyebrow">{labelForType(item.type)}</p>
+          <p className="eyebrow">{labelForType(item.type, t)}</p>
           <h2>{item.title}</h2>
         </div>
-        <button type="button" className="primary-button" onClick={() => void clipwheelClient.copyItem(item.id)}><Copy size={17} /> Copy</button>
+        <button type="button" className="primary-button" onClick={() => void clipwheelClient.copyItem(item.id)}><Copy size={17} /> {t('copy')}</button>
       </header>
       <PreviewContent item={item} />
       <ItemMetadata item={item} />
       {canTransform && (
         <div className="tool-strip">
-          <IconButton label="Uppercase" onClick={() => void applyAction({ type: 'uppercase' }, 'Uppercase transform')}><Type size={16} /></IconButton>
-          <IconButton label="Lowercase" onClick={() => void applyAction({ type: 'lowercase' }, 'Lowercase transform')}><Type size={16} /></IconButton>
-          <IconButton label="Title case" onClick={() => void applyAction({ type: 'titlecase' }, 'Title case transform')}><Wand2 size={16} /></IconButton>
-          <IconButton label="Trim" onClick={() => void applyAction({ type: 'trim' }, 'Trimmed text')}><X size={16} /></IconButton>
-          <IconButton label="Dedupe spaces" onClick={() => void applyAction({ type: 'dedupe_spaces' }, 'Space-normalized text')}><Braces size={16} /></IconButton>
-          <IconButton label="Slugify" onClick={() => void applyAction({ type: 'slugify' }, 'Slugified text')}><Link size={16} /></IconButton>
-          <IconButton label="JSON pretty" onClick={() => void applyAction({ type: 'json_pretty' }, 'Pretty JSON')}><Braces size={16} /></IconButton>
-          <IconButton label="JSON minify" onClick={() => void applyAction({ type: 'json_minify' }, 'Minified JSON')}><Braces size={16} /></IconButton>
-          <IconButton label="QR code" onClick={() => void createQr()}><QrCode size={16} /></IconButton>
+          <IconButton label={t('uppercase')} onClick={() => void applyAction({ type: 'uppercase' }, t('uppercaseTitle'))}><Type size={16} /></IconButton>
+          <IconButton label={t('lowercase')} onClick={() => void applyAction({ type: 'lowercase' }, t('lowercaseTitle'))}><Type size={16} /></IconButton>
+          <IconButton label={t('titleCase')} onClick={() => void applyAction({ type: 'titlecase' }, t('titleCaseTitle'))}><Wand2 size={16} /></IconButton>
+          <IconButton label={t('trim')} onClick={() => void applyAction({ type: 'trim' }, t('trimmedTitle'))}><X size={16} /></IconButton>
+          <IconButton label={t('dedupeSpaces')} onClick={() => void applyAction({ type: 'dedupe_spaces' }, t('spaceNormalizedTitle'))}><Braces size={16} /></IconButton>
+          <IconButton label={t('slugify')} onClick={() => void applyAction({ type: 'slugify' }, t('slugifiedTitle'))}><Link size={16} /></IconButton>
+          <IconButton label={t('jsonPretty')} onClick={() => void applyAction({ type: 'json_pretty' }, t('jsonPrettyTitle'))}><Braces size={16} /></IconButton>
+          <IconButton label={t('jsonMinify')} onClick={() => void applyAction({ type: 'json_minify' }, t('jsonMinifyTitle'))}><Braces size={16} /></IconButton>
+          <IconButton label={t('qrCode')} onClick={() => void createQr()}><QrCode size={16} /></IconButton>
         </div>
       )}
       {canTransform && (
         <div className="regex-row">
-          <input aria-label="Regex pattern" placeholder="Regex pattern" value={regexPattern} onChange={(event) => setRegexPattern(event.target.value)} />
-          <input aria-label="Regex replacement" placeholder="Replacement" value={regexReplacement} onChange={(event) => setRegexReplacement(event.target.value)} />
-          <button type="button" onClick={() => void applyAction({ type: 'regex_replace', pattern: regexPattern, replacement: regexReplacement }, 'Regex transform')}>Save</button>
+          <input aria-label={t('regexPattern')} placeholder={t('regexPattern')} value={regexPattern} onChange={(event) => setRegexPattern(event.target.value)} />
+          <input aria-label={t('regexReplacement')} placeholder={t('regexReplacement')} value={regexReplacement} onChange={(event) => setRegexReplacement(event.target.value)} />
+          <button type="button" onClick={() => void applyAction({ type: 'regex_replace', pattern: regexPattern, replacement: regexReplacement }, t('regexTransformTitle'))}>{t('save')}</button>
         </div>
       )}
       {currentQr && (
         <div className="modal-layer">
-          <button type="button" className="modal-backdrop" aria-label="Close QR modal" onClick={() => setQr(null)} />
+          <button type="button" className="modal-backdrop" aria-label={t('back')} onClick={() => setQr(null)} />
           <div className="qr-modal" onClick={(event) => event.stopPropagation()}>
-            <img src={currentQr} alt="QR for selected clipboard content" />
-            <a className="secondary-button" download="clipwheel-qr.png" href={currentQr}>Save QR image</a>
+            <img src={currentQr} alt={t('qrCode')} />
+            <a className="secondary-button" download="clipwheel-qr.png" href={currentQr}>{t('saveQrImage')}</a>
           </div>
         </div>
       )}
@@ -383,19 +422,20 @@ function PreviewPanel({ item, onRefresh, resolvedTheme }: { item: ClipboardItem 
 }
 
 function ItemMetadata({ item }: { item: ClipboardItem }) {
+  const { locale, t } = useI18n();
   const length = getContentLength(item);
   const lines = getLineCount(item);
-  const formatLabels = formatInfoLabels(item);
-  const signalLabels = item.contentSignals.map(labelForSignal);
+  const formatLabels = formatInfoLabels(item, t);
+  const signalLabels = item.contentSignals.map((signal) => labelForSignal(signal, t));
   const details = [
-    { label: 'Size', value: formatBytes(item.sizeBytes) },
-    { label: 'Length', value: length === null ? 'N/A' : `${length.toLocaleString()} chars` },
-    { label: 'Lines', value: lines === null ? 'N/A' : lines.toLocaleString() },
-    { label: 'Files', value: item.filePaths.length.toLocaleString() },
-    { label: 'Clipboard formats', value: formatLabels.length ? formatLabels.join(', ') : 'Unknown' },
-    { label: 'Detected content', value: signalLabels.length ? signalLabels.join(', ') : 'None' },
-    { label: 'Created', value: formatDateTime(item.createdAt) },
-    { label: 'Last used', value: item.lastUsedAt ? formatDateTime(item.lastUsedAt) : 'Never' },
+    { label: t('size'), value: formatBytes(item.sizeBytes, locale, t) },
+    { label: t('length'), value: length === null ? t('notAvailable') : `${length.toLocaleString(locale)} ${t('chars')}` },
+    { label: t('lines'), value: lines === null ? t('notAvailable') : lines.toLocaleString(locale) },
+    { label: t('files'), value: item.filePaths.length.toLocaleString(locale) },
+    { label: t('clipboardFormats'), value: formatLabels.length ? formatLabels.join(', ') : t('unknown') },
+    { label: t('detectedContent'), value: signalLabels.length ? signalLabels.join(', ') : t('none') },
+    { label: t('created'), value: formatDateTime(item.createdAt, locale) },
+    { label: t('lastUsed'), value: item.lastUsedAt ? formatDateTime(item.lastUsedAt, locale) : t('never') },
   ];
 
   return (
@@ -409,14 +449,14 @@ function ItemMetadata({ item }: { item: ClipboardItem }) {
         ))}
       </dl>
       {(formatLabels.length > 0 || signalLabels.length > 0) && (
-        <div className="metadata-badges" aria-label="Clipboard metadata">
+        <div className="metadata-badges" aria-label={t('clipboardMetadata')}>
           {formatLabels.map((label) => <span key={`format-${label}`}>{label}</span>)}
           {signalLabels.map((label) => <span key={`signal-${label}`}>{label}</span>)}
         </div>
       )}
       {item.formatInfo.rawFormats.length > 0 && (
         <details className="raw-formats">
-          <summary>Raw clipboard formats</summary>
+          <summary>{t('rawClipboardFormats')}</summary>
           <code>{item.formatInfo.rawFormats.join(', ')}</code>
         </details>
       )}
@@ -425,6 +465,7 @@ function ItemMetadata({ item }: { item: ClipboardItem }) {
 }
 
 function PreviewContent({ item }: { item: ClipboardItem }) {
+  const { t } = useI18n();
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
 
@@ -440,20 +481,20 @@ function PreviewContent({ item }: { item: ClipboardItem }) {
       if (dataUrl) {
         setImageDataUrl(dataUrl);
       } else {
-        setImageError('Image file is no longer available on disk.');
+        setImageError(t('imageFileMissing'));
       }
     }).catch((error: unknown) => {
-      if (!disposed) setImageError(error instanceof Error ? error.message : 'Unable to load image preview.');
+      if (!disposed) setImageError(error instanceof Error ? error.message : t('unableToLoadImagePreview'));
     });
     return () => {
       disposed = true;
     };
-  }, [item.id, item.type]);
+  }, [item.id, item.type, t]);
 
   if (item.type === 'image') {
     if (imageError) return <div className="image-preview image-preview-state">{imageError}</div>;
-    if (!imageDataUrl) return <div className="image-preview image-preview-state">Loading image preview...</div>;
-    return <img className="image-preview" src={imageDataUrl} alt="Clipboard preview" />;
+    if (!imageDataUrl) return <div className="image-preview image-preview-state">{t('loadingImagePreview')}</div>;
+    return <img className="image-preview" src={imageDataUrl} alt={t('clipboardPreview')} />;
   }
   if (item.type === 'file_reference') {
     return <pre className="preview-code">{item.filePaths.join('\n')}</pre>;
@@ -477,26 +518,28 @@ function PreviewContent({ item }: { item: ClipboardItem }) {
 function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRefresh }: {
   settings: Settings;
   updateSettings: (patch: Partial<Settings>) => Promise<void>;
-  activeTab: (typeof tabs)[number];
-  setActiveTab: (tab: (typeof tabs)[number]) => void;
+  activeTab: SettingsTabId;
+  setActiveTab: (tab: SettingsTabId) => void;
   onRefresh: () => Promise<void>;
 }) {
+  const { t } = useI18n();
   return (
     <div className="settings-panel">
-      <div className="tabs">{tabs.map((entry) => <button type="button" className={entry === activeTab ? 'active' : ''} key={entry} onClick={() => setActiveTab(entry)}>{entry}</button>)}</div>
-      {activeTab === 'General' && (
+      <div className="tabs">{settingsTabs.map((entry) => <button type="button" className={entry.id === activeTab ? 'active' : ''} key={entry.id} onClick={() => setActiveTab(entry.id)}>{t(entry.labelKey)}</button>)}</div>
+      {activeTab === 'general' && (
         <SettingsGrid>
-          <Toggle icon={<LogIn size={18} />} label="Start At Login" value={settings.startAtLogin} onChange={(value) => updateSettings({ startAtLogin: value })} />
-          <Toggle icon={<Monitor size={18} />} label="Show Tray Icon" value={settings.showTrayIcon} onChange={(value) => updateSettings({ showTrayIcon: value })} />
-          <SelectSetting icon={<MousePointer2 size={18} />} label="Wheel Position" value={settings.wheelPosition} options={['center', 'cursor']} onChange={(value) => updateSettings({ wheelPosition: value as Settings['wheelPosition'] })} />
-          <SelectSetting icon={settings.theme === 'light' ? <Sun size={18} /> : settings.theme === 'dark' ? <Moon size={18} /> : <Monitor size={18} />} label="Theme" value={settings.theme} options={['system', 'dark', 'light']} onChange={(value) => updateSettings({ theme: value as Settings['theme'] })} />
+          <Toggle icon={<LogIn size={18} />} label={t('startAtLogin')} value={settings.startAtLogin} onChange={(value) => updateSettings({ startAtLogin: value })} />
+          <Toggle icon={<Monitor size={18} />} label={t('showTrayIcon')} value={settings.showTrayIcon} onChange={(value) => updateSettings({ showTrayIcon: value })} />
+          <SelectSetting icon={<MousePointer2 size={18} />} label={t('wheelPosition')} value={settings.wheelPosition} options={['center', 'cursor']} getOptionLabel={(value) => settingOptionLabel(value, t)} onChange={(value) => updateSettings({ wheelPosition: value as Settings['wheelPosition'] })} />
+          <SelectSetting icon={settings.theme === 'light' ? <Sun size={18} /> : settings.theme === 'dark' ? <Moon size={18} /> : <Monitor size={18} />} label={t('theme')} value={settings.theme} options={['system', 'dark', 'light']} getOptionLabel={(value) => settingOptionLabel(value, t)} onChange={(value) => updateSettings({ theme: value as Settings['theme'] })} />
+          <SelectSetting icon={<Globe2 size={18} />} label={t('language')} value={settings.language} options={languageOptions} getOptionLabel={(value) => languageOptionLabel(value, t)} onChange={(value) => updateSettings({ language: value as Settings['language'] })} />
         </SettingsGrid>
       )}
-      {activeTab === 'Appearance' && (
+      {activeTab === 'wheelAppearance' && (
         <div className="appearance-settings">
           <WheelAppearancePreview appearance={settings.wheelAppearance} />
           <div className="preset-panel">
-            <span className="setting-label"><span className="setting-icon"><Palette size={18} /></span>Color Presets</span>
+            <span className="setting-label"><span className="setting-icon"><Palette size={18} /></span>{t('colorPresets')}</span>
             <div className="preset-grid">
               {wheelAppearancePresets.map((preset) => (
                 <button
@@ -514,65 +557,65 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
             </div>
           </div>
           <SettingsGrid>
-            <SelectSetting icon={<Palette size={18} />} label="Color Mode" value={settings.wheelAppearance.colorMode} options={['palette', 'single']} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, colorMode: value as Settings['wheelAppearance']['colorMode'] } })} />
-            <ColorSetting label="Segment Color" value={settings.wheelAppearance.segmentColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, segmentColor: value } })} />
-            <RangeSetting label="Segment Opacity" value={settings.wheelAppearance.segmentOpacity} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, segmentOpacity: value } })} />
-            <ColorSetting label="Active Slice" value={settings.wheelAppearance.activeColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, activeColor: value } })} />
-            <RangeSetting label="Active Opacity" value={settings.wheelAppearance.activeOpacity} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, activeOpacity: value } })} />
-            <ColorSetting label="Active Lines" value={settings.wheelAppearance.activeLineColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, activeLineColor: value } })} />
-            <ColorSetting label="Ring Lines" value={settings.wheelAppearance.ringLineColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, ringLineColor: value } })} />
-            <ColorSetting label="Center Panel" value={settings.wheelAppearance.panelColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, panelColor: value } })} />
-            <RangeSetting label="Panel Opacity" value={settings.wheelAppearance.panelOpacity} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, panelOpacity: value } })} />
-            <ColorSetting label="Icon Background" value={settings.wheelAppearance.iconBackgroundColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, iconBackgroundColor: value } })} />
-            <ColorSetting label="Label Color" value={settings.wheelAppearance.labelColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, labelColor: value } })} />
-            <button type="button" className="secondary-button" onClick={() => updateSettings({ wheelAppearance: defaultWheelAppearance })}><Palette size={17} /> Reset Appearance</button>
+            <SelectSetting icon={<Palette size={18} />} label={t('colorMode')} value={settings.wheelAppearance.colorMode} options={['palette', 'single']} getOptionLabel={(value) => settingOptionLabel(value, t)} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, colorMode: value as Settings['wheelAppearance']['colorMode'] } })} />
+            <ColorSetting label={t('segmentColor')} value={settings.wheelAppearance.segmentColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, segmentColor: value } })} />
+            <RangeSetting label={t('segmentOpacity')} value={settings.wheelAppearance.segmentOpacity} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, segmentOpacity: value } })} />
+            <ColorSetting label={t('activeSlice')} value={settings.wheelAppearance.activeColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, activeColor: value } })} />
+            <RangeSetting label={t('activeOpacity')} value={settings.wheelAppearance.activeOpacity} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, activeOpacity: value } })} />
+            <ColorSetting label={t('activeLines')} value={settings.wheelAppearance.activeLineColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, activeLineColor: value } })} />
+            <ColorSetting label={t('ringLines')} value={settings.wheelAppearance.ringLineColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, ringLineColor: value } })} />
+            <ColorSetting label={t('centerPanel')} value={settings.wheelAppearance.panelColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, panelColor: value } })} />
+            <RangeSetting label={t('panelOpacity')} value={settings.wheelAppearance.panelOpacity} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, panelOpacity: value } })} />
+            <ColorSetting label={t('iconBackground')} value={settings.wheelAppearance.iconBackgroundColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, iconBackgroundColor: value } })} />
+            <ColorSetting label={t('labelColor')} value={settings.wheelAppearance.labelColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, labelColor: value } })} />
+            <button type="button" className="secondary-button" onClick={() => updateSettings({ wheelAppearance: defaultWheelAppearance })}><Palette size={17} /> {t('resetAppearance')}</button>
           </SettingsGrid>
         </div>
       )}
-      {activeTab === 'Clipboard' && (
+      {activeTab === 'clipboard' && (
         <SettingsGrid>
-          <Toggle icon={<Type size={18} />} label="Capture Plain Text" value={settings.capturePlainText} onChange={(value) => updateSettings({ capturePlainText: value })} />
-          <Toggle icon={<Star size={18} />} label="Capture Rich Text" value={settings.captureRichText} onChange={(value) => updateSettings({ captureRichText: value })} />
-          <Toggle icon={<Image size={18} />} label="Capture Images" value={settings.captureImages} onChange={(value) => updateSettings({ captureImages: value })} />
-          <Toggle icon={<File size={18} />} label="Capture Files" value={settings.captureFiles} onChange={(value) => updateSettings({ captureFiles: value })} />
-          <Toggle icon={<Braces size={18} />} label="Capture Code" value={settings.captureCode} onChange={(value) => updateSettings({ captureCode: value })} />
-          <Toggle icon={<Copy size={18} />} label="Ignore Duplicates" value={settings.ignoreDuplicates} onChange={(value) => updateSettings({ ignoreDuplicates: value })} />
-          <NumberSetting label="Max History Items" value={settings.maxHistoryItems} onChange={(value) => updateSettings({ maxHistoryItems: value })} />
-          <NumberSetting label="Max Image Size MB" value={settings.maxImageSizeMb} onChange={(value) => updateSettings({ maxImageSizeMb: value })} />
+          <Toggle icon={<Type size={18} />} label={t('capturePlainText')} value={settings.capturePlainText} onChange={(value) => updateSettings({ capturePlainText: value })} />
+          <Toggle icon={<Star size={18} />} label={t('captureRichText')} value={settings.captureRichText} onChange={(value) => updateSettings({ captureRichText: value })} />
+          <Toggle icon={<Image size={18} />} label={t('captureImages')} value={settings.captureImages} onChange={(value) => updateSettings({ captureImages: value })} />
+          <Toggle icon={<File size={18} />} label={t('captureFiles')} value={settings.captureFiles} onChange={(value) => updateSettings({ captureFiles: value })} />
+          <Toggle icon={<Braces size={18} />} label={t('captureCode')} value={settings.captureCode} onChange={(value) => updateSettings({ captureCode: value })} />
+          <Toggle icon={<Copy size={18} />} label={t('ignoreDuplicates')} value={settings.ignoreDuplicates} onChange={(value) => updateSettings({ ignoreDuplicates: value })} />
+          <NumberSetting label={t('maxHistoryItems')} value={settings.maxHistoryItems} onChange={(value) => updateSettings({ maxHistoryItems: value })} />
+          <NumberSetting label={t('maxImageSizeMb')} value={settings.maxImageSizeMb} onChange={(value) => updateSettings({ maxImageSizeMb: value })} />
         </SettingsGrid>
       )}
-      {activeTab === 'Privacy' && (
+      {activeTab === 'privacy' && (
         <SettingsGrid>
-          <Toggle icon={<Shield size={18} />} label="Pause Capture" value={settings.pauseCapture} onChange={(value) => updateSettings({ pauseCapture: value })} />
-          <Toggle icon={<Trash2 size={18} />} label="Clear Clipboard On Quit" value={settings.clearClipboardOnQuit} onChange={(value) => updateSettings({ clearClipboardOnQuit: value })} />
-          <label className="setting-field wide"><span className="setting-label"><span className="setting-icon"><Shield size={18} /></span>Ignored Source Apps</span><textarea value={settings.ignoredSourceApps.join('\n')} onChange={(event) => updateSettings({ ignoredSourceApps: event.target.value.split('\n').flatMap((line) => {
+          <Toggle icon={<Shield size={18} />} label={t('pauseCapture')} value={settings.pauseCapture} onChange={(value) => updateSettings({ pauseCapture: value })} />
+          <Toggle icon={<Trash2 size={18} />} label={t('clearClipboardOnQuit')} value={settings.clearClipboardOnQuit} onChange={(value) => updateSettings({ clearClipboardOnQuit: value })} />
+          <label className="setting-field wide"><span className="setting-label"><span className="setting-icon"><Shield size={18} /></span>{t('ignoredSourceApps')}</span><textarea value={settings.ignoredSourceApps.join('\n')} onChange={(event) => updateSettings({ ignoredSourceApps: event.target.value.split('\n').flatMap((line) => {
             const trimmed = line.trim();
             return trimmed ? [trimmed] : [];
           }) })} /></label>
         </SettingsGrid>
       )}
-      {activeTab === 'Cleanup' && (
+      {activeTab === 'cleanup' && (
         <SettingsGrid>
-          <NumberSetting label="Auto Delete After Days" value={settings.autoDeleteAfterDays} onChange={(value) => updateSettings({ autoDeleteAfterDays: value })} />
-          <button type="button" className="danger-button" onClick={async () => { if (confirm('Clear all unpinned history?')) { await clipwheelClient.cleanup({ mode: 'unpinned' }); await onRefresh(); } }}>Clear Unpinned</button>
-          <button type="button" className="danger-button" onClick={async () => { if (confirm('Clear all history, excluding pinned items?')) { await clipwheelClient.cleanup({ mode: 'all' }); await onRefresh(); } }}>Clear History</button>
-          <button type="button" className="danger-button" onClick={async () => { if (confirm('Permanently purge soft-deleted items?')) { await clipwheelClient.cleanup({ mode: 'purge_deleted' }); await onRefresh(); } }}>Purge Deleted</button>
+          <NumberSetting label={t('autoDeleteAfterDays')} value={settings.autoDeleteAfterDays} onChange={(value) => updateSettings({ autoDeleteAfterDays: value })} />
+          <button type="button" className="danger-button" onClick={async () => { if (confirm(t('clearUnpinnedConfirm'))) { await clipwheelClient.cleanup({ mode: 'unpinned' }); await onRefresh(); } }}>{t('clearUnpinned')}</button>
+          <button type="button" className="danger-button" onClick={async () => { if (confirm(t('clearAllHistoryConfirm'))) { await clipwheelClient.cleanup({ mode: 'all' }); await onRefresh(); } }}>{t('clearHistory')}</button>
+          <button type="button" className="danger-button" onClick={async () => { if (confirm(t('purgeDeletedConfirm'))) { await clipwheelClient.cleanup({ mode: 'purge_deleted' }); await onRefresh(); } }}>{t('purgeDeleted')}</button>
         </SettingsGrid>
       )}
-      {activeTab === 'Shortcuts' && (
+      {activeTab === 'shortcuts' && (
         <div className="shortcut-list">
-          <span>Open radial wheel</span><kbd>{openWheelShortcut}</kbd>
-          <span>Select wheel item</span><kbd>1-8 / Enter</kbd>
-          <span>Close wheel</span><kbd>Escape</kbd>
+          <span>{t('openRadialWheel')}</span><kbd>{openWheelShortcut}</kbd>
+          <span>{t('selectWheelItem')}</span><kbd>1-8 / Enter</kbd>
+          <span>{t('back')}</span><kbd>Escape</kbd>
         </div>
       )}
-      {activeTab === 'Advanced' && (
+      {activeTab === 'advanced' && (
         <SettingsGrid>
-          <Toggle icon={<Clipboard size={18} />} label="Auto Paste After Restore" value={settings.autoPaste} onChange={(value) => updateSettings({ autoPaste: value })} />
+          <Toggle icon={<Clipboard size={18} />} label={t('autoPasteAfterRestore')} value={settings.autoPaste} onChange={(value) => updateSettings({ autoPaste: value })} />
           <div className="setting-field app-version-card">
-            <span>Updates</span>
-            <strong>{labelFromToken(appVersion.updateMode)}</strong>
-            <small>Install newer local releases over this app.</small>
+            <span>{t('updates')}</span>
+            <strong>{labelFromToken(appVersion.updateMode, t)}</strong>
+            <small>{t('updatesDescription')}</small>
           </div>
         </SettingsGrid>
       )}
@@ -595,8 +638,12 @@ function WheelSurface() {
   const activeAngle = activeIndex * segmentDeg - 90;
   const quickLookSide = Math.cos((activeAngle * Math.PI) / 180) >= 0 ? 'left' : 'right';
   const resolvedTheme = useResolvedTheme(settings.theme);
+  const language = resolveLanguage(settings.language);
+  const i18n = useMemo<I18nView>(() => ({ language, locale: getLanguageLocale(language), t: createTranslator(language) }), [language]);
+  const { t } = i18n;
 
   useApplyTheme(resolvedTheme);
+  useApplyLanguage(language);
 
   useEffect(() => {
     document.documentElement.classList.add('wheel-html');
@@ -680,7 +727,7 @@ function WheelSurface() {
       className="wheel-overlay"
       style={wheelAppearanceStyle(settings.wheelAppearance)}
       role="application"
-      aria-label="ClipWheel radial clipboard wheel"
+      aria-label={t('wheelAria')}
       tabIndex={-1}
       onKeyDown={(event) => {
         if (event.key === 'Shift' || event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
@@ -719,8 +766,8 @@ function WheelSurface() {
               <span className="wheel-segment-content">
                 <span className="wheel-index">{index + 1}</span>
                 <span className="wheel-icon">{item ? iconForType(item.type) : <Clipboard size={22} />}</span>
-                <strong>{item ? item.title : 'Empty'}</strong>
-                <small>{item ? wheelSegmentMeta(item) : 'No item'}</small>
+                <strong>{item ? item.title : t('empty')}</strong>
+                <small>{item ? wheelSegmentMeta(item, i18n) : t('noItem')}</small>
               </span>
             </button>
           );
@@ -728,26 +775,31 @@ function WheelSurface() {
         <div className="wheel-center">
           {activeItem ? (
             <>
-              <span className="type-chip">{labelForType(activeItem.type)}</span>
+              <span className="type-chip">{labelForType(activeItem.type, t)}</span>
               <strong>{activeItem.title}</strong>
-              <small className="wheel-center-meta">{wheelSegmentMeta(activeItem)}</small>
-              <div className="wheel-hints"><span><kbd>Enter</kbd> Apply</span><span><kbd>Esc</kbd> Back</span><span><kbd>Shift</kbd> Quicklook</span></div>
+              <small className="wheel-center-meta">{wheelSegmentMeta(activeItem, i18n)}</small>
+              <div className="wheel-hints"><span><kbd>Enter</kbd> {t('apply')}</span><span><kbd>Esc</kbd> {t('back')}</span><span><kbd>Shift</kbd> {t('quicklook')}</span></div>
             </>
           ) : (
             <>
               <Clipboard size={30} />
-              <strong>No captures</strong>
-              <div className="wheel-hints"><span><kbd>Esc</kbd> Back</span></div>
+              <strong>{t('noCaptures')}</strong>
+              <div className="wheel-hints"><span><kbd>Esc</kbd> {t('back')}</span></div>
             </>
           )}
         </div>
-        {activeItem && isQuickLookVisible && <WheelQuickLook item={activeItem} side={quickLookSide} />}
+        {activeItem && isQuickLookVisible && (
+          <I18nContext.Provider value={i18n}>
+            <WheelQuickLook item={activeItem} side={quickLookSide} />
+          </I18nContext.Provider>
+        )}
       </div>
     </div>
   );
 }
 
 function WheelAppearancePreview({ appearance }: { appearance: Settings['wheelAppearance'] }) {
+  const { t } = useI18n();
   const count = 8;
   const segmentDeg = 360 / count;
   return (
@@ -760,16 +812,16 @@ function WheelAppearancePreview({ appearance }: { appearance: Settings['wheelApp
             <span className="wheel-segment-content">
               <span className="wheel-index">{index + 1}</span>
               <span className="wheel-icon">{index % 3 === 0 ? <Image size={16} /> : <Type size={16} />}</span>
-              <strong>{index === 0 ? 'Selected Clip' : 'Clipboard'}</strong>
-              <small>{index === 0 ? 'Text • now' : 'Item • 5m ago'}</small>
+              <strong>{index === 0 ? t('selectedClip') : t('clipboard')}</strong>
+              <small>{index === 0 ? `${t('plainText')} • ${t('now')}` : `${t('item')} • 5m ago`}</small>
             </span>
           </span>
         ))}
         <div className="wheel-center">
-          <span className="type-chip">Plain Text</span>
-          <strong>Live Preview</strong>
-          <small className="wheel-center-meta">Plain Text • now</small>
-          <div className="wheel-hints"><span><kbd>Enter</kbd> Apply</span><span><kbd>Esc</kbd> Back</span></div>
+          <span className="type-chip">{t('plainText')}</span>
+          <strong>{t('livePreview')}</strong>
+          <small className="wheel-center-meta">{t('plainText')} • {t('now')}</small>
+          <div className="wheel-hints"><span><kbd>Enter</kbd> {t('apply')}</span><span><kbd>Esc</kbd> {t('back')}</span></div>
         </div>
       </div>
     </div>
@@ -780,8 +832,8 @@ function isShiftEvent(event: KeyboardEvent): boolean {
   return event.key === 'Shift' || event.code === 'ShiftLeft' || event.code === 'ShiftRight';
 }
 
-function wheelSegmentMeta(item: ClipboardItem): string {
-  return `${labelForType(item.type)} • ${formatRelativeTime(item.createdAt)}`;
+function wheelSegmentMeta(item: ClipboardItem, i18n: I18nView): string {
+  return `${labelForType(item.type, i18n.t)} • ${formatRelativeTime(item.createdAt, i18n.language, i18n.t)}`;
 }
 
 function useResolvedTheme(theme: Settings['theme']): ResolvedTheme {
@@ -790,7 +842,6 @@ function useResolvedTheme(theme: Settings['theme']): ResolvedTheme {
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => setPrefersDark(media.matches);
-    handleChange();
     media.addEventListener('change', handleChange);
     return () => media.removeEventListener('change', handleChange);
   }, []);
@@ -805,14 +856,21 @@ function useApplyTheme(theme: ResolvedTheme) {
   }, [theme]);
 }
 
+function useApplyLanguage(language: LanguageCode) {
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+}
+
 function WheelQuickLook({ item, side }: { item: ClipboardItem; side: 'left' | 'right' }) {
+  const { locale, t } = useI18n();
   return (
     <aside className={`wheel-quicklook ${side}`}>
-      <span className="type-chip">{labelForType(item.type)}</span>
+      <span className="type-chip">{labelForType(item.type, t)}</span>
       <strong>{item.title}</strong>
       <time className="wheel-quicklook-created" dateTime={item.createdAt}>
-        <span>Created</span>
-        <strong>{formatDateTime(item.createdAt)}</strong>
+        <span>{t('created')}</span>
+        <strong>{formatDateTime(item.createdAt, locale)}</strong>
       </time>
       {item.type === 'image' && <WheelQuickLookImage item={item} />}
       <div className="wheel-quicklook-body">
@@ -825,6 +883,7 @@ function WheelQuickLook({ item, side }: { item: ClipboardItem; side: 'left' | 'r
 }
 
 function WheelQuickLookImage({ item }: { item: ClipboardItem }) {
+  const { t } = useI18n();
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
 
@@ -837,19 +896,19 @@ function WheelQuickLookImage({ item }: { item: ClipboardItem }) {
       if (dataUrl) {
         setImageDataUrl(dataUrl);
       } else {
-        setImageError('Image preview unavailable.');
+        setImageError(t('imagePreviewUnavailable'));
       }
     }).catch((error: unknown) => {
-      if (!disposed) setImageError(error instanceof Error ? error.message : 'Unable to load image preview.');
+      if (!disposed) setImageError(error instanceof Error ? error.message : t('unableToLoadImagePreview'));
     });
     return () => {
       disposed = true;
     };
-  }, [item.id]);
+  }, [item.id, t]);
 
   if (imageError) return <div className="wheel-quicklook-image-state">{imageError}</div>;
-  if (!imageDataUrl) return <div className="wheel-quicklook-image-state">Loading preview...</div>;
-  return <img className="wheel-quicklook-image" src={imageDataUrl} alt="Clipboard quicklook preview" />;
+  if (!imageDataUrl) return <div className="wheel-quicklook-image-state">{t('loadingPreview')}</div>;
+  return <img className="wheel-quicklook-image" src={imageDataUrl} alt={t('clipboardQuicklookPreview')} />;
 }
 
 function SettingsGrid({ children }: { children: React.ReactNode }) {
@@ -891,8 +950,15 @@ function ColorSetting({ label, value, onChange }: { label: string; value: string
   );
 }
 
-function SelectSetting({ icon, label, value, options, onChange }: { icon: React.ReactNode; label: string; value: string; options: string[]; onChange: (value: string) => void }) {
-  return <label className="setting-field"><span className="setting-label"><span className="setting-icon">{icon}</span>{label}</span><select value={value} onChange={(event) => onChange(event.target.value)}>{options.map((option) => <option key={option} value={option}>{labelFromToken(option)}</option>)}</select></label>;
+function SelectSetting({ icon, label, value, options, getOptionLabel, onChange }: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  options: readonly string[];
+  getOptionLabel?: (value: string) => string;
+  onChange: (value: string) => void;
+}) {
+  return <label className="setting-field"><span className="setting-label"><span className="setting-icon">{icon}</span>{label}</span><select value={value} onChange={(event) => onChange(event.target.value)}>{options.map((option) => <option key={option} value={option}>{getOptionLabel ? getOptionLabel(option) : labelFromToken(option)}</option>)}</select></label>;
 }
 
 function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
@@ -916,49 +982,86 @@ function iconForType(type: ClipboardItemType) {
   }
 }
 
-function labelForType(type: ClipboardItemType | 'all'): string {
-  return labelFromToken(type);
+function labelForType(type: ClipboardItemType | 'all', t: Translator): string {
+  const labels: Record<ClipboardItemType | 'all', I18nKey> = {
+    all: 'all',
+    plain_text: 'plainText',
+    rich_text: 'richText',
+    code: 'code',
+    url: 'url',
+    image: 'image',
+    file_reference: 'fileReference',
+    command: 'command',
+  };
+  return t(labels[type]);
 }
 
-function formatInfoLabels(item: ClipboardItem): string[] {
+function formatInfoLabels(item: ClipboardItem, t: Translator): string[] {
   const labels: string[] = [];
-  if (item.formatInfo.hasText) labels.push('Plain text');
+  if (item.formatInfo.hasText) labels.push(t('plainText'));
   if (item.formatInfo.hasHtml) labels.push('HTML');
   if (item.formatInfo.hasRtf) labels.push('RTF');
-  if (item.formatInfo.hasImage) labels.push('Image');
-  if (item.formatInfo.hasFiles) labels.push('Files');
+  if (item.formatInfo.hasImage) labels.push(t('image'));
+  if (item.formatInfo.hasFiles) labels.push(t('files'));
   return labels;
 }
 
-function labelForSignal(signal: ClipboardItem['contentSignals'][number]): string {
+function labelForSignal(signal: ClipboardItem['contentSignals'][number], t: Translator): string {
   switch (signal.kind) {
     case 'json':
       return 'JSON';
     case 'json_fragment':
-      return 'JSON fragment';
+      return t('jsonFragment');
     case 'html':
       return 'HTML';
     case 'url':
       return 'URL';
     case 'email':
-      return 'Email';
+      return t('email');
     case 'hex_color':
-      return signal.metadata?.value ? `Hex ${signal.metadata.value}` : 'Hex color';
+      return signal.metadata?.value ? `Hex ${signal.metadata.value}` : t('hexColor');
     case 'markdown':
-      return 'Markdown';
+      return t('markdown');
     case 'code':
-      return signal.language && signal.language !== 'unknown' ? labelFromToken(signal.language) : 'Code';
+      return signal.language && signal.language !== 'unknown' ? labelFromToken(signal.language, t) : t('code');
     case 'code_block':
-      return 'Code block';
+      return t('codeBlock');
     case 'shell':
-      return 'Shell';
+      return t('shell');
     default:
       return signal.kind;
   }
 }
 
-function labelFromToken(value: string): string {
+function labelFromToken(value: string, t?: Translator): string {
+  if (t) {
+    const key = tokenLabelKey(value);
+    if (key) return t(key);
+  }
   return value.split('_').map((part) => part[0].toUpperCase() + part.slice(1)).join(' ');
+}
+
+function tokenLabelKey(value: string): I18nKey | null {
+  const labels: Record<string, I18nKey> = {
+    system: 'system',
+    dark: 'dark',
+    light: 'light',
+    center: 'center',
+    cursor: 'cursor',
+    palette: 'palette',
+    single: 'single',
+  };
+  return labels[value] ?? null;
+}
+
+function settingOptionLabel(value: string, t: Translator): string {
+  return labelFromToken(value, t);
+}
+
+function languageOptionLabel(value: string, t: Translator): string {
+  if (value === 'en') return t('english');
+  if (value === 'tr') return t('turkish');
+  return t('system');
 }
 
 function safeDomain(url: string): string {
@@ -982,8 +1085,8 @@ function getLineCount(item: ClipboardItem): number | null {
   return value.split(/\r\n|\r|\n/).length;
 }
 
-function formatBytes(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes < 0) return 'N/A';
+function formatBytes(bytes: number, locale: string, t: Translator): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return t('notAvailable');
   if (bytes < 1024) return `${bytes} B`;
   const units = ['KB', 'MB', 'GB'];
   let value = bytes / 1024;
@@ -992,21 +1095,33 @@ function formatBytes(bytes: number): string {
     value /= 1024;
     unitIndex += 1;
   }
-  return `${value.toLocaleString(undefined, { maximumFractionDigits: value >= 10 ? 1 : 2 })} ${units[unitIndex]}`;
+  return `${value.toLocaleString(locale, { maximumFractionDigits: value >= 10 ? 1 : 2 })} ${units[unitIndex]}`;
 }
 
-function formatDateTime(value: string): string {
-  return dateTimeFormatter.format(new Date(value));
+function formatDateTime(value: string, locale: string): string {
+  let formatter = dateTimeFormatters.get(locale);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    dateTimeFormatters.set(locale, formatter);
+  }
+  return formatter.format(new Date(value));
 }
 
-function formatRelativeTime(value: string): string {
+function formatRelativeTime(value: string, language: LanguageCode, t: Translator): string {
   const deltaSeconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
-  if (deltaSeconds < 60) return 'now';
+  if (deltaSeconds < 60) return t('now');
   const deltaMinutes = Math.floor(deltaSeconds / 60);
-  if (deltaMinutes < 60) return `${deltaMinutes}m ago`;
+  if (deltaMinutes < 60) return language === 'tr' ? `${deltaMinutes} dk önce` : `${deltaMinutes}m ago`;
   const deltaHours = Math.floor(deltaMinutes / 60);
-  if (deltaHours < 24) return `${deltaHours}h ago`;
-  return `${Math.floor(deltaHours / 24)}d ago`;
+  if (deltaHours < 24) return language === 'tr' ? `${deltaHours} sa önce` : `${deltaHours}h ago`;
+  const deltaDays = Math.floor(deltaHours / 24);
+  return language === 'tr' ? `${deltaDays} gün önce` : `${deltaDays}d ago`;
 }
 
 function isMacPlatform(): boolean {

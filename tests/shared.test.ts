@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { matchesCleanupRequest } from '../src/shared/cleanupFilters';
 import { detectClipboardType, detectCodeLanguage, detectContentSignals, isUrl, normalizeClipboardFormats } from '../src/shared/detection';
 import { hashContent, normalizeContent } from '../src/shared/hash';
+import { createTranslator, resolveLanguage } from '../src/shared/i18n';
 import { getSegmentIndex } from '../src/shared/radialGeometry';
+import { defaultSettings } from '../src/shared/settings';
 import { qrColorsForTheme, resolveTheme } from '../src/shared/theme';
 import type { ClipboardItem } from '../src/shared/types';
 import { applyWheelAppearancePreset, defaultWheelAppearance, normalizeOpacity, wheelAppearancePresets, wheelAppearanceStyle, wheelSegmentStyle } from '../src/shared/wheelAppearance';
@@ -128,6 +130,20 @@ describe('theme resolution', () => {
   it('keeps QR colors high contrast for both themes', () => {
     expect(qrColorsForTheme('dark')).toMatchObject({ dark: '#182018', light: '#f4f7ef' });
     expect(qrColorsForTheme('light')).toMatchObject({ dark: '#172018', light: '#fbfcf8' });
+  });
+});
+
+describe('localization', () => {
+  it('defaults language selection to system and resolves supported locales', () => {
+    expect(defaultSettings.language).toBe('system');
+    expect(resolveLanguage('system', 'tr-TR')).toBe('tr');
+    expect(resolveLanguage('system', 'de-DE')).toBe('en');
+    expect(resolveLanguage('en', 'tr-TR')).toBe('en');
+  });
+
+  it('translates app-owned labels in English and Turkish', () => {
+    expect(createTranslator('en')('wheelAppearance')).toBe('Wheel Appearance');
+    expect(createTranslator('tr')('customizeWheel')).toBe('Tekerleği Özelleştir');
   });
 });
 

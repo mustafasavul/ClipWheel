@@ -7,6 +7,7 @@ export const defaultSettings: Settings = {
   wheelPosition: 'center',
   wheelItemCount: 8,
   theme: 'system',
+  language: 'system',
   wheelAppearance: defaultWheelAppearance,
   capturePlainText: true,
   captureRichText: true,

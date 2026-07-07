@@ -82,6 +82,8 @@ pub struct Settings {
     pub wheel_position: String,
     pub wheel_item_count: i64,
     pub theme: String,
+    #[serde(default = "default_language")]
+    pub language: String,
     pub wheel_appearance: WheelAppearanceSettings,
     pub capture_plain_text: bool,
     pub capture_rich_text: bool,
@@ -96,6 +98,10 @@ pub struct Settings {
     pub ignored_source_apps: Vec<String>,
     pub clear_clipboard_on_quit: bool,
     pub auto_paste: bool,
+}
+
+fn default_language() -> String {
+    "system".into()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -163,6 +169,7 @@ impl Default for Settings {
             wheel_position: "center".into(),
             wheel_item_count: 8,
             theme: "system".into(),
+            language: "system".into(),
             wheel_appearance: WheelAppearanceSettings::default(),
             capture_plain_text: true,
             capture_rich_text: true,

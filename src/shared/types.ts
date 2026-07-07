@@ -8,6 +8,7 @@ export type ClipboardItemType =
   | 'command';
 
 export type CodeLanguage = 'javascript' | 'typescript' | 'json' | 'html' | 'css' | 'shell' | 'python' | 'unknown';
+export type LanguageSetting = 'system' | 'en' | 'tr';
 
 export type ClipboardPlatform = 'darwin' | 'win32' | 'linux' | 'unknown';
 
@@ -94,6 +95,7 @@ export interface Settings {
   wheelPosition: 'center' | 'cursor';
   wheelItemCount: 6 | 8 | 10 | 12;
   theme: 'system' | 'dark' | 'light';
+  language: LanguageSetting;
   wheelAppearance: WheelAppearanceSettings;
   capturePlainText: boolean;
   captureRichText: boolean;
