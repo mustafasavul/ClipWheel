@@ -815,9 +815,11 @@ function WheelQuickLook({ item, side }: { item: ClipboardItem; side: 'left' | 'r
         <strong>{formatDateTime(item.createdAt)}</strong>
       </time>
       {item.type === 'image' && <WheelQuickLookImage item={item} />}
-      <p>{item.previewText}</p>
-      {item.url && <small>{item.url}</small>}
-      {item.filePaths.length > 0 && <small>{item.filePaths.join('\n')}</small>}
+      <div className="wheel-quicklook-body">
+        <p>{item.previewText}</p>
+        {item.url && <small>{item.url}</small>}
+        {item.filePaths.length > 0 && <small>{item.filePaths.join('\n')}</small>}
+      </div>
     </aside>
   );
 }

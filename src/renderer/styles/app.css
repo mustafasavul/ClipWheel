@@ -1424,6 +1424,7 @@ kbd {
   background: var(--wheel-panel);
   box-shadow: var(--shadow-inset), var(--shadow-soft);
   backdrop-filter: blur(22px);
+  overflow: hidden;
   pointer-events: none;
 }
 
@@ -1436,10 +1437,15 @@ kbd {
 }
 
 .wheel-quicklook strong {
+  display: -webkit-box;
+  max-height: 58px;
+  overflow: hidden;
   color: var(--text-strong);
   font-size: 16px;
   line-height: 1.2;
   overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .wheel-quicklook-created {
@@ -1488,6 +1494,16 @@ kbd {
   text-align: center;
 }
 
+.wheel-quicklook-body {
+  min-height: 0;
+  max-height: 132px;
+  display: grid;
+  gap: 8px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+
 .wheel-quicklook p,
 .wheel-quicklook small {
   margin: 0;
@@ -1498,13 +1514,11 @@ kbd {
 }
 
 .wheel-quicklook p {
-  max-height: 158px;
-  overflow: auto;
+  overflow: visible;
 }
 
 .wheel-quicklook small {
-  max-height: 84px;
-  overflow: auto;
+  overflow: visible;
   font-size: 12px;
   color: var(--text-subtle);
 }
