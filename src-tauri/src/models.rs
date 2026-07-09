@@ -85,6 +85,8 @@ pub struct Settings {
     pub show_tray_icon: bool,
     pub wheel_position: String,
     pub wheel_item_count: i64,
+    #[serde(default)]
+    pub wheel_item_ids: Vec<String>,
     pub theme: String,
     #[serde(default = "default_language")]
     pub language: String,
@@ -215,6 +217,7 @@ impl Default for Settings {
             show_tray_icon: true,
             wheel_position: "center".into(),
             wheel_item_count: DEFAULT_WHEEL_ITEMS,
+            wheel_item_ids: Vec::new(),
             theme: "system".into(),
             language: "system".into(),
             shortcuts: ShortcutSettings::default(),
@@ -240,8 +243,15 @@ pub fn clamp_wheel_item_count(value: i64) -> i64 {
 
 pub fn normalize_settings(mut settings: Settings) -> Settings {
     settings.wheel_item_count = clamp_wheel_item_count(settings.wheel_item_count);
+    settings.wheel_item_ids = normalize_wheel_item_ids(settings.wheel_item_ids);
     settings.shortcuts.wheel_items = normalize_wheel_item_shortcuts(settings.shortcuts.wheel_items);
     settings
+}
+
+fn normalize_wheel_item_ids(mut ids: Vec<String>) -> Vec<String> {
+    ids.resize(MAX_WHEEL_ITEMS as usize, String::new());
+    ids.truncate(MAX_WHEEL_ITEMS as usize);
+    ids
 }
 
 fn normalize_wheel_item_shortcuts(mut shortcuts: Vec<String>) -> Vec<String> {
@@ -256,6 +266,7 @@ pub struct HistoryQuery {
     pub search: Option<String>,
     #[serde(rename = "type")]
     pub item_type: Option<String>,
+    pub collection_filter: Option<String>,
     pub date_filter: Option<String>,
     pub start_date: Option<String>,
     pub end_date: Option<String>,

@@ -7,6 +7,7 @@ export const defaultSettings: Settings = {
   showTrayIcon: true,
   wheelPosition: 'center',
   wheelItemCount: defaultWheelItems,
+  wheelItemIds: [],
   theme: 'system',
   language: 'system',
   shortcuts: {

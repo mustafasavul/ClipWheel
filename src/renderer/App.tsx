@@ -18,8 +18,6 @@ import {
   Moon,
   MousePointer2,
   Palette,
-  Pin,
-  PinOff,
   QrCode,
   Search,
   Settings as SettingsIcon,
@@ -77,6 +75,7 @@ hljs.registerLanguage('shell', bash);
 hljs.registerLanguage('python', python);
 
 const typeOptions: Array<ClipboardItemType | 'all'> = ['all', 'plain_text', 'rich_text', 'code', 'url', 'image', 'file_reference', 'command'];
+const collectionFilterOptions: Array<NonNullable<HistoryQuery['collectionFilter']>> = ['all', 'wheel', 'favorites'];
 const settingsTabs = [
   { id: 'general', labelKey: 'general' },
   { id: 'wheelAppearance', labelKey: 'wheelAppearance' },
@@ -184,6 +183,8 @@ function MainSurface() {
   const refreshRequestRef = useRef(0);
 
   const selected = items.find((item) => item.id === selectedId) ?? items[0] ?? null;
+  const wheelItemCount = clampWheelItemCount(settings.wheelItemCount);
+  const activeWheelItemIds = normalizeWheelItemIds(settings.wheelItemIds).slice(0, wheelItemCount);
   const pagedQuery = useMemo(() => ({ ...query, limit: pageSize, offset: (page - 1) * pageSize }), [page, pageSize, query]);
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const resolvedTheme = useResolvedTheme(settings.theme);
@@ -259,6 +260,24 @@ function MainSurface() {
     setSettings(next);
   };
 
+  const toggleWheelItem = async (itemId: string) => {
+    const nextWheelItemIds = normalizeWheelItemIds(settings.wheelItemIds);
+    const currentSlot = nextWheelItemIds.slice(0, wheelItemCount).indexOf(itemId);
+    if (currentSlot >= 0) {
+      nextWheelItemIds[currentSlot] = '';
+      await updateSettings({ wheelItemIds: nextWheelItemIds });
+      return;
+    }
+    for (let index = 0; index < nextWheelItemIds.length; index += 1) {
+      if (nextWheelItemIds[index] === itemId) nextWheelItemIds[index] = '';
+    }
+    const activeIds = nextWheelItemIds.slice(0, wheelItemCount);
+    const emptySlot = activeIds.findIndex((id) => !id);
+    if (emptySlot < 0) return;
+    nextWheelItemIds[emptySlot] = itemId;
+    await updateSettings({ wheelItemIds: nextWheelItemIds });
+  };
+
   const openWheelAppearanceSettings = () => {
     setView('settings');
     setTab('wheelAppearance');
@@ -310,7 +329,16 @@ function MainSurface() {
               </header>
               <Filters query={query} setQuery={setQuery} resetPage={() => setPage(1)} />
               {error && <div className="error-state">{error}</div>}
-              {loading ? <SkeletonList /> : <HistoryList items={items} selectedId={selected?.id ?? null} onSelect={setSelectedId} onRefresh={refresh} />}
+              {loading ? <SkeletonList /> : (
+                <HistoryList
+                  items={items}
+                  selectedId={selected?.id ?? null}
+                  wheelItemIds={activeWheelItemIds}
+                  onSelect={setSelectedId}
+                  onRefresh={refresh}
+                  onToggleWheelItem={toggleWheelItem}
+                />
+              )}
               {!loading && totalItems > 0 && (
                 <Pagination
                   page={page}
@@ -363,6 +391,9 @@ function Filters({ query, setQuery, resetPage }: { query: HistoryQuery; setQuery
       <select aria-label={t('clipboard')} value={query.type ?? 'all'} onChange={(event) => updateQuery({ type: event.target.value as ClipboardItemType | 'all' })}>
         {typeOptions.map((type) => <option key={type} value={type}>{labelForType(type, t)}</option>)}
       </select>
+      <select aria-label="Filter" value={query.collectionFilter ?? 'all'} onChange={(event) => updateQuery({ collectionFilter: event.target.value as HistoryQuery['collectionFilter'] })}>
+        {collectionFilterOptions.map((filter) => <option key={filter} value={filter}>{labelForCollectionFilter(filter, t)}</option>)}
+      </select>
       <select aria-label={t('allDates')} value={query.dateFilter ?? 'all'} onChange={(event) => updateQuery({ dateFilter: event.target.value as HistoryQuery['dateFilter'] })}>
         <option value="all">{t('allDates')}</option>
         <option value="today">{t('today')}</option>
@@ -410,8 +441,23 @@ function Pagination({ page, pageSize, totalItems, totalPages, setPage, setPageSi
   );
 }
 
-function HistoryList({ items, selectedId, onSelect, onRefresh }: { items: ClipboardItem[]; selectedId: string | null; onSelect: (id: string) => void; onRefresh: () => Promise<void> }) {
+function HistoryList({
+  items,
+  selectedId,
+  wheelItemIds,
+  onSelect,
+  onRefresh,
+  onToggleWheelItem,
+}: {
+  items: ClipboardItem[];
+  selectedId: string | null;
+  wheelItemIds: string[];
+  onSelect: (id: string) => void;
+  onRefresh: () => Promise<void>;
+  onToggleWheelItem: (id: string) => Promise<void>;
+}) {
   const { t } = useI18n();
+  const isWheelFull = wheelItemIds.every(Boolean);
   if (!items.length) {
     return (
       <div className="empty-state">
@@ -423,21 +469,35 @@ function HistoryList({ items, selectedId, onSelect, onRefresh }: { items: Clipbo
   }
   return (
     <div className="history-list">
-      {items.map((item, index) => (
-        <button type="button" className={`history-row ${item.id === selectedId ? 'selected' : ''}`} key={item.id} onClick={() => onSelect(item.id)} style={{ '--index': index } as React.CSSProperties}>
-          <span className="type-icon">{iconForType(item.type)}</span>
-          <span className="row-content">
-            <strong>{item.title}</strong>
-            <small>{item.previewText}</small>
-          </span>
-          <span className="row-actions" onClick={(event) => event.stopPropagation()}>
-            <IconButton label={t('copy')} onClick={async () => { await clipwheelClient.copyItem(item.id); await onRefresh(); }}><Copy size={16} /></IconButton>
-            <IconButton label={item.isPinned ? t('unpin') : t('pin')} onClick={async () => { await clipwheelClient.togglePin(item.id); await onRefresh(); }}>{item.isPinned ? <PinOff size={16} /> : <Pin size={16} />}</IconButton>
-            <IconButton label={item.isFavorite ? t('unfavorite') : t('favorite')} onClick={async () => { await clipwheelClient.toggleFavorite(item.id); await onRefresh(); }}><Heart size={16} fill={item.isFavorite ? 'currentColor' : 'none'} /></IconButton>
-            <IconButton label={t('delete')} onClick={async () => { await clipwheelClient.deleteItem(item.id); await onRefresh(); }}><Trash2 size={16} /></IconButton>
-          </span>
-        </button>
-      ))}
+      {items.map((item, index) => {
+        const wheelSlot = wheelItemIds.indexOf(item.id);
+        const isInWheel = wheelSlot >= 0;
+        const wheelButtonDisabled = !isInWheel && isWheelFull;
+        return (
+          <button type="button" className={`history-row ${item.id === selectedId ? 'selected' : ''} ${isInWheel ? 'in-wheel' : ''}`} key={item.id} onClick={() => onSelect(item.id)} style={{ '--index': index } as React.CSSProperties}>
+            <span className="type-icon">{iconForType(item.type)}</span>
+            <span className="row-content">
+              <span className="row-title-line">
+                <strong>{item.title}</strong>
+                {isInWheel && <span className="wheel-slot-badge">{t('wheel')} {wheelSlot + 1}</span>}
+              </span>
+              <small>{item.previewText}</small>
+            </span>
+            <span className="row-actions" onClick={(event) => event.stopPropagation()}>
+              <IconButton
+                label={isInWheel ? `${t('wheel')} ${wheelSlot + 1}` : t('wheel')}
+                disabled={wheelButtonDisabled}
+                onClick={() => onToggleWheelItem(item.id)}
+              >
+                {isInWheel ? <X size={16} /> : <Command size={16} />}
+              </IconButton>
+              <IconButton label={t('copy')} onClick={async () => { await clipwheelClient.copyItem(item.id); await onRefresh(); }}><Copy size={16} /></IconButton>
+              <IconButton label={item.isFavorite ? t('unfavorite') : t('favorite')} onClick={async () => { await clipwheelClient.toggleFavorite(item.id); await onRefresh(); }}><Heart size={16} fill={item.isFavorite ? 'currentColor' : 'none'} /></IconButton>
+              <IconButton label={t('delete')} onClick={async () => { if (isInWheel) await onToggleWheelItem(item.id); await clipwheelClient.deleteItem(item.id); await onRefresh(); }}><Trash2 size={16} /></IconButton>
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -812,7 +872,7 @@ function WheelSurface() {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const isShiftPressedRef = useRef(false);
   const refreshRef = useRef<() => void>(() => undefined);
-  const [items, setItems] = useState<ClipboardItem[]>([]);
+  const [items, setItems] = useState<Array<ClipboardItem | null>>([]);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isQuickLookVisible, setQuickLookVisible] = useState(false);
@@ -1388,6 +1448,10 @@ function normalizeWheelItemShortcuts(value: string[]): string[] {
   return Array.from({ length: maxWheelShortcutItems }, (_, index) => value[index] ?? '');
 }
 
+function normalizeWheelItemIds(value: string[]): string[] {
+  return Array.from({ length: maxWheelShortcutItems }, (_, index) => value[index] ?? '');
+}
+
 function SelectSetting({ icon, label, value, options, getOptionLabel, onChange }: {
   icon: React.ReactNode;
   label: string;
@@ -1399,8 +1463,8 @@ function SelectSetting({ icon, label, value, options, getOptionLabel, onChange }
   return <label className="setting-field"><span className="setting-label"><span className="setting-icon">{icon}</span>{label}</span><select value={value} onChange={(event) => onChange(event.target.value)}>{options.map((option) => <option key={option} value={option}>{getOptionLabel ? getOptionLabel(option) : labelFromToken(option)}</option>)}</select></label>;
 }
 
-function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
-  return <button type="button" className="icon-button" aria-label={label} title={label} onClick={onClick}>{children}</button>;
+function IconButton({ children, disabled = false, label, onClick }: { children: React.ReactNode; disabled?: boolean; label: string; onClick: () => void }) {
+  return <button type="button" className="icon-button" aria-label={label} title={label} disabled={disabled} onClick={onClick}>{children}</button>;
 }
 
 function SkeletonList() {
@@ -1432,6 +1496,12 @@ function labelForType(type: ClipboardItemType | 'all', t: Translator): string {
     command: 'command',
   };
   return t(labels[type]);
+}
+
+function labelForCollectionFilter(filter: NonNullable<HistoryQuery['collectionFilter']>, t: Translator): string {
+  if (filter === 'wheel') return t('wheel');
+  if (filter === 'favorites') return t('favorite');
+  return t('all');
 }
 
 function formatInfoLabels(item: ClipboardItem, t: Translator): string[] {

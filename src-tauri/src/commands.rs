@@ -16,10 +16,11 @@ pub fn get_items(
     state: tauri::State<'_, AppState>,
     query: Option<HistoryQuery>,
 ) -> CommandResult<Vec<ClipboardItem>> {
-    state
-        .repository
-        .list_items(query.unwrap_or_default())
-        .map_err(to_string)
+    let query = query.unwrap_or_default();
+    if query.collection_filter.as_deref() == Some("wheel") {
+        return get_filtered_wheel_items(&state, &query);
+    }
+    state.repository.list_items(query).map_err(to_string)
 }
 
 #[tauri::command]
@@ -27,30 +28,38 @@ pub fn count_items(
     state: tauri::State<'_, AppState>,
     query: Option<HistoryQuery>,
 ) -> CommandResult<i64> {
-    state
-        .repository
-        .count_items(query.unwrap_or_default())
-        .map_err(to_string)
+    let query = query.unwrap_or_default();
+    if query.collection_filter.as_deref() == Some("wheel") {
+        let mut count_query = query;
+        count_query.limit = None;
+        count_query.offset = None;
+        return get_filtered_wheel_items(&state, &count_query).map(|items| items.len() as i64);
+    }
+    state.repository.count_items(query).map_err(to_string)
 }
 
 #[tauri::command]
 pub fn get_recent_wheel_items(
     state: tauri::State<'_, AppState>,
     count: Option<i64>,
-) -> CommandResult<Vec<ClipboardItem>> {
-    state
-        .repository
-        .list_items(HistoryQuery {
-            limit: Some(clamp_wheel_item_count(count.unwrap_or_else(|| {
-                state
-                    .repository
-                    .get_settings()
-                    .map(|s| s.wheel_item_count)
-                    .unwrap_or(8)
-            }))),
-            ..Default::default()
+) -> CommandResult<Vec<Option<ClipboardItem>>> {
+    let settings = state.repository.get_settings().map_err(to_string)?;
+    let limit = clamp_wheel_item_count(count.unwrap_or(settings.wheel_item_count)) as usize;
+    Ok(settings
+        .wheel_item_ids
+        .iter()
+        .take(limit)
+        .map(|id| {
+            if id.is_empty() {
+                return None;
+            }
+            state
+                .repository
+                .get_item(id)
+                .ok()
+                .filter(|item| !item.is_deleted)
         })
-        .map_err(to_string)
+        .collect())
 }
 
 #[tauri::command]
@@ -233,4 +242,76 @@ pub fn close_wheel(app: AppHandle) -> CommandResult<()> {
 
 fn to_string(error: impl std::fmt::Display) -> String {
     error.to_string()
+}
+
+fn get_filtered_wheel_items(
+    state: &tauri::State<'_, AppState>,
+    query: &HistoryQuery,
+) -> CommandResult<Vec<ClipboardItem>> {
+    let settings = state.repository.get_settings().map_err(to_string)?;
+    let mut items = settings
+        .wheel_item_ids
+        .iter()
+        .filter(|id| !id.is_empty())
+        .filter_map(|id| state.repository.get_item(id).ok())
+        .filter(|item| matches_history_query(item, query))
+        .collect::<Vec<_>>();
+    let offset = query.offset.unwrap_or(0).max(0) as usize;
+    let limit = query.limit.unwrap_or(500).max(0) as usize;
+    if offset >= items.len() {
+        return Ok(Vec::new());
+    }
+    let end = (offset + limit).min(items.len());
+    Ok(items.drain(offset..end).collect())
+}
+
+fn matches_history_query(item: &ClipboardItem, query: &HistoryQuery) -> bool {
+    if query.include_deleted != Some(true) && item.is_deleted {
+        return false;
+    }
+    if let Some(item_type) = &query.item_type {
+        if item_type != "all" && item.item_type != *item_type {
+            return false;
+        }
+    }
+    if let Some(search) = query
+        .search
+        .as_ref()
+        .map(|value| value.trim().to_lowercase())
+    {
+        if !search.is_empty()
+            && !item.title.to_lowercase().contains(&search)
+            && !item.preview_text.to_lowercase().contains(&search)
+            && !item
+                .content_text
+                .as_deref()
+                .unwrap_or_default()
+                .to_lowercase()
+                .contains(&search)
+            && !item
+                .url
+                .as_deref()
+                .unwrap_or_default()
+                .to_lowercase()
+                .contains(&search)
+        {
+            return false;
+        }
+    }
+    match query.date_filter.as_deref() {
+        Some("custom") => {
+            if let Some(start) = &query.start_date {
+                if item.created_at < *start {
+                    return false;
+                }
+            }
+            if let Some(end) = &query.end_date {
+                if item.created_at > *end {
+                    return false;
+                }
+            }
+        }
+        _ => {}
+    }
+    true
 }

@@ -121,6 +121,7 @@ export interface Settings {
   showTrayIcon: boolean;
   wheelPosition: 'center' | 'cursor';
   wheelItemCount: WheelItemCount;
+  wheelItemIds: string[];
   theme: 'system' | 'dark' | 'light';
   language: LanguageSetting;
   shortcuts: ShortcutSettings;
@@ -163,6 +164,7 @@ export interface WheelAppearanceSettings {
 export interface HistoryQuery {
   search?: string;
   type?: ClipboardItemType | 'all';
+  collectionFilter?: 'all' | 'wheel' | 'favorites';
   dateFilter?: 'all' | 'today' | 'last7' | 'last30' | 'custom';
   startDate?: string;
   endDate?: string;
@@ -200,7 +202,7 @@ export interface ClipboardSnapshot {
 export interface AppApi {
   getItems(query?: HistoryQuery): Promise<ClipboardItem[]>;
   countItems(query?: HistoryQuery): Promise<number>;
-  getRecentWheelItems(count?: number): Promise<ClipboardItem[]>;
+  getRecentWheelItems(count?: number): Promise<Array<ClipboardItem | null>>;
   copyItem(id: string): Promise<void>;
   deleteItem(id: string): Promise<void>;
   togglePin(id: string): Promise<ClipboardItem>;

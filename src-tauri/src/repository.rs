@@ -431,6 +431,10 @@ fn build_where(query: &HistoryQuery) -> String {
             clauses.push(format!("type = '{}'", sql_escape(item_type)));
         }
     }
+    match query.collection_filter.as_deref() {
+        Some("favorites") => clauses.push("is_favorite = 1".into()),
+        _ => {}
+    }
     if let Some(search) = query
         .search
         .as_ref()
