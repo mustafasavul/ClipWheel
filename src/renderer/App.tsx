@@ -77,15 +77,16 @@ hljs.registerLanguage('python', python);
 const typeOptions: Array<ClipboardItemType | 'all'> = ['all', 'plain_text', 'rich_text', 'code', 'url', 'image', 'file_reference', 'command'];
 const collectionFilterOptions: Array<NonNullable<HistoryQuery['collectionFilter']>> = ['all', 'wheel', 'favorites'];
 const settingsTabs = [
-  { id: 'general', labelKey: 'general' },
-  { id: 'wheelAppearance', labelKey: 'wheelAppearance' },
-  { id: 'clipboard', labelKey: 'clipboard' },
-  { id: 'privacy', labelKey: 'privacy' },
-  { id: 'cleanup', labelKey: 'cleanup' },
-  { id: 'shortcuts', labelKey: 'shortcuts' },
-  { id: 'advanced', labelKey: 'advanced' },
+  { id: 'general', labelKey: 'general', icon: SettingsIcon },
+  { id: 'wheelAppearance', labelKey: 'wheelAppearance', icon: Palette },
+  { id: 'clipboard', labelKey: 'clipboard', icon: Clipboard },
+  { id: 'privacy', labelKey: 'privacy', icon: Shield },
+  { id: 'cleanup', labelKey: 'cleanup', icon: Trash2 },
+  { id: 'shortcuts', labelKey: 'shortcuts', icon: Command },
+  { id: 'advanced', labelKey: 'advanced', icon: Wand2 },
 ] as const;
 type SettingsTabId = (typeof settingsTabs)[number]['id'];
+type CleanupActionId = 'unpinned' | 'all' | 'purge_deleted';
 const defaultPageSize = 10;
 const queryClient = new QueryClient();
 const dateTimeFormatters = new Map<string, Intl.DateTimeFormat>();
@@ -391,7 +392,7 @@ function Filters({ query, setQuery, resetPage }: { query: HistoryQuery; setQuery
       <select aria-label={t('clipboard')} value={query.type ?? 'all'} onChange={(event) => updateQuery({ type: event.target.value as ClipboardItemType | 'all' })}>
         {typeOptions.map((type) => <option key={type} value={type}>{labelForType(type, t)}</option>)}
       </select>
-      <select aria-label="Filter" value={query.collectionFilter ?? 'all'} onChange={(event) => updateQuery({ collectionFilter: event.target.value as HistoryQuery['collectionFilter'] })}>
+      <select aria-label={t('filter')} value={query.collectionFilter ?? 'all'} onChange={(event) => updateQuery({ collectionFilter: event.target.value as HistoryQuery['collectionFilter'] })}>
         {collectionFilterOptions.map((filter) => <option key={filter} value={filter}>{labelForCollectionFilter(filter, t)}</option>)}
       </select>
       <select aria-label={t('allDates')} value={query.dateFilter ?? 'all'} onChange={(event) => updateQuery({ dateFilter: event.target.value as HistoryQuery['dateFilter'] })}>
@@ -678,6 +679,7 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
   const { t } = useI18n();
   const [recordingShortcut, setRecordingShortcut] = useState<string | null>(null);
   const [shortcutError, setShortcutError] = useState<string | null>(null);
+  const [pendingCleanup, setPendingCleanup] = useState<CleanupActionId | null>(null);
   const startShortcutRecording = async (target: ShortcutTarget) => {
     setShortcutError(null);
     if (target.kind === 'openWheel') {
@@ -694,7 +696,7 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
   const updateShortcut = (target: ShortcutTarget, value: string) => {
     const isGlobal = target.kind === 'openWheel';
     if (isGlobal && value && !isValidGlobalShortcut(value)) {
-      setShortcutError('Use at least one modifier plus one key.');
+      setShortcutError(t('shortcutValidationError'));
       return;
     }
     setShortcutError(null);
@@ -709,15 +711,30 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
       void clipwheelClient.setShortcutCaptureActive(false);
     }
   }, [recordingShortcut]);
+  const cleanupActions: Array<{ id: CleanupActionId; label: string; description: string }> = [
+    { id: 'unpinned', label: t('clearUnpinned'), description: t('clearUnpinnedDescription') },
+    { id: 'all', label: t('clearHistory'), description: t('clearHistoryDescription') },
+    { id: 'purge_deleted', label: t('purgeDeleted'), description: t('purgeDeletedDescription') },
+  ];
+  const activeCleanupAction = cleanupActions.find((action) => action.id === pendingCleanup) ?? null;
+  const runCleanup = async (action: CleanupActionId) => {
+    await clipwheelClient.cleanup({ mode: action });
+    setPendingCleanup(null);
+    await onRefresh();
+  };
   return (
-    <div className="settings-panel">
-      <div className="tabs">{settingsTabs.map((entry) => <button type="button" className={entry.id === activeTab ? 'active' : ''} key={entry.id} onClick={() => setActiveTab(entry.id)}>{t(entry.labelKey)}</button>)}</div>
+    <>
+      <div className="settings-panel">
+      <div className="tabs">{settingsTabs.map((entry) => {
+        const TabIcon = entry.icon;
+        return <button type="button" className={entry.id === activeTab ? 'active' : ''} key={entry.id} onClick={() => setActiveTab(entry.id)}><TabIcon size={15} /> {t(entry.labelKey)}</button>;
+      })}</div>
       {activeTab === 'general' && (
         <SettingsGrid>
           <Toggle icon={<LogIn size={18} />} label={t('startAtLogin')} value={settings.startAtLogin} onChange={(value) => updateSettings({ startAtLogin: value })} />
           <Toggle icon={<Monitor size={18} />} label={t('showTrayIcon')} value={settings.showTrayIcon} onChange={(value) => updateSettings({ showTrayIcon: value })} />
           <SelectSetting icon={<MousePointer2 size={18} />} label={t('wheelPosition')} value={settings.wheelPosition} options={['center', 'cursor']} getOptionLabel={(value) => settingOptionLabel(value, t)} onChange={(value) => updateSettings({ wheelPosition: value as Settings['wheelPosition'] })} />
-          <SelectSetting icon={<Clipboard size={18} />} label={`${t('wheel')} ${t('item')}`} value={String(settings.wheelItemCount)} options={wheelItemCountOptions.map(String)} getOptionLabel={(value) => value} onChange={(value) => updateSettings({ wheelItemCount: clampWheelItemCount(Number(value)) })} />
+          <SelectSetting icon={<Clipboard size={18} />} label={t('wheelItem')} value={String(settings.wheelItemCount)} options={wheelItemCountOptions.map(String)} getOptionLabel={(value) => value} onChange={(value) => updateSettings({ wheelItemCount: clampWheelItemCount(Number(value)) })} />
           <SelectSetting icon={settings.theme === 'light' ? <Sun size={18} /> : settings.theme === 'dark' ? <Moon size={18} /> : <Monitor size={18} />} label={t('theme')} value={settings.theme} options={['system', 'dark', 'light']} getOptionLabel={(value) => settingOptionLabel(value, t)} onChange={(value) => updateSettings({ theme: value as Settings['theme'] })} />
           <SelectSetting icon={<Globe2 size={18} />} label={t('language')} value={settings.language} options={languageOptions} getOptionLabel={(value) => languageOptionLabel(value, t)} onChange={(value) => updateSettings({ language: value as Settings['language'] })} />
         </SettingsGrid>
@@ -777,17 +794,25 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
         </SettingsGrid>
       )}
       {activeTab === 'cleanup' && (
-        <SettingsGrid>
+        <div className="cleanup-panel">
           <NumberSetting label={t('autoDeleteAfterDays')} value={settings.autoDeleteAfterDays} onChange={(value) => updateSettings({ autoDeleteAfterDays: value })} />
-          <button type="button" className="danger-button" onClick={async () => { if (confirm(t('clearUnpinnedConfirm'))) { await clipwheelClient.cleanup({ mode: 'unpinned' }); await onRefresh(); } }}>{t('clearUnpinned')}</button>
-          <button type="button" className="danger-button" onClick={async () => { if (confirm(t('clearAllHistoryConfirm'))) { await clipwheelClient.cleanup({ mode: 'all' }); await onRefresh(); } }}>{t('clearHistory')}</button>
-          <button type="button" className="danger-button" onClick={async () => { if (confirm(t('purgeDeletedConfirm'))) { await clipwheelClient.cleanup({ mode: 'purge_deleted' }); await onRefresh(); } }}>{t('purgeDeleted')}</button>
-        </SettingsGrid>
+          <div className="cleanup-actions">
+            {cleanupActions.map((action) => (
+              <button type="button" className="cleanup-action danger-button" key={action.id} onClick={() => setPendingCleanup(action.id)}>
+                <Trash2 size={18} />
+                <span>
+                  <strong>{action.label}</strong>
+                  <small>{action.description}</small>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
       {activeTab === 'shortcuts' && (
         <div className="shortcut-list">
           <section className="shortcut-section">
-            <span className="shortcut-section-title">Global</span>
+            <span className="shortcut-section-title">{t('global')}</span>
             <ShortcutRecorder
               active={recordingShortcut === shortcutKey({ kind: 'openWheel' })}
               error={shortcutError}
@@ -838,7 +863,7 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
                   compact
                   active={recordingShortcut === shortcutKey({ kind: 'wheelItem', index })}
                   key={index}
-                  label={`Item ${index + 1}`}
+                  label={`${t('item')} ${index + 1}`}
                   scope="wheel"
                   value={settings.shortcuts.wheelItems[index] ?? ''}
                   onCancel={() => setRecordingShortcut(null)}
@@ -864,7 +889,18 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
           </div>
         </SettingsGrid>
       )}
-    </div>
+      </div>
+      {activeCleanupAction && (
+        <ConfirmDialog
+          title={t('confirmCleanup')}
+          body={cleanupConfirmMessage(activeCleanupAction.id, t)}
+          confirmLabel={t('continue')}
+          cancelLabel={t('cancel')}
+          onCancel={() => setPendingCleanup(null)}
+          onConfirm={() => void runCleanup(activeCleanupAction.id)}
+        />
+      )}
+    </>
   );
 }
 
@@ -1149,9 +1185,9 @@ function shortcutKeyFromEvent(event: KeyboardEvent): string | null {
   return event.key.length === 1 ? event.key.toUpperCase() : event.key;
 }
 
-function formatShortcutForPlatform(shortcut: string): string {
+function formatShortcutForPlatform(shortcut: string, t?: Translator): string {
   const parts = shortcut.split('+').map((part) => part.trim()).filter(Boolean);
-  if (!parts.length) return 'Not set';
+  if (!parts.length) return t ? t('notSet') : fallbackMessages.notSet;
   return parts.map((part) => {
     const normalized = normalizeShortcutToken(part);
     if (normalized === 'cmdorctrl') return isMacPlatform() ? 'Command' : 'CTRL';
@@ -1323,6 +1359,47 @@ function SettingsGrid({ children }: { children: React.ReactNode }) {
   return <div className="settings-grid">{children}</div>;
 }
 
+function ConfirmDialog({ body, cancelLabel, confirmLabel, onCancel, onConfirm, title }: {
+  body: string;
+  cancelLabel: string;
+  confirmLabel: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+  title: string;
+}) {
+  const { t } = useI18n();
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return undefined;
+    if (!dialog.open) dialog.showModal();
+    return () => {
+      if (dialog.open) dialog.close();
+    };
+  }, []);
+  return (
+    <dialog
+      ref={dialogRef}
+      className="confirm-dialog"
+      aria-labelledby="confirm-dialog-title"
+      onCancel={(event) => {
+        event.preventDefault();
+        onCancel();
+      }}
+    >
+      <div>
+        <p className="eyebrow">{t('cleanupWarning')}</p>
+        <h2 id="confirm-dialog-title">{title}</h2>
+        <p>{body}</p>
+      </div>
+      <div className="confirm-actions">
+        <button type="button" className="secondary-button" onClick={onCancel}>{cancelLabel}</button>
+        <button type="button" className="danger-button" onClick={onConfirm}>{confirmLabel}</button>
+      </div>
+    </dialog>
+  );
+}
+
 function Toggle({ icon, label, value, onChange }: { icon: React.ReactNode; label: string; value: boolean; onChange: (value: boolean) => void }) {
   return (
     <label className="toggle-row">
@@ -1346,12 +1423,14 @@ function RangeSetting({ label, value, onChange }: { label: string; value: number
 }
 
 function ColorSetting({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  const { t } = useI18n();
   const colorValue = /^#[0-9a-fA-F]{6}$/.test(value) ? value : '#000000';
+  const pickerLabel = `${label} ${t('colorPicker')}`;
   return (
     <label className="setting-field color-setting">
       <span className="setting-label">{label}</span>
       <span className="color-setting-control">
-        <input type="color" aria-label={`${label} color picker`} title={`${label} color picker`} value={colorValue} onChange={(event) => onChange(event.target.value)} />
+        <input type="color" aria-label={pickerLabel} title={pickerLabel} value={colorValue} onChange={(event) => onChange(event.target.value)} />
         <input type="text" value={value} onChange={(event) => onChange(event.target.value)} />
       </span>
     </label>
@@ -1383,6 +1462,7 @@ function ShortcutRecorder({
   onRecord: (value: string) => void;
   onStart: () => void;
 }) {
+  const { t } = useI18n();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const recordKeyboardEvent = useCallback((event: KeyboardEvent) => {
     if (!active) return;
@@ -1431,10 +1511,10 @@ function ShortcutRecorder({
           onClick={onStart}
           onKeyDown={handleKeyDown}
         >
-          {active ? 'Press shortcut...' : formatShortcutForPlatform(value)}
+          {active ? t('pressShortcut') : formatShortcutForPlatform(value, t)}
         </button>
         {value && (
-          <button type="button" className="shortcut-clear" aria-label={`Clear ${label}`} onClick={onClear}>
+          <button type="button" className="shortcut-clear" aria-label={`${t('clearShortcut')} ${label}`} onClick={onClear}>
             <X size={14} />
           </button>
         )}
@@ -1502,6 +1582,12 @@ function labelForCollectionFilter(filter: NonNullable<HistoryQuery['collectionFi
   if (filter === 'wheel') return t('wheel');
   if (filter === 'favorites') return t('favorite');
   return t('all');
+}
+
+function cleanupConfirmMessage(action: CleanupActionId, t: Translator): string {
+  if (action === 'unpinned') return t('cleanupConfirmClearUnpinned');
+  if (action === 'purge_deleted') return t('cleanupConfirmPurgeDeleted');
+  return t('cleanupConfirmClearHistory');
 }
 
 function formatInfoLabels(item: ClipboardItem, t: Translator): string[] {
