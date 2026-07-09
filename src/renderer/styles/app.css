@@ -1522,13 +1522,13 @@ textarea {
 
 .shortcut-list {
   display: grid;
-  gap: 18px;
+  gap: 16px;
   color: var(--text);
 }
 
 .shortcut-section {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   padding-top: 2px;
 }
 
@@ -1541,33 +1541,37 @@ textarea {
   color: var(--text-subtle);
   font-size: 12px;
   font-weight: 800;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .shortcut-setting {
   display: grid;
-  grid-template-columns: minmax(190px, 1fr) minmax(180px, 240px);
+  grid-template-columns: minmax(190px, 1fr) minmax(260px, 480px);
   align-items: center;
   gap: 12px;
 }
 
 .shortcut-setting > span:first-child {
   color: var(--text-strong);
+  font-size: 15px;
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .shortcut-recorder-wrap {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 32px;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  gap: 9px;
+  min-width: 0;
 }
 
 .shortcut-recorder,
 .shortcut-clear {
-  min-height: 32px;
+  min-height: 34px;
   border: 1px solid var(--border-strong);
   border-bottom-color: color-mix(in srgb, var(--border-strong) 66%, var(--text-muted));
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--control-fill);
   color: var(--text-strong);
   box-shadow: inset 0 1px 0 var(--glass-highlight);
@@ -1578,9 +1582,15 @@ textarea {
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  padding: 5px 10px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 6px 11px;
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 15px;
   font-weight: 700;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .shortcut-recorder:hover,
@@ -1603,6 +1613,7 @@ textarea {
 .shortcut-clear {
   display: grid;
   place-items: center;
+  width: 34px;
   padding: 0;
   color: var(--text-muted);
 }
@@ -1615,22 +1626,34 @@ textarea {
 
 .shortcut-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+  gap: 12px 14px;
 }
 
 .shortcut-setting.compact {
   grid-template-columns: minmax(0, 1fr);
-  gap: 6px;
+  gap: 7px;
+  min-width: 0;
 }
 
 .shortcut-setting.compact .shortcut-recorder-wrap {
-  grid-template-columns: minmax(0, 1fr) 28px;
+  grid-template-columns: minmax(0, 1fr) 30px;
+  gap: 7px;
 }
 
 .shortcut-setting.compact .shortcut-recorder,
 .shortcut-setting.compact .shortcut-clear {
-  min-height: 30px;
+  min-height: 32px;
+  border-radius: 9px;
+}
+
+.shortcut-setting.compact .shortcut-recorder {
+  padding: 5px 10px;
+  font-size: 14px;
+}
+
+.shortcut-setting.compact .shortcut-clear {
+  width: 30px;
 }
 
 .shortcut-setting.compact .shortcut-error {
@@ -1711,13 +1734,16 @@ kbd {
 }
 
 .confirm-dialog {
-  width: min(420px, calc(100vw - 32px));
-  padding: 18px;
+  width: min(360px, calc(100vw - 36px));
+  max-height: calc(100vh - 96px);
+  height: fit-content;
+  padding: 16px;
   border: 1px solid var(--danger-border);
-  border-radius: 18px;
+  border-radius: 16px;
   margin: auto;
   display: grid;
-  gap: 16px;
+  align-content: start;
+  gap: 14px;
   color: var(--text);
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--danger) 16%, transparent), transparent 42%),
@@ -1734,13 +1760,15 @@ kbd {
 }
 
 .confirm-dialog h2 {
-  margin-top: 0;
-  font-size: 20px;
+  margin: 4px 0 0;
+  font-size: 18px;
+  line-height: 1.15;
 }
 
 .confirm-dialog p:not(.eyebrow) {
   margin: 8px 0 0;
   color: var(--text-muted);
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -1748,6 +1776,15 @@ kbd {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.confirm-actions .secondary-button,
+.confirm-actions .danger-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .qr-modal img {
@@ -2197,8 +2234,13 @@ kbd {
   .filters,
   .settings-grid,
   .cleanup-panel,
+  .shortcut-setting,
   .regex-row {
     grid-template-columns: 1fr;
+  }
+
+  .shortcut-error {
+    grid-column: 1;
   }
 
   .pagination-bar {
