@@ -15,10 +15,11 @@
       {
         "label": "main",
         "title": "ClipWheel",
-        "width": 1160,
-        "height": 760,
-        "minWidth": 960,
-        "minHeight": 620,
+        "width": 1280,
+        "height": 820,
+        "minWidth": 820,
+        "minHeight": 560,
+        "center": true,
         "visible": false,
         "backgroundColor": "#111214"
       },

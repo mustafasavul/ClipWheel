@@ -13,5 +13,8 @@ pub fn image_data_url(item: &ClipboardItem) -> Result<Option<String>> {
         return Ok(None);
     }
     let bytes = fs::read(path)?;
-    Ok(Some(format!("data:image/png;base64,{}", general_purpose::STANDARD.encode(bytes))))
+    Ok(Some(format!(
+        "data:image/png;base64,{}",
+        general_purpose::STANDARD.encode(bytes)
+    )))
 }

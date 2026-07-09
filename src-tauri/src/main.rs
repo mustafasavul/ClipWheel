@@ -6,7 +6,10 @@ mod models;
 mod repository;
 
 use anyhow::Result;
-use std::{str::FromStr, sync::atomic::{AtomicBool, Ordering}};
+use std::{
+    str::FromStr,
+    sync::atomic::{AtomicBool, Ordering},
+};
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
@@ -63,8 +66,16 @@ fn main() {
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir()?;
             let repository = ClipRepository::new(&app_data_dir)?;
-            let clipboard = ClipboardService::new(repository.clone(), app.handle().clone(), app_data_dir.join("media"));
-            let state = AppState { repository, clipboard: clipboard.clone(), shortcut_capture_active: AtomicBool::new(false) };
+            let clipboard = ClipboardService::new(
+                repository.clone(),
+                app.handle().clone(),
+                app_data_dir.join("media"),
+            );
+            let state = AppState {
+                repository,
+                clipboard: clipboard.clone(),
+                shortcut_capture_active: AtomicBool::new(false),
+            };
             app.manage(state);
             clipboard.start();
             register_shortcut(app.handle());
@@ -111,6 +122,7 @@ pub fn show_window(app: &AppHandle, name: &str) -> Result<()> {
 
 fn setup_windows(app: &AppHandle) -> Result<()> {
     if let Some(main) = app.get_webview_window("main") {
+        fit_main_window_to_monitor(&main)?;
         main.show()?;
     }
     if let Some(wheel) = app.get_webview_window("wheel") {
@@ -124,13 +136,60 @@ fn setup_windows(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-fn position_wheel_window(app: &AppHandle, window: &WebviewWindow, wheel_position: &str) -> Result<()> {
+fn fit_main_window_to_monitor(window: &WebviewWindow) -> Result<()> {
+    let Some(monitor) = window.current_monitor()? else {
+        return Ok(());
+    };
+    let current_size = window.outer_size()?;
+    let monitor_size = monitor.size();
+    let monitor_position = monitor.position();
+    let (width, height) = constrain_window_size(
+        current_size.width,
+        current_size.height,
+        monitor_size.width,
+        monitor_size.height,
+    );
+
+    if width != current_size.width || height != current_size.height {
+        window.set_size(tauri::Size::Physical(tauri::PhysicalSize { width, height }))?;
+    }
+
+    let x = monitor_position.x + ((monitor_size.width as i32 - width as i32) / 2).max(0);
+    let y = monitor_position.y + ((monitor_size.height as i32 - height as i32) / 2).max(0);
+    window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }))?;
+    Ok(())
+}
+
+fn constrain_window_size(
+    requested_width: u32,
+    requested_height: u32,
+    monitor_width: u32,
+    monitor_height: u32,
+) -> (u32, u32) {
+    let max_width = monitor_width.saturating_sub(48).max(820).min(monitor_width);
+    let max_height = monitor_height
+        .saturating_sub(72)
+        .max(560)
+        .min(monitor_height);
+    (
+        requested_width.min(max_width),
+        requested_height.min(max_height),
+    )
+}
+
+fn position_wheel_window(
+    app: &AppHandle,
+    window: &WebviewWindow,
+    wheel_position: &str,
+) -> Result<()> {
     let window_size = window.outer_size()?;
     let half_width = window_size.width as i32 / 2;
     let half_height = window_size.height as i32 / 2;
 
     let cursor = app.cursor_position()?;
-    let monitor = app.monitor_from_point(cursor.x, cursor.y)?.or(window.current_monitor()?);
+    let monitor = app
+        .monitor_from_point(cursor.x, cursor.y)?
+        .or(window.current_monitor()?);
     let Some(monitor) = monitor else {
         return Ok(());
     };
@@ -171,8 +230,16 @@ fn clamp_window_position(
 ) -> (i32, i32) {
     let max_x = monitor_x + monitor_width - window_width;
     let max_y = monitor_y + monitor_height - window_height;
-    let clamped_x = if max_x < monitor_x { monitor_x } else { x.clamp(monitor_x, max_x) };
-    let clamped_y = if max_y < monitor_y { monitor_y } else { y.clamp(monitor_y, max_y) };
+    let clamped_x = if max_x < monitor_x {
+        monitor_x
+    } else {
+        x.clamp(monitor_x, max_x)
+    };
+    let clamped_y = if max_y < monitor_y {
+        monitor_y
+    } else {
+        y.clamp(monitor_y, max_y)
+    };
     (clamped_x, clamped_y)
 }
 
@@ -202,7 +269,9 @@ pub fn register_shortcut(app: &AppHandle) {
 
 pub fn set_shortcut_capture_active(app: &AppHandle, active: bool) -> Result<()> {
     if let Some(state) = app.try_state::<AppState>() {
-        state.shortcut_capture_active.store(active, Ordering::SeqCst);
+        state
+            .shortcut_capture_active
+            .store(active, Ordering::SeqCst);
     }
     if active {
         app.global_shortcut().unregister_all()?;
@@ -214,17 +283,40 @@ pub fn set_shortcut_capture_active(app: &AppHandle, active: bool) -> Result<()> 
 
 #[cfg(test)]
 mod tests {
-    use super::clamp_window_position;
+    use super::{clamp_window_position, constrain_window_size};
 
     #[test]
     fn keeps_cursor_window_inside_monitor_bounds() {
-        assert_eq!(clamp_window_position(100, 80, 400, 300, 0, 0, 1440, 900), (100, 80));
-        assert_eq!(clamp_window_position(-120, -90, 400, 300, 0, 0, 1440, 900), (0, 0));
-        assert_eq!(clamp_window_position(1300, 820, 400, 300, 0, 0, 1440, 900), (1040, 600));
+        assert_eq!(
+            clamp_window_position(100, 80, 400, 300, 0, 0, 1440, 900),
+            (100, 80)
+        );
+        assert_eq!(
+            clamp_window_position(-120, -90, 400, 300, 0, 0, 1440, 900),
+            (0, 0)
+        );
+        assert_eq!(
+            clamp_window_position(1300, 820, 400, 300, 0, 0, 1440, 900),
+            (1040, 600)
+        );
     }
 
     #[test]
     fn pins_oversized_window_to_monitor_origin() {
-        assert_eq!(clamp_window_position(40, 50, 1600, 1000, 100, 200, 1440, 900), (100, 200));
+        assert_eq!(
+            clamp_window_position(40, 50, 1600, 1000, 100, 200, 1440, 900),
+            (100, 200)
+        );
+    }
+
+    #[test]
+    fn constrains_main_window_to_monitor_with_margin() {
+        assert_eq!(constrain_window_size(1280, 820, 1440, 900), (1280, 820));
+        assert_eq!(constrain_window_size(1280, 820, 1160, 760), (1112, 688));
+    }
+
+    #[test]
+    fn keeps_main_window_usable_on_small_monitors() {
+        assert_eq!(constrain_window_size(1280, 820, 800, 540), (800, 540));
     }
 }
