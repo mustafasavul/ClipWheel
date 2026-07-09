@@ -1,6 +1,6 @@
 :root {
   color-scheme: dark;
-  font-family: "Geist", "Satoshi", "Aptos", system-ui, sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", "Noto Sans", "Noto Sans Arabic", "Noto Sans Hebrew", "Geeza Pro", Tahoma, Arial, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --bg: #111412;
@@ -407,7 +407,7 @@ button:active {
   border-radius: 999px;
   background: linear-gradient(135deg, var(--accent-muted), var(--control-fill));
   color: var(--accent-strong);
-  font-family: "Geist Mono", "SFMono-Regular", Consolas, monospace;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 14px;
   line-height: 1;
 }
@@ -791,7 +791,7 @@ textarea {
 }
 
 .preview-code {
-  font-family: "Geist Mono", "SFMono-Regular", Consolas, monospace;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 13px;
 }
 
@@ -1325,7 +1325,7 @@ kbd {
   padding: 5px 8px;
   background: var(--control-fill);
   color: var(--text-strong);
-  font-family: "Geist Mono", monospace;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
   box-shadow: inset 0 1px 0 var(--glass-highlight);
 }
 

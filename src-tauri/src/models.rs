@@ -126,7 +126,7 @@ pub struct WheelAppearanceSettings {
 }
 
 fn default_wheel_color_mode() -> String {
-    "palette".into()
+    "single".into()
 }
 
 fn default_wheel_palette_colors() -> Vec<String> {
@@ -145,18 +145,18 @@ fn default_wheel_palette_colors() -> Vec<String> {
 impl Default for WheelAppearanceSettings {
     fn default() -> Self {
         Self {
-            color_mode: "palette".into(),
+            color_mode: "single".into(),
             palette_colors: default_wheel_palette_colors(),
-            segment_color: "#1f2a1d".into(),
+            segment_color: "#6f7d89".into(),
             segment_opacity: 0.86,
-            active_color: "#c8df9f".into(),
+            active_color: "#c3d0dc".into(),
             active_opacity: 0.34,
-            active_line_color: "#d8ecb8".into(),
-            ring_line_color: "#20272a".into(),
-            panel_color: "#11171a".into(),
+            active_line_color: "#dce7f0".into(),
+            ring_line_color: "#20272d".into(),
+            panel_color: "#101519".into(),
             panel_opacity: 0.94,
-            icon_background_color: "#151c1f".into(),
-            label_color: "#eef4e9".into(),
+            icon_background_color: "#182027".into(),
+            label_color: "#f1f6fb".into(),
         }
     }
 }
