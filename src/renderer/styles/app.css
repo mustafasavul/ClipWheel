@@ -1312,10 +1312,119 @@ textarea {
 
 .shortcut-list {
   display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 10px;
+  gap: 18px;
   color: var(--text);
+}
+
+.shortcut-section {
+  display: grid;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.shortcut-section + .shortcut-section {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.shortcut-section-title {
+  color: var(--text-subtle);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.shortcut-setting {
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) minmax(180px, 240px);
+  align-items: center;
+  gap: 12px;
+}
+
+.shortcut-setting > span:first-child {
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.shortcut-recorder-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  gap: 8px;
+}
+
+.shortcut-recorder,
+.shortcut-clear {
+  min-height: 32px;
+  border: 1px solid var(--border-strong);
+  border-bottom-color: color-mix(in srgb, var(--border-strong) 66%, var(--text-muted));
+  border-radius: 8px;
+  background: var(--control-fill);
+  color: var(--text-strong);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+.shortcut-recorder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding: 5px 10px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-weight: 700;
+}
+
+.shortcut-recorder:hover,
+.shortcut-clear:hover {
+  background: var(--control-fill-hover);
+  border-color: var(--glass-edge-strong);
+}
+
+.shortcut-recorder.recording {
+  border-color: var(--accent-border);
+  color: var(--accent-strong);
+  box-shadow: 0 0 0 3px var(--accent-muted), inset 0 1px 0 var(--glass-highlight);
+}
+
+.shortcut-recorder.invalid {
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+
+.shortcut-clear {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--text-muted);
+}
+
+.shortcut-error {
+  grid-column: 2;
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.shortcut-setting.compact {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+.shortcut-setting.compact .shortcut-recorder-wrap {
+  grid-template-columns: minmax(0, 1fr) 28px;
+}
+
+.shortcut-setting.compact .shortcut-recorder,
+.shortcut-setting.compact .shortcut-clear {
+  min-height: 30px;
+}
+
+.shortcut-setting.compact .shortcut-error {
+  grid-column: 1;
 }
 
 kbd {

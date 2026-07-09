@@ -8,6 +8,12 @@ export const defaultSettings: Settings = {
   wheelItemCount: 8,
   theme: 'system',
   language: 'system',
+  shortcuts: {
+    openWheel: 'CmdOrCtrl+Shift+V',
+    selectActiveItem: 'Enter',
+    back: 'Escape',
+    wheelItems: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='],
+  },
   wheelAppearance: defaultWheelAppearance,
   capturePlainText: true,
   captureRichText: true,

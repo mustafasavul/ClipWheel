@@ -89,9 +89,18 @@ pub fn get_settings(state: tauri::State<'_, AppState>) -> CommandResult<Settings
 
 #[tauri::command]
 pub fn update_settings(app: AppHandle, state: tauri::State<'_, AppState>, settings: Value) -> CommandResult<Settings> {
+    let has_shortcuts_patch = settings.get("shortcuts").is_some();
     let next = state.repository.update_settings(settings).map_err(to_string)?;
+    if has_shortcuts_patch {
+        crate::register_shortcut(&app);
+    }
     app.emit("items-changed", ()).map_err(to_string)?;
     Ok(next)
+}
+
+#[tauri::command]
+pub fn set_shortcut_capture_active(app: AppHandle, active: bool) -> CommandResult<()> {
+    crate::set_shortcut_capture_active(&app, active).map_err(to_string)
 }
 
 #[tauri::command]

@@ -13,6 +13,7 @@ export const clipwheelClient: AppApi = {
   saveTransformedItem: (id: string, text: string, title: string) => invoke<ClipboardItem>('save_transformed_item', { id, text, title }),
   getSettings: () => invoke<Settings>('get_settings'),
   updateSettings: (settings: Partial<Settings>) => invoke<Settings>('update_settings', { settings }),
+  setShortcutCaptureActive: (active: boolean) => invoke<void>('set_shortcut_capture_active', { active }),
   cleanup: (request: CleanupRequest) => invoke('cleanup', { request }),
   clearSystemClipboard: () => invoke<void>('clear_system_clipboard'),
   getImageDataUrl: (id: string) => invoke<string | null>('get_image_data_url', { id }),

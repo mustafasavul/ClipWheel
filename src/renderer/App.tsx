@@ -87,9 +87,15 @@ const settingsTabs = [
 type SettingsTabId = (typeof settingsTabs)[number]['id'];
 const defaultPageSize = 10;
 const queryClient = new QueryClient();
-const openWheelShortcut = isMacPlatform() ? 'Cmd+Shift+V' : 'Ctrl+Shift+V';
 const dateTimeFormatters = new Map<string, Intl.DateTimeFormat>();
 const relativeTimeFormatters = new Map<string, Intl.RelativeTimeFormat>();
+const maxWheelShortcutItems = 12;
+type ShortcutTarget =
+  | { kind: 'openWheel' }
+  | { kind: 'selectActiveItem' }
+  | { kind: 'back' }
+  | { kind: 'wheelItem'; index: number };
+type ShortcutScope = 'global' | 'wheel';
 
 interface I18nView {
   language: LanguageCode;
@@ -598,6 +604,40 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
   onRefresh: () => Promise<void>;
 }) {
   const { t } = useI18n();
+  const [recordingShortcut, setRecordingShortcut] = useState<string | null>(null);
+  const [shortcutError, setShortcutError] = useState<string | null>(null);
+  const shortcutKey = (target: ShortcutTarget) => target.kind === 'wheelItem' ? `wheelItem-${target.index}` : target.kind;
+  const startShortcutRecording = async (target: ShortcutTarget) => {
+    setShortcutError(null);
+    if (target.kind === 'openWheel') {
+      await clipwheelClient.setShortcutCaptureActive(true);
+    }
+    setRecordingShortcut(shortcutKey(target));
+  };
+  const cancelShortcutRecording = (target: ShortcutTarget) => {
+    setRecordingShortcut(null);
+    if (target.kind === 'openWheel') {
+      void clipwheelClient.setShortcutCaptureActive(false);
+    }
+  };
+  const updateShortcut = (target: ShortcutTarget, value: string) => {
+    const isGlobal = target.kind === 'openWheel';
+    if (isGlobal && value && !isValidGlobalShortcut(value)) {
+      setShortcutError('Use at least one modifier plus one key.');
+      return;
+    }
+    setShortcutError(null);
+    updateSettings({ shortcuts: setShortcutValue(settings.shortcuts, target, value) });
+    setRecordingShortcut(null);
+    if (target.kind === 'openWheel' && !value) {
+      void clipwheelClient.setShortcutCaptureActive(false);
+    }
+  };
+  useEffect(() => () => {
+    if (recordingShortcut === 'openWheel') {
+      void clipwheelClient.setShortcutCaptureActive(false);
+    }
+  }, [recordingShortcut]);
   return (
     <div className="settings-panel">
       <div className="tabs">{settingsTabs.map((entry) => <button type="button" className={entry.id === activeTab ? 'active' : ''} key={entry.id} onClick={() => setActiveTab(entry.id)}>{t(entry.labelKey)}</button>)}</div>
@@ -612,7 +652,7 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
       )}
       {activeTab === 'wheelAppearance' && (
         <div className="appearance-settings">
-          <WheelAppearancePreview appearance={settings.wheelAppearance} />
+          <WheelAppearancePreview appearance={settings.wheelAppearance} shortcuts={settings.shortcuts} />
           <div className="preset-panel">
             <span className="setting-label"><span className="setting-icon"><Palette size={18} /></span>{t('colorPresets')}</span>
             <div className="preset-grid">
@@ -679,9 +719,72 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
       )}
       {activeTab === 'shortcuts' && (
         <div className="shortcut-list">
-          <span>{t('openRadialWheel')}</span><kbd>{openWheelShortcut}</kbd>
-          <span>{t('selectWheelItem')}</span><kbd>1-8 / Enter</kbd>
-          <span>{t('back')}</span><kbd>Escape</kbd>
+          <section className="shortcut-section">
+            <span className="shortcut-section-title">Global</span>
+            <ShortcutRecorder
+              active={recordingShortcut === shortcutKey({ kind: 'openWheel' })}
+              error={shortcutError}
+              label={t('openRadialWheel')}
+              scope="global"
+              value={settings.shortcuts.openWheel}
+              onCancel={() => cancelShortcutRecording({ kind: 'openWheel' })}
+              onClear={() => updateShortcut({ kind: 'openWheel' }, '')}
+              onRecord={(value) => updateShortcut({ kind: 'openWheel' }, value)}
+              onStart={() => startShortcutRecording({ kind: 'openWheel' })}
+            />
+          </section>
+          <section className="shortcut-section">
+            <span className="shortcut-section-title">{t('wheel')}</span>
+            <ShortcutRecorder
+              active={recordingShortcut === shortcutKey({ kind: 'selectActiveItem' })}
+              label={`${t('selectWheelItem')} (${t('apply')})`}
+              scope="wheel"
+              value={settings.shortcuts.selectActiveItem}
+              onCancel={() => setRecordingShortcut(null)}
+              onClear={() => updateShortcut({ kind: 'selectActiveItem' }, '')}
+              onRecord={(value) => updateShortcut({ kind: 'selectActiveItem' }, value)}
+              onStart={() => {
+                setShortcutError(null);
+                setRecordingShortcut(shortcutKey({ kind: 'selectActiveItem' }));
+              }}
+            />
+            <ShortcutRecorder
+              active={recordingShortcut === shortcutKey({ kind: 'back' })}
+              allowEscape
+              label={t('back')}
+              scope="wheel"
+              value={settings.shortcuts.back}
+              onCancel={() => setRecordingShortcut(null)}
+              onClear={() => updateShortcut({ kind: 'back' }, '')}
+              onRecord={(value) => updateShortcut({ kind: 'back' }, value)}
+              onStart={() => {
+                setShortcutError(null);
+                setRecordingShortcut(shortcutKey({ kind: 'back' }));
+              }}
+            />
+          </section>
+          <section className="shortcut-section">
+            <span className="shortcut-section-title">{t('selectWheelItem')}</span>
+            <div className="shortcut-grid">
+              {Array.from({ length: maxWheelShortcutItems }, (_, index) => (
+                <ShortcutRecorder
+                  compact
+                  active={recordingShortcut === shortcutKey({ kind: 'wheelItem', index })}
+                  key={index}
+                  label={`Item ${index + 1}`}
+                  scope="wheel"
+                  value={settings.shortcuts.wheelItems[index] ?? ''}
+                  onCancel={() => setRecordingShortcut(null)}
+                  onClear={() => updateShortcut({ kind: 'wheelItem', index }, '')}
+                  onRecord={(value) => updateShortcut({ kind: 'wheelItem', index }, value)}
+                  onStart={() => {
+                    setShortcutError(null);
+                    setRecordingShortcut(shortcutKey({ kind: 'wheelItem', index }));
+                  }}
+                />
+              ))}
+            </div>
+          </section>
         </div>
       )}
       {activeTab === 'advanced' && (
@@ -771,10 +874,23 @@ function WheelSurface() {
         isShiftPressedRef.current = true;
         setQuickLookVisible(true);
       }
-      if (event.key === 'Escape') void clipwheelClient.closeWheel();
-      if (event.key === 'Enter' && activeItem) void clipwheelClient.copyItem(activeItem.id);
-      const number = Number(event.key);
-      if (number >= 1 && number <= count && wheelItems[number - 1]) void clipwheelClient.copyItem(wheelItems[number - 1].id);
+      if (matchesShortcut(event, settings.shortcuts.back)) {
+        event.preventDefault();
+        void clipwheelClient.closeWheel();
+        return;
+      }
+      if (activeItem && matchesShortcut(event, settings.shortcuts.selectActiveItem)) {
+        event.preventDefault();
+        void clipwheelClient.copyItem(activeItem.id);
+        return;
+      }
+      const itemIndex = settings.shortcuts.wheelItems
+        .slice(0, count)
+        .findIndex((shortcut) => matchesShortcut(event, shortcut));
+      if (itemIndex >= 0 && wheelItems[itemIndex]) {
+        event.preventDefault();
+        void clipwheelClient.copyItem(wheelItems[itemIndex].id);
+      }
     };
     const upHandler = (event: KeyboardEvent) => {
       if (isShiftEvent(event)) {
@@ -794,7 +910,7 @@ function WheelSurface() {
       window.removeEventListener('keyup', upHandler);
       window.removeEventListener('blur', blurHandler);
     };
-  }, [activeItem, count, wheelItems]);
+  }, [activeItem, count, settings.shortcuts, wheelItems]);
 
   return (
     <div
@@ -853,13 +969,13 @@ function WheelSurface() {
               <span className="type-chip">{labelForType(activeItem.type, t)}</span>
               <strong>{activeItem.title}</strong>
               <small className="wheel-center-meta">{wheelSegmentMeta(activeItem, i18n)}</small>
-              <div className="wheel-hints"><span><kbd>Enter</kbd> {t('apply')}</span><span><kbd>Esc</kbd> {t('back')}</span><span><kbd>Shift</kbd> {t('quicklook')}</span></div>
+              <div className="wheel-hints"><span><kbd>{formatShortcutForPlatform(settings.shortcuts.selectActiveItem || 'Enter')}</kbd> {t('apply')}</span><span><kbd>{formatShortcutForPlatform(settings.shortcuts.back || 'Escape')}</kbd> {t('back')}</span><span><kbd>Shift</kbd> {t('quicklook')}</span></div>
             </>
           ) : (
             <>
               <Clipboard size={30} />
               <strong>{t('noCaptures')}</strong>
-              <div className="wheel-hints"><span><kbd>Esc</kbd> {t('back')}</span></div>
+              <div className="wheel-hints"><span><kbd>{formatShortcutForPlatform(settings.shortcuts.back || 'Escape')}</kbd> {t('back')}</span></div>
             </>
           )}
         </div>
@@ -873,7 +989,7 @@ function WheelSurface() {
   );
 }
 
-function WheelAppearancePreview({ appearance }: { appearance: Settings['wheelAppearance'] }) {
+function WheelAppearancePreview({ appearance, shortcuts }: { appearance: Settings['wheelAppearance']; shortcuts: Settings['shortcuts'] }) {
   const { t } = useI18n();
   const count = 8;
   const segmentDeg = 360 / count;
@@ -896,7 +1012,7 @@ function WheelAppearancePreview({ appearance }: { appearance: Settings['wheelApp
           <span className="type-chip">{t('plainText')}</span>
           <strong>{t('livePreview')}</strong>
           <small className="wheel-center-meta">{t('plainText')} • {t('now')}</small>
-          <div className="wheel-hints"><span><kbd>Enter</kbd> {t('apply')}</span><span><kbd>Esc</kbd> {t('back')}</span></div>
+          <div className="wheel-hints"><span><kbd>{formatShortcutForPlatform(shortcuts.selectActiveItem || 'Enter')}</kbd> {t('apply')}</span><span><kbd>{formatShortcutForPlatform(shortcuts.back || 'Escape')}</kbd> {t('back')}</span></div>
         </div>
       </div>
     </div>
@@ -905,6 +1021,154 @@ function WheelAppearancePreview({ appearance }: { appearance: Settings['wheelApp
 
 function isShiftEvent(event: KeyboardEvent): boolean {
   return event.key === 'Shift' || event.code === 'ShiftLeft' || event.code === 'ShiftRight';
+}
+
+function matchesShortcut(event: KeyboardEvent, shortcut: string | undefined): boolean {
+  const parts = shortcut?.split('+').map((part) => normalizeShortcutToken(part)).filter(Boolean) ?? [];
+  if (!parts.length) return false;
+  const key = parts.at(-1);
+  const modifiers = new Set(parts.slice(0, -1));
+  const expectedMeta = modifiers.has('cmd') || modifiers.has('meta') || modifiers.has('super') || (modifiers.has('cmdorctrl') && isMacPlatform());
+  const expectedCtrl = modifiers.has('ctrl') || modifiers.has('control') || (modifiers.has('cmdorctrl') && !isMacPlatform());
+  const expectedAlt = modifiers.has('alt') || modifiers.has('option');
+  const expectedShift = modifiers.has('shift');
+  if (event.metaKey !== expectedMeta || event.ctrlKey !== expectedCtrl || event.altKey !== expectedAlt || event.shiftKey !== expectedShift) {
+    return false;
+  }
+  return key !== undefined && eventShortcutKeys(event).includes(key);
+}
+
+function eventToShortcut(event: KeyboardEvent, scope: ShortcutScope): string | null {
+  const key = shortcutKeyFromEvent(event);
+  if (!key) return null;
+  const modifiers: string[] = [];
+  if (event.metaKey) modifiers.push(isMacPlatform() ? 'CmdOrCtrl' : 'Cmd');
+  if (event.ctrlKey) modifiers.push(isMacPlatform() ? 'Ctrl' : 'CmdOrCtrl');
+  if (event.altKey) modifiers.push('Alt');
+  if (event.shiftKey) modifiers.push('Shift');
+  if (scope === 'global' && modifiers.length === 0) return key;
+  return [...modifiers, key].join('+');
+}
+
+function shortcutKeyFromEvent(event: KeyboardEvent): string | null {
+  if (['Alt', 'Control', 'Meta', 'Shift'].includes(event.key)) return null;
+  if (/^Key[A-Z]$/.test(event.code)) return event.code.slice(3);
+  if (/^Digit[0-9]$/.test(event.code)) return event.code.slice(5);
+  if (/^Numpad[0-9]$/.test(event.code)) return event.code.slice(6);
+  const codeAliases: Record<string, string> = {
+    Backquote: '`',
+    Backslash: '\\',
+    BracketLeft: '[',
+    BracketRight: ']',
+    Comma: ',',
+    Equal: '=',
+    Minus: '-',
+    Period: '.',
+    Quote: "'",
+    Semicolon: ';',
+    Slash: '/',
+    ArrowDown: 'ArrowDown',
+    ArrowLeft: 'ArrowLeft',
+    ArrowRight: 'ArrowRight',
+    ArrowUp: 'ArrowUp',
+    Escape: 'Escape',
+    Enter: 'Enter',
+    Space: 'Space',
+    Tab: 'Tab',
+  };
+  if (codeAliases[event.code]) return codeAliases[event.code];
+  if (/^F([1-9]|1[0-9]|2[0-4])$/.test(event.key)) return event.key.toUpperCase();
+  return event.key.length === 1 ? event.key.toUpperCase() : event.key;
+}
+
+function formatShortcutForPlatform(shortcut: string): string {
+  const parts = shortcut.split('+').map((part) => part.trim()).filter(Boolean);
+  if (!parts.length) return 'Not set';
+  return parts.map((part) => {
+    const normalized = normalizeShortcutToken(part);
+    if (normalized === 'cmdorctrl') return isMacPlatform() ? 'Command' : 'CTRL';
+    if (['cmd', 'command', 'meta', 'super'].includes(normalized)) return 'Command';
+    if (['ctrl', 'control'].includes(normalized)) return 'CTRL';
+    if (['alt', 'option'].includes(normalized)) return 'Option';
+    if (normalized === 'shift') return 'Shift';
+    if (normalized === 'esc') return 'Escape';
+    if (normalized === 'arrowup') return 'Arrow Up';
+    if (normalized === 'arrowdown') return 'Arrow Down';
+    if (normalized === 'arrowleft') return 'Arrow Left';
+    if (normalized === 'arrowright') return 'Arrow Right';
+    return part.length === 1 ? part.toUpperCase() : part;
+  }).join(' + ');
+}
+
+function isValidGlobalShortcut(shortcut: string): boolean {
+  const parts = shortcut.split('+').map((part) => normalizeShortcutToken(part)).filter(Boolean);
+  if (parts.length < 2) return false;
+  const modifiers = new Set(parts.slice(0, -1));
+  return ['alt', 'cmd', 'cmdorctrl', 'command', 'control', 'ctrl', 'meta', 'option', 'shift', 'super'].some((modifier) => modifiers.has(modifier));
+}
+
+function setShortcutValue(shortcuts: Settings['shortcuts'], target: ShortcutTarget, value: string): Settings['shortcuts'] {
+  const next = {
+    ...shortcuts,
+    wheelItems: normalizeWheelItemShortcuts(shortcuts.wheelItems),
+  };
+  if (target.kind === 'openWheel') {
+    return { ...next, openWheel: value };
+  }
+  if (value) {
+    if (target.kind !== 'selectActiveItem' && shortcutsEqual(next.selectActiveItem, value)) next.selectActiveItem = '';
+    if (target.kind !== 'back' && shortcutsEqual(next.back, value)) next.back = '';
+    next.wheelItems = next.wheelItems.map((shortcut, index) => target.kind === 'wheelItem' && target.index === index ? shortcut : shortcutsEqual(shortcut, value) ? '' : shortcut);
+  }
+  if (target.kind === 'selectActiveItem') return { ...next, selectActiveItem: value };
+  if (target.kind === 'back') return { ...next, back: value };
+  const wheelItems = normalizeWheelItemShortcuts(next.wheelItems);
+  wheelItems[target.index] = value;
+  return { ...next, wheelItems };
+}
+
+function shortcutsEqual(left: string | undefined, right: string | undefined): boolean {
+  return normalizeShortcutValue(left) === normalizeShortcutValue(right);
+}
+
+function normalizeShortcutValue(value: string | undefined): string {
+  return value?.split('+').map((part) => normalizeShortcutToken(part)).filter(Boolean).join('+') ?? '';
+}
+
+function normalizeShortcutToken(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, '');
+}
+
+function eventShortcutKeys(event: KeyboardEvent): string[] {
+  const keys = new Set<string>([normalizeShortcutToken(event.key)]);
+  if (/^Key[A-Z]$/.test(event.code)) keys.add(event.code.slice(3).toLowerCase());
+  if (/^Digit[0-9]$/.test(event.code)) keys.add(event.code.slice(5));
+  if (/^Numpad[0-9]$/.test(event.code)) keys.add(event.code.slice(6));
+  const codeAliases: Record<string, string[]> = {
+    Backquote: ['`'],
+    Backslash: ['\\'],
+    BracketLeft: ['['],
+    BracketRight: [']'],
+    Comma: [','],
+    Equal: ['='],
+    Minus: ['-'],
+    Period: ['.'],
+    Quote: ["'"],
+    Semicolon: [';'],
+    Slash: ['/'],
+    ArrowDown: ['down'],
+    ArrowLeft: ['left'],
+    ArrowRight: ['right'],
+    ArrowUp: ['up'],
+    Escape: ['esc', 'escape'],
+    Enter: ['enter', 'return'],
+    Space: ['space'],
+    Tab: ['tab'],
+  };
+  for (const alias of codeAliases[event.code] ?? []) {
+    keys.add(alias);
+  }
+  return [...keys];
 }
 
 function wheelSegmentMeta(item: ClipboardItem, i18n: I18nView): string {
@@ -1024,6 +1288,96 @@ function ColorSetting({ label, value, onChange }: { label: string; value: string
       </span>
     </label>
   );
+}
+
+function ShortcutRecorder({
+  active,
+  allowEscape = false,
+  compact = false,
+  error,
+  label,
+  scope,
+  value,
+  onCancel,
+  onClear,
+  onRecord,
+  onStart,
+}: {
+  active: boolean;
+  allowEscape?: boolean;
+  compact?: boolean;
+  error?: string | null;
+  label: string;
+  scope: ShortcutScope;
+  value: string;
+  onCancel: () => void;
+  onClear: () => void;
+  onRecord: (value: string) => void;
+  onStart: () => void;
+}) {
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const recordKeyboardEvent = useCallback((event: KeyboardEvent) => {
+    if (!active) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.key === 'Backspace') {
+      onClear();
+      return;
+    }
+    if (event.key === 'Escape' && !allowEscape) {
+      onCancel();
+      return;
+    }
+    const shortcut = eventToShortcut(event, scope);
+    if (shortcut) {
+      onRecord(shortcut);
+    }
+  }, [active, allowEscape, onCancel, onClear, onRecord, scope]);
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    recordKeyboardEvent(event.nativeEvent);
+  };
+  useEffect(() => {
+    if (!active) return undefined;
+    buttonRef.current?.focus();
+    const handleWindowKeyDown = (event: KeyboardEvent) => recordKeyboardEvent(event);
+    window.addEventListener('keydown', handleWindowKeyDown, true);
+    return () => window.removeEventListener('keydown', handleWindowKeyDown, true);
+  }, [active, recordKeyboardEvent]);
+  return (
+    <label className={`shortcut-setting ${compact ? 'compact' : ''}`}>
+      <span>{label}</span>
+      <span className="shortcut-recorder-wrap">
+        <button
+          type="button"
+          className={`shortcut-recorder ${active ? 'recording' : ''} ${error ? 'invalid' : ''}`}
+          aria-label={label}
+          ref={buttonRef}
+          onBlur={() => {
+            if (active) return;
+            window.setTimeout(() => {
+              if (buttonRef.current && document.activeElement !== buttonRef.current) {
+                onCancel();
+              }
+            }, 0);
+          }}
+          onClick={onStart}
+          onKeyDown={handleKeyDown}
+        >
+          {active ? 'Press shortcut...' : formatShortcutForPlatform(value)}
+        </button>
+        {value && (
+          <button type="button" className="shortcut-clear" aria-label={`Clear ${label}`} onClick={onClear}>
+            <X size={14} />
+          </button>
+        )}
+      </span>
+      {error && <small className="shortcut-error">{error}</small>}
+    </label>
+  );
+}
+
+function normalizeWheelItemShortcuts(value: string[]): string[] {
+  return Array.from({ length: maxWheelShortcutItems }, (_, index) => value[index] ?? '');
 }
 
 function SelectSetting({ icon, label, value, options, getOptionLabel, onChange }: {

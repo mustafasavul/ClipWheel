@@ -6,8 +6,9 @@ mod models;
 mod repository;
 
 use anyhow::Result;
+use std::{str::FromStr, sync::atomic::{AtomicBool, Ordering}};
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
 use clipboard_service::ClipboardService;
 use repository::ClipRepository;
@@ -15,6 +16,7 @@ use repository::ClipRepository;
 pub struct AppState {
     repository: ClipRepository,
     clipboard: ClipboardService,
+    shortcut_capture_active: AtomicBool,
 }
 
 fn main() {
@@ -29,6 +31,13 @@ fn main() {
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, _shortcut, event| {
                     if event.state == ShortcutState::Pressed {
+                        if app
+                            .try_state::<AppState>()
+                            .map(|state| state.shortcut_capture_active.load(Ordering::SeqCst))
+                            .unwrap_or(false)
+                        {
+                            return;
+                        }
                         let _ = show_window(app, "wheel");
                     }
                 })
@@ -45,6 +54,7 @@ fn main() {
             commands::save_transformed_item,
             commands::get_settings,
             commands::update_settings,
+            commands::set_shortcut_capture_active,
             commands::cleanup,
             commands::clear_system_clipboard,
             commands::get_image_data_url,
@@ -55,7 +65,7 @@ fn main() {
             let app_data_dir = app.path().app_data_dir()?;
             let repository = ClipRepository::new(&app_data_dir)?;
             let clipboard = ClipboardService::new(repository.clone(), app.handle().clone(), app_data_dir.join("media"));
-            let state = AppState { repository, clipboard: clipboard.clone() };
+            let state = AppState { repository, clipboard: clipboard.clone(), shortcut_capture_active: AtomicBool::new(false) };
             app.manage(state);
             clipboard.start();
             register_shortcut(app.handle());
@@ -170,21 +180,40 @@ fn clamp_window_position(
     (clamped_x, clamped_y)
 }
 
-fn register_shortcut(app: &AppHandle) {
-    let shortcut = Shortcut::new(Some(shortcut_modifiers()), Code::KeyV);
-    if let Err(error) = app.global_shortcut().register(shortcut) {
-        eprintln!("Unable to register ClipWheel shortcut: {error}");
+pub fn register_shortcut(app: &AppHandle) {
+    if let Some(state) = app.try_state::<AppState>() {
+        state.shortcut_capture_active.store(false, Ordering::SeqCst);
+    }
+    if let Err(error) = app.global_shortcut().unregister_all() {
+        eprintln!("Unable to unregister ClipWheel shortcuts: {error}");
+    }
+    let shortcut_value = app
+        .try_state::<AppState>()
+        .and_then(|state| state.repository.get_settings().ok())
+        .map(|settings| settings.shortcuts.open_wheel)
+        .unwrap_or_else(|| "CmdOrCtrl+Shift+V".into());
+    match Shortcut::from_str(shortcut_value.trim()) {
+        Ok(shortcut) => {
+            if let Err(error) = app.global_shortcut().register(shortcut) {
+                eprintln!("Unable to register ClipWheel shortcut '{shortcut_value}': {error}");
+            }
+        }
+        Err(error) => {
+            eprintln!("Invalid ClipWheel shortcut '{shortcut_value}': {error}");
+        }
     }
 }
 
-#[cfg(target_os = "macos")]
-fn shortcut_modifiers() -> Modifiers {
-    Modifiers::SUPER | Modifiers::SHIFT
-}
-
-#[cfg(not(target_os = "macos"))]
-fn shortcut_modifiers() -> Modifiers {
-    Modifiers::CONTROL | Modifiers::SHIFT
+pub fn set_shortcut_capture_active(app: &AppHandle, active: bool) -> Result<()> {
+    if let Some(state) = app.try_state::<AppState>() {
+        state.shortcut_capture_active.store(active, Ordering::SeqCst);
+    }
+    if active {
+        app.global_shortcut().unregister_all()?;
+    } else {
+        register_shortcut(app);
+    }
+    Ok(())
 }
 
 #[cfg(test)]

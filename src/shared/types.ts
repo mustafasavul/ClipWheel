@@ -121,6 +121,7 @@ export interface Settings {
   wheelItemCount: 6 | 8 | 10 | 12;
   theme: 'system' | 'dark' | 'light';
   language: LanguageSetting;
+  shortcuts: ShortcutSettings;
   wheelAppearance: WheelAppearanceSettings;
   capturePlainText: boolean;
   captureRichText: boolean;
@@ -135,6 +136,13 @@ export interface Settings {
   ignoredSourceApps: string[];
   clearClipboardOnQuit: boolean;
   autoPaste: boolean;
+}
+
+export interface ShortcutSettings {
+  openWheel: string;
+  selectActiveItem: string;
+  back: string;
+  wheelItems: string[];
 }
 
 export interface WheelAppearanceSettings {
@@ -200,6 +208,7 @@ export interface AppApi {
   saveTransformedItem(id: string, text: string, title: string): Promise<ClipboardItem>;
   getSettings(): Promise<Settings>;
   updateSettings(settings: Partial<Settings>): Promise<Settings>;
+  setShortcutCaptureActive(active: boolean): Promise<void>;
   cleanup(request: CleanupRequest): Promise<CleanupJob>;
   clearSystemClipboard(): Promise<void>;
   getImageDataUrl(id: string): Promise<string | null>;

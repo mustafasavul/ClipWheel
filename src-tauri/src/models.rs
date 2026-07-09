@@ -84,6 +84,8 @@ pub struct Settings {
     pub theme: String,
     #[serde(default = "default_language")]
     pub language: String,
+    #[serde(default)]
+    pub shortcuts: ShortcutSettings,
     pub wheel_appearance: WheelAppearanceSettings,
     pub capture_plain_text: bool,
     pub capture_rich_text: bool,
@@ -102,6 +104,49 @@ pub struct Settings {
 
 fn default_language() -> String {
     "system".into()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ShortcutSettings {
+    #[serde(default = "default_open_wheel_shortcut")]
+    pub open_wheel: String,
+    #[serde(default = "default_select_active_item_shortcut")]
+    pub select_active_item: String,
+    #[serde(default = "default_back_shortcut")]
+    pub back: String,
+    #[serde(default = "default_wheel_item_shortcuts")]
+    pub wheel_items: Vec<String>,
+}
+
+fn default_open_wheel_shortcut() -> String {
+    "CmdOrCtrl+Shift+V".into()
+}
+
+fn default_select_active_item_shortcut() -> String {
+    "Enter".into()
+}
+
+fn default_back_shortcut() -> String {
+    "Escape".into()
+}
+
+fn default_wheel_item_shortcuts() -> Vec<String> {
+    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="]
+        .into_iter()
+        .map(String::from)
+        .collect()
+}
+
+impl Default for ShortcutSettings {
+    fn default() -> Self {
+        Self {
+            open_wheel: default_open_wheel_shortcut(),
+            select_active_item: default_select_active_item_shortcut(),
+            back: default_back_shortcut(),
+            wheel_items: default_wheel_item_shortcuts(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -170,6 +215,7 @@ impl Default for Settings {
             wheel_item_count: 8,
             theme: "system".into(),
             language: "system".into(),
+            shortcuts: ShortcutSettings::default(),
             wheel_appearance: WheelAppearanceSettings::default(),
             capture_plain_text: true,
             capture_rich_text: true,
