@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS clipboard_items (
   last_used_at TEXT,
   deleted_at TEXT
 );
-CREATE UNIQUE INDEX IF NOT EXISTS idx_clipboard_items_hash_live ON clipboard_items(content_hash) WHERE is_deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_clipboard_items_hash_live_lookup ON clipboard_items(content_hash) WHERE is_deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_clipboard_items_created ON clipboard_items(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_clipboard_items_type ON clipboard_items(type);
 

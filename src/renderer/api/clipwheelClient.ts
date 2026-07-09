@@ -15,7 +15,6 @@ export const clipwheelClient: AppApi = {
   updateSettings: (settings: Partial<Settings>) => invoke<Settings>('update_settings', { settings }),
   setShortcutCaptureActive: (active: boolean) => invoke<void>('set_shortcut_capture_active', { active }),
   cleanup: (request: CleanupRequest) => invoke('cleanup', { request }),
-  clearSystemClipboard: () => invoke<void>('clear_system_clipboard'),
   getImageDataUrl: (id: string) => invoke<string | null>('get_image_data_url', { id }),
   showWindow: (name: 'history' | 'settings' | 'wheel') => invoke<void>('show_window', { name }),
   closeWheel: () => invoke<void>('close_wheel'),

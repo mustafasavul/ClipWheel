@@ -56,7 +56,6 @@ fn main() {
             commands::update_settings,
             commands::set_shortcut_capture_active,
             commands::cleanup,
-            commands::clear_system_clipboard,
             commands::get_image_data_url,
             commands::show_window,
             commands::close_wheel,
@@ -86,9 +85,6 @@ fn main() {
             if let tauri::RunEvent::ExitRequested { .. } = event {
                 if let Some(state) = app.try_state::<AppState>() {
                     state.clipboard.stop();
-                    if state.repository.get_settings().map(|s| s.clear_clipboard_on_quit).unwrap_or(false) {
-                        let _ = state.clipboard.clear_system_clipboard();
-                    }
                 }
             }
         });

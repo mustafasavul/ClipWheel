@@ -97,8 +97,6 @@ pub struct Settings {
     pub max_image_size_mb: i64,
     pub auto_delete_after_days: i64,
     pub pause_capture: bool,
-    pub ignored_source_apps: Vec<String>,
-    pub clear_clipboard_on_quit: bool,
     pub auto_paste: bool,
 }
 
@@ -227,14 +225,6 @@ impl Default for Settings {
             max_image_size_mb: 25,
             auto_delete_after_days: 0,
             pause_capture: false,
-            ignored_source_apps: vec![
-                "1Password".into(),
-                "Bitwarden".into(),
-                "KeePass".into(),
-                "Dashlane".into(),
-                "LastPass".into(),
-            ],
-            clear_clipboard_on_quit: false,
             auto_paste: false,
         }
     }

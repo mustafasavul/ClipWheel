@@ -1,12 +1,23 @@
-use std::{fs, path::{Path, PathBuf}};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{Context, Result};
-use diesel::{prelude::*, r2d2::{ConnectionManager, Pool}, sql_query, sql_types::{BigInt, Integer, Nullable, Text}};
+use diesel::{
+    prelude::*,
+    r2d2::{ConnectionManager, Pool},
+    sql_query,
+    sql_types::{BigInt, Integer, Nullable, Text},
+};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use serde_json::Value;
 use uuid::Uuid;
 
-use crate::models::{default_format_info, CleanupJob, CleanupRequest, ClipboardItem, ClipboardItemInput, HistoryQuery, Settings};
+use crate::models::{
+    default_format_info, CleanupJob, CleanupRequest, ClipboardItem, ClipboardItemInput,
+    HistoryQuery, Settings,
+};
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
@@ -17,30 +28,54 @@ pub struct ClipRepository {
 
 #[derive(QueryableByName)]
 struct ClipboardRow {
-    #[diesel(sql_type = Text)] id: String,
-    #[diesel(sql_type = Text)] type_: String,
-    #[diesel(sql_type = Text)] title: String,
-    #[diesel(sql_type = Text)] preview_text: String,
-    #[diesel(sql_type = Nullable<Text>)] content_text: Option<String>,
-    #[diesel(sql_type = Nullable<Text>)] content_html: Option<String>,
-    #[diesel(sql_type = Nullable<Text>)] content_rtf: Option<String>,
-    #[diesel(sql_type = Nullable<Text>)] image_path: Option<String>,
-    #[diesel(sql_type = Nullable<Text>)] thumbnail_path: Option<String>,
-    #[diesel(sql_type = Nullable<Text>)] file_paths_json: Option<String>,
-    #[diesel(sql_type = Nullable<Text>)] formats_json: Option<String>,
-    #[diesel(sql_type = Nullable<Text>)] content_signals_json: Option<String>,
-    #[diesel(sql_type = Nullable<Text>)] url: Option<String>,
-    #[diesel(sql_type = Nullable<Text>)] code_language: Option<String>,
-    #[diesel(sql_type = Nullable<Text>)] source_app: Option<String>,
-    #[diesel(sql_type = BigInt)] size_bytes: i64,
-    #[diesel(sql_type = Text)] content_hash: String,
-    #[diesel(sql_type = Integer)] is_pinned: i32,
-    #[diesel(sql_type = Integer)] is_favorite: i32,
-    #[diesel(sql_type = Integer)] is_deleted: i32,
-    #[diesel(sql_type = Text)] created_at: String,
-    #[diesel(sql_type = Text)] updated_at: String,
-    #[diesel(sql_type = Nullable<Text>)] last_used_at: Option<String>,
-    #[diesel(sql_type = Nullable<Text>)] deleted_at: Option<String>,
+    #[diesel(sql_type = Text)]
+    id: String,
+    #[diesel(sql_type = Text)]
+    type_: String,
+    #[diesel(sql_type = Text)]
+    title: String,
+    #[diesel(sql_type = Text)]
+    preview_text: String,
+    #[diesel(sql_type = Nullable<Text>)]
+    content_text: Option<String>,
+    #[diesel(sql_type = Nullable<Text>)]
+    content_html: Option<String>,
+    #[diesel(sql_type = Nullable<Text>)]
+    content_rtf: Option<String>,
+    #[diesel(sql_type = Nullable<Text>)]
+    image_path: Option<String>,
+    #[diesel(sql_type = Nullable<Text>)]
+    thumbnail_path: Option<String>,
+    #[diesel(sql_type = Nullable<Text>)]
+    file_paths_json: Option<String>,
+    #[diesel(sql_type = Nullable<Text>)]
+    formats_json: Option<String>,
+    #[diesel(sql_type = Nullable<Text>)]
+    content_signals_json: Option<String>,
+    #[diesel(sql_type = Nullable<Text>)]
+    url: Option<String>,
+    #[diesel(sql_type = Nullable<Text>)]
+    code_language: Option<String>,
+    #[diesel(sql_type = Nullable<Text>)]
+    source_app: Option<String>,
+    #[diesel(sql_type = BigInt)]
+    size_bytes: i64,
+    #[diesel(sql_type = Text)]
+    content_hash: String,
+    #[diesel(sql_type = Integer)]
+    is_pinned: i32,
+    #[diesel(sql_type = Integer)]
+    is_favorite: i32,
+    #[diesel(sql_type = Integer)]
+    is_deleted: i32,
+    #[diesel(sql_type = Text)]
+    created_at: String,
+    #[diesel(sql_type = Text)]
+    updated_at: String,
+    #[diesel(sql_type = Nullable<Text>)]
+    last_used_at: Option<String>,
+    #[diesel(sql_type = Nullable<Text>)]
+    deleted_at: Option<String>,
 }
 
 #[derive(QueryableByName)]
@@ -75,7 +110,8 @@ impl ClipRepository {
         if let Some(parent) = db_path.parent() {
             fs::create_dir_all(parent)?;
         }
-        let manager = ConnectionManager::<SqliteConnection>::new(db_path.to_string_lossy().to_string());
+        let manager =
+            ConnectionManager::<SqliteConnection>::new(db_path.to_string_lossy().to_string());
         let pool = Pool::builder().max_size(4).build(manager)?;
         let repo = Self { pool };
         repo.configure_and_migrate()?;
@@ -111,11 +147,14 @@ impl ClipRepository {
         .bind::<Nullable<Text>, _>(&input.url)
         .bind::<Nullable<Text>, _>(&input.code_language)
         .bind::<Nullable<Text>, _>(&input.source_app)
-        .bind::<BigInt, _>(input.size_bytes)
-        .bind::<Text, _>(&input.content_hash)
-        .bind::<Text, _>(&now)
-        .bind::<Text, _>(&now)
-        .execute(&mut conn)?;
+            .bind::<BigInt, _>(input.size_bytes)
+            .bind::<Text, _>(&input.content_hash)
+            .bind::<Text, _>(&now)
+            .bind::<Text, _>(&now)
+            .execute(&mut conn)?;
+        drop(conn);
+        let settings = self.get_settings()?;
+        self.enforce_history_limit(settings.max_history_items, Some(&id))?;
         self.get_item(&id)
     }
 
@@ -130,9 +169,12 @@ impl ClipRepository {
 
     pub fn find_by_hash(&self, hash: &str) -> Result<Option<ClipboardItem>> {
         let mut conn = self.conn()?;
-        let rows = sql_query(format!("{} LIMIT 1", select_sql("WHERE content_hash = ? AND is_deleted = 0")))
-            .bind::<Text, _>(hash)
-            .load::<ClipboardRow>(&mut conn)?;
+        let rows = sql_query(format!(
+            "{} LIMIT 1",
+            select_sql("WHERE content_hash = ? AND is_deleted = 0")
+        ))
+        .bind::<Text, _>(hash)
+        .load::<ClipboardRow>(&mut conn)?;
         Ok(rows.into_iter().next().map(row_to_item))
     }
 
@@ -140,19 +182,37 @@ impl ClipRepository {
         let where_sql = build_where(&query);
         let limit = query.limit.unwrap_or(500);
         let offset = query.offset.unwrap_or(0);
-        let sql = format!("{} {} ORDER BY is_pinned DESC, created_at DESC LIMIT {} OFFSET {}", select_sql(""), where_sql, limit, offset);
+        let sql = format!(
+            "{} {} ORDER BY is_pinned DESC, created_at DESC LIMIT {} OFFSET {}",
+            select_sql(""),
+            where_sql,
+            limit,
+            offset
+        );
         let mut conn = self.conn()?;
-        Ok(sql_query(sql).load::<ClipboardRow>(&mut conn)?.into_iter().map(row_to_item).collect())
+        Ok(sql_query(sql)
+            .load::<ClipboardRow>(&mut conn)?
+            .into_iter()
+            .map(row_to_item)
+            .collect())
     }
 
     pub fn count_items(&self, query: HistoryQuery) -> Result<i64> {
         let where_sql = build_where(&query);
         let mut conn = self.conn()?;
-        let row = sql_query(format!("SELECT COUNT(*) as count FROM clipboard_items {where_sql}")).get_result::<CountRow>(&mut conn)?;
+        let row = sql_query(format!(
+            "SELECT COUNT(*) as count FROM clipboard_items {where_sql}"
+        ))
+        .get_result::<CountRow>(&mut conn)?;
         Ok(row.count)
     }
 
-    pub fn update_flags(&self, id: &str, is_pinned: Option<bool>, is_favorite: Option<bool>) -> Result<ClipboardItem> {
+    pub fn update_flags(
+        &self,
+        id: &str,
+        is_pinned: Option<bool>,
+        is_favorite: Option<bool>,
+    ) -> Result<ClipboardItem> {
         let current = self.get_item(id)?;
         let now = now();
         let mut conn = self.conn()?;
@@ -208,7 +268,11 @@ impl ClipRepository {
         }
         if request.mode == "between" {
             if let (Some(start), Some(end)) = (&request.start_date, &request.end_date) {
-                where_sql.push_str(&format!(" AND created_at BETWEEN '{}' AND '{}'", sql_escape(start), sql_escape(end)));
+                where_sql.push_str(&format!(
+                    " AND created_at BETWEEN '{}' AND '{}'",
+                    sql_escape(start),
+                    sql_escape(end)
+                ));
             }
         }
 
@@ -239,8 +303,11 @@ impl ClipRepository {
     pub fn get_settings(&self) -> Result<Settings> {
         let mut settings_value = serde_json::to_value(Settings::default())?;
         let mut conn = self.conn()?;
-        let rows = sql_query("SELECT key, value_json FROM settings").load::<SettingRow>(&mut conn)?;
-        let object = settings_value.as_object_mut().context("default settings must be an object")?;
+        let rows =
+            sql_query("SELECT key, value_json FROM settings").load::<SettingRow>(&mut conn)?;
+        let object = settings_value
+            .as_object_mut()
+            .context("default settings must be an object")?;
         for row in rows {
             if let Ok(value) = serde_json::from_str::<Value>(&row.value_json) {
                 object.insert(row.key, value);
@@ -250,7 +317,9 @@ impl ClipRepository {
     }
 
     pub fn update_settings(&self, patch: Value) -> Result<Settings> {
-        let object = patch.as_object().context("settings patch must be an object")?;
+        let object = patch
+            .as_object()
+            .context("settings patch must be an object")?;
         let now = now();
         let mut conn = self.conn()?;
         for (key, value) in object {
@@ -260,21 +329,65 @@ impl ClipRepository {
                 .bind::<Text, _>(&now)
                 .execute(&mut conn)?;
         }
-        self.get_settings()
+        drop(conn);
+        let next = self.get_settings()?;
+        if object.contains_key("maxHistoryItems") {
+            self.enforce_history_limit(next.max_history_items, None)?;
+        }
+        Ok(next)
     }
 
     fn configure_and_migrate(&self) -> Result<()> {
         let mut conn = self.conn()?;
         sql_query("PRAGMA journal_mode = WAL").execute(&mut conn)?;
         sql_query("PRAGMA foreign_keys = ON").execute(&mut conn)?;
-        conn.run_pending_migrations(MIGRATIONS).map_err(|err| anyhow::anyhow!("{err}"))?;
+        conn.run_pending_migrations(MIGRATIONS)
+            .map_err(|err| anyhow::anyhow!("{err}"))?;
         add_column_if_missing(&mut conn, "clipboard_items", "formats_json", "TEXT")?;
         add_column_if_missing(&mut conn, "clipboard_items", "content_signals_json", "TEXT")?;
+        sql_query("DROP INDEX IF EXISTS idx_clipboard_items_hash_live").execute(&mut conn)?;
+        sql_query("CREATE INDEX IF NOT EXISTS idx_clipboard_items_hash_live_lookup ON clipboard_items(content_hash) WHERE is_deleted = 0").execute(&mut conn)?;
         let now = now();
         sql_query("UPDATE clipboard_items SET is_deleted = 1, deleted_at = COALESCE(deleted_at, ?), updated_at = ? WHERE is_deleted = 0 AND (type = 'sensitive' OR is_sensitive = 1)")
             .bind::<Text, _>(&now)
             .bind::<Text, _>(&now)
             .execute(&mut conn)?;
+        Ok(())
+    }
+
+    fn enforce_history_limit(&self, max_history_items: i64, keep_id: Option<&str>) -> Result<()> {
+        if max_history_items <= 0 {
+            return Ok(());
+        }
+        let active_count = self.count_items(HistoryQuery {
+            include_deleted: Some(false),
+            ..Default::default()
+        })?;
+        let overflow = active_count - max_history_items;
+        if overflow <= 0 {
+            return Ok(());
+        }
+
+        let now = now();
+        let keep_clause = keep_id
+            .map(|id| format!(" AND id != '{}'", sql_escape(id)))
+            .unwrap_or_default();
+        let mut conn = self.conn()?;
+        sql_query(format!(
+            "UPDATE clipboard_items
+             SET is_deleted = 1, deleted_at = '{deleted_at}', updated_at = '{updated_at}'
+             WHERE id IN (
+               SELECT id FROM clipboard_items
+               WHERE is_deleted = 0 AND is_pinned = 0{keep_clause}
+               ORDER BY created_at ASC, id ASC
+               LIMIT {overflow}
+             )",
+            deleted_at = sql_escape(&now),
+            updated_at = sql_escape(&now),
+            keep_clause = keep_clause,
+            overflow = overflow,
+        ))
+        .execute(&mut conn)?;
         Ok(())
     }
 
@@ -288,7 +401,9 @@ impl ClipRepository {
 
     fn count_settings(&self) -> Result<i64> {
         let mut conn = self.conn()?;
-        Ok(sql_query("SELECT COUNT(*) as count FROM settings").get_result::<CountRow>(&mut conn)?.count)
+        Ok(sql_query("SELECT COUNT(*) as count FROM settings")
+            .get_result::<CountRow>(&mut conn)?
+            .count)
     }
 
     fn conn(&self) -> Result<diesel::r2d2::PooledConnection<ConnectionManager<SqliteConnection>>> {
@@ -314,7 +429,12 @@ fn build_where(query: &HistoryQuery) -> String {
             clauses.push(format!("type = '{}'", sql_escape(item_type)));
         }
     }
-    if let Some(search) = query.search.as_ref().map(|value| value.trim()).filter(|value| !value.is_empty()) {
+    if let Some(search) = query
+        .search
+        .as_ref()
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
+    {
         let search = sql_escape(search);
         clauses.push(format!("(title LIKE '%{search}%' OR preview_text LIKE '%{search}%' OR content_text LIKE '%{search}%' OR url LIKE '%{search}%')"));
     }
@@ -336,7 +456,12 @@ fn build_where(query: &HistoryQuery) -> String {
     }
 }
 
-fn add_column_if_missing(conn: &mut SqliteConnection, table: &str, column: &str, definition: &str) -> Result<()> {
+fn add_column_if_missing(
+    conn: &mut SqliteConnection,
+    table: &str,
+    column: &str,
+    definition: &str,
+) -> Result<()> {
     #[derive(QueryableByName)]
     struct TableInfo {
         #[diesel(sql_type = Text)]
@@ -344,7 +469,10 @@ fn add_column_if_missing(conn: &mut SqliteConnection, table: &str, column: &str,
     }
     let rows = sql_query(format!("PRAGMA table_info({table})")).load::<TableInfo>(conn)?;
     if !rows.iter().any(|row| row.name == column) {
-        sql_query(format!("ALTER TABLE {table} ADD COLUMN {column} {definition}")).execute(conn)?;
+        sql_query(format!(
+            "ALTER TABLE {table} ADD COLUMN {column} {definition}"
+        ))
+        .execute(conn)?;
     }
     Ok(())
 }
@@ -383,7 +511,11 @@ fn parse_json<T: serde::de::DeserializeOwned>(value: Option<String>) -> Option<T
 }
 
 fn bool_int(value: bool) -> i32 {
-    if value { 1 } else { 0 }
+    if value {
+        1
+    } else {
+        0
+    }
 }
 
 fn now() -> String {
@@ -394,13 +526,144 @@ fn sql_escape(value: &str) -> String {
     value.replace('\'', "''")
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::{default_format_info, ClipboardItemInput};
+
+    fn test_repo() -> (tempfile::TempDir, ClipRepository) {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let repo = ClipRepository::with_path(&dir.path().join("clipwheel.sqlite")).expect("repo");
+        (dir, repo)
+    }
+
+    fn text_input(content: &str, hash: &str) -> ClipboardItemInput {
+        ClipboardItemInput {
+            item_type: "plain_text".into(),
+            title: content.into(),
+            preview_text: content.into(),
+            content_text: Some(content.into()),
+            content_html: None,
+            content_rtf: None,
+            image_path: None,
+            thumbnail_path: None,
+            file_paths: Vec::new(),
+            format_info: default_format_info("test"),
+            content_signals: Vec::new(),
+            url: None,
+            code_language: None,
+            source_app: None,
+            size_bytes: content.len() as i64,
+            content_hash: hash.into(),
+        }
+    }
+
+    #[test]
+    fn allows_duplicate_hash_rows_for_duplicate_capture_setting() {
+        let (_dir, repo) = test_repo();
+
+        repo.create_item(text_input("same", "duplicate-hash"))
+            .expect("first item");
+        repo.create_item(text_input("same", "duplicate-hash"))
+            .expect("duplicate item");
+
+        let items = repo
+            .list_items(HistoryQuery {
+                limit: Some(10),
+                ..Default::default()
+            })
+            .expect("items");
+        assert_eq!(items.len(), 2);
+        assert!(items
+            .iter()
+            .all(|item| item.content_hash == "duplicate-hash"));
+    }
+
+    #[test]
+    fn max_history_items_soft_deletes_oldest_unpinned_items() {
+        let (_dir, repo) = test_repo();
+        repo.update_settings(serde_json::json!({ "maxHistoryItems": 2 }))
+            .expect("settings");
+
+        let first = repo
+            .create_item(text_input("first", "hash-1"))
+            .expect("first");
+        std::thread::sleep(std::time::Duration::from_millis(2));
+        let second = repo
+            .create_item(text_input("second", "hash-2"))
+            .expect("second");
+        std::thread::sleep(std::time::Duration::from_millis(2));
+        let third = repo
+            .create_item(text_input("third", "hash-3"))
+            .expect("third");
+
+        let active = repo
+            .list_items(HistoryQuery {
+                limit: Some(10),
+                ..Default::default()
+            })
+            .expect("active");
+        assert_eq!(active.len(), 2);
+        assert!(!active.iter().any(|item| item.id == first.id));
+        assert!(active.iter().any(|item| item.id == second.id));
+        assert!(active.iter().any(|item| item.id == third.id));
+
+        let deleted_first = repo.get_item(&first.id).expect("deleted first");
+        assert!(deleted_first.is_deleted);
+    }
+
+    #[test]
+    fn lowering_max_history_items_prunes_existing_history() {
+        let (_dir, repo) = test_repo();
+
+        let first = repo
+            .create_item(text_input("first", "hash-1"))
+            .expect("first");
+        std::thread::sleep(std::time::Duration::from_millis(2));
+        let second = repo
+            .create_item(text_input("second", "hash-2"))
+            .expect("second");
+        std::thread::sleep(std::time::Duration::from_millis(2));
+        let third = repo
+            .create_item(text_input("third", "hash-3"))
+            .expect("third");
+
+        repo.update_flags(&first.id, Some(true), None)
+            .expect("pin first");
+        repo.update_settings(serde_json::json!({ "maxHistoryItems": 1 }))
+            .expect("settings");
+
+        let active = repo
+            .list_items(HistoryQuery {
+                limit: Some(10),
+                ..Default::default()
+            })
+            .expect("active");
+        assert_eq!(active.len(), 1);
+        assert!(active
+            .iter()
+            .any(|item| item.id == first.id && item.is_pinned));
+
+        let deleted_second = repo.get_item(&second.id).expect("deleted second");
+        assert!(deleted_second.is_deleted);
+        let deleted_third = repo.get_item(&third.id).expect("deleted third");
+        assert!(deleted_third.is_deleted);
+    }
+}
+
 fn electron_db_path() -> PathBuf {
     let home = std::env::var("HOME").unwrap_or_default();
     if cfg!(target_os = "macos") {
         PathBuf::from(home).join("Library/Application Support/ClipWheel/clipwheel.sqlite")
     } else if cfg!(target_os = "windows") {
-        std::env::var("APPDATA").map(PathBuf::from).unwrap_or_default().join("ClipWheel/clipwheel.sqlite")
+        std::env::var("APPDATA")
+            .map(PathBuf::from)
+            .unwrap_or_default()
+            .join("ClipWheel/clipwheel.sqlite")
     } else {
-        std::env::var("XDG_CONFIG_HOME").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from(home).join(".config")).join("ClipWheel/clipwheel.sqlite")
+        std::env::var("XDG_CONFIG_HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| PathBuf::from(home).join(".config"))
+            .join("ClipWheel/clipwheel.sqlite")
     }
 }

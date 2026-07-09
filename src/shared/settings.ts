@@ -25,7 +25,5 @@ export const defaultSettings: Settings = {
   maxImageSizeMb: 25,
   autoDeleteAfterDays: 0,
   pauseCapture: false,
-  ignoredSourceApps: ['1Password', 'Bitwarden', 'KeePass', 'Dashlane', 'LastPass'],
-  clearClipboardOnQuit: false,
   autoPaste: false,
 };

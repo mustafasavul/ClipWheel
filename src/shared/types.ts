@@ -133,8 +133,6 @@ export interface Settings {
   maxImageSizeMb: number;
   autoDeleteAfterDays: number;
   pauseCapture: boolean;
-  ignoredSourceApps: string[];
-  clearClipboardOnQuit: boolean;
   autoPaste: boolean;
 }
 
@@ -210,7 +208,6 @@ export interface AppApi {
   updateSettings(settings: Partial<Settings>): Promise<Settings>;
   setShortcutCaptureActive(active: boolean): Promise<void>;
   cleanup(request: CleanupRequest): Promise<CleanupJob>;
-  clearSystemClipboard(): Promise<void>;
   getImageDataUrl(id: string): Promise<string | null>;
   showWindow(name: 'history' | 'settings' | 'wheel'): Promise<void>;
   closeWheel(): Promise<void>;

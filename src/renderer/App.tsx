@@ -709,11 +709,6 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
       {activeTab === 'privacy' && (
         <SettingsGrid>
           <Toggle icon={<Shield size={18} />} label={t('pauseCapture')} value={settings.pauseCapture} onChange={(value) => updateSettings({ pauseCapture: value })} />
-          <Toggle icon={<Trash2 size={18} />} label={t('clearClipboardOnQuit')} value={settings.clearClipboardOnQuit} onChange={(value) => updateSettings({ clearClipboardOnQuit: value })} />
-          <label className="setting-field wide"><span className="setting-label"><span className="setting-icon"><Shield size={18} /></span>{t('ignoredSourceApps')}</span><textarea value={settings.ignoredSourceApps.join('\n')} onChange={(event) => updateSettings({ ignoredSourceApps: event.target.value.split('\n').flatMap((line) => {
-            const trimmed = line.trim();
-            return trimmed ? [trimmed] : [];
-          }) })} /></label>
         </SettingsGrid>
       )}
       {activeTab === 'cleanup' && (

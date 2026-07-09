@@ -111,11 +111,6 @@ pub fn cleanup(app: AppHandle, state: tauri::State<'_, AppState>, request: Clean
 }
 
 #[tauri::command]
-pub fn clear_system_clipboard(state: tauri::State<'_, AppState>) -> CommandResult<()> {
-    state.clipboard.clear_system_clipboard().map_err(to_string)
-}
-
-#[tauri::command]
 pub fn get_image_data_url(state: tauri::State<'_, AppState>, id: String) -> CommandResult<Option<String>> {
     let item = state.repository.get_item(&id).map_err(to_string)?;
     media::image_data_url(&item).map_err(to_string)
