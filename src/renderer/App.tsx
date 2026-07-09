@@ -168,6 +168,8 @@ function MainSurface() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const refreshRef = useRef<() => void>(() => undefined);
+  const pageRef = useRef(page);
+  const refreshRequestRef = useRef(0);
 
   const selected = items.find((item) => item.id === selectedId) ?? items[0] ?? null;
   const pagedQuery = useMemo(() => ({ ...query, limit: pageSize, offset: (page - 1) * pageSize }), [page, pageSize, query]);
@@ -181,9 +183,12 @@ function MainSurface() {
   useApplyLanguage(i18n.language, i18n.direction);
 
   const refresh = useCallback(async () => {
+    const requestId = refreshRequestRef.current + 1;
+    refreshRequestRef.current = requestId;
     try {
       setError(null);
       const [nextItems, nextSettings, nextTotal] = await Promise.all([clipwheelClient.getItems(pagedQuery), clipwheelClient.getSettings(), clipwheelClient.countItems(query)]);
+      if (refreshRequestRef.current !== requestId) return;
       setItems(nextItems);
       setSettings(nextSettings);
       setTotalItems(nextTotal);
@@ -192,22 +197,35 @@ function MainSurface() {
       }
       setSelectedId((current) => current && nextItems.some((item) => item.id === current) ? current : nextItems[0]?.id ?? null);
     } catch (refreshError) {
+      if (refreshRequestRef.current !== requestId) return;
       setError(refreshError instanceof Error ? refreshError.message : t('unableToLoadClipWheelData'));
     } finally {
-      setLoading(false);
+      if (refreshRequestRef.current === requestId) {
+        setLoading(false);
+      }
     }
   }, [page, pageSize, pagedQuery, query, t]);
+
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
 
   useEffect(() => {
     refreshRef.current = () => void refresh();
   }, [refresh]);
 
   useEffect(() => {
-    refreshRef.current();
+    void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
     const refreshNow = () => refreshRef.current();
     const refreshForClipboardItem = () => {
+      if (pageRef.current === 1) {
+        refreshNow();
+        return;
+      }
       setPage(1);
-      window.setTimeout(refreshNow, 0);
     };
     const unlistenItemsChanged = clipwheelClient.onItemsChanged(refreshNow);
     const unlistenClipboardItem = clipwheelClient.onClipboardItem(refreshForClipboardItem);
