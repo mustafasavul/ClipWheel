@@ -3,7 +3,9 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::{
     media,
-    models::{CleanupJob, CleanupRequest, ClipboardItem, HistoryQuery, Settings},
+    models::{
+        clamp_wheel_item_count, CleanupJob, CleanupRequest, ClipboardItem, HistoryQuery, Settings,
+    },
     AppState,
 };
 
@@ -39,13 +41,13 @@ pub fn get_recent_wheel_items(
     state
         .repository
         .list_items(HistoryQuery {
-            limit: Some(count.unwrap_or_else(|| {
+            limit: Some(clamp_wheel_item_count(count.unwrap_or_else(|| {
                 state
                     .repository
                     .get_settings()
                     .map(|s| s.wheel_item_count)
                     .unwrap_or(8)
-            })),
+            }))),
             ..Default::default()
         })
         .map_err(to_string)

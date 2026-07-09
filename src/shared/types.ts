@@ -1,3 +1,5 @@
+import type { WheelItemCount } from './wheelLimits';
+
 export type ClipboardItemType =
   | 'plain_text'
   | 'rich_text'
@@ -118,7 +120,7 @@ export interface Settings {
   startAtLogin: boolean;
   showTrayIcon: boolean;
   wheelPosition: 'center' | 'cursor';
-  wheelItemCount: 6 | 8 | 10 | 12;
+  wheelItemCount: WheelItemCount;
   theme: 'system' | 'dark' | 'light';
   language: LanguageSetting;
   shortcuts: ShortcutSettings;

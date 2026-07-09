@@ -1,6 +1,10 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+pub const MIN_WHEEL_ITEMS: i64 = 4;
+pub const DEFAULT_WHEEL_ITEMS: i64 = 8;
+pub const MAX_WHEEL_ITEMS: i64 = 12;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ClipboardFormatInfo {
@@ -210,7 +214,7 @@ impl Default for Settings {
             start_at_login: false,
             show_tray_icon: true,
             wheel_position: "center".into(),
-            wheel_item_count: 8,
+            wheel_item_count: DEFAULT_WHEEL_ITEMS,
             theme: "system".into(),
             language: "system".into(),
             shortcuts: ShortcutSettings::default(),
@@ -228,6 +232,22 @@ impl Default for Settings {
             auto_paste: false,
         }
     }
+}
+
+pub fn clamp_wheel_item_count(value: i64) -> i64 {
+    value.clamp(MIN_WHEEL_ITEMS, MAX_WHEEL_ITEMS)
+}
+
+pub fn normalize_settings(mut settings: Settings) -> Settings {
+    settings.wheel_item_count = clamp_wheel_item_count(settings.wheel_item_count);
+    settings.shortcuts.wheel_items = normalize_wheel_item_shortcuts(settings.shortcuts.wheel_items);
+    settings
+}
+
+fn normalize_wheel_item_shortcuts(mut shortcuts: Vec<String>) -> Vec<String> {
+    shortcuts.resize(MAX_WHEEL_ITEMS as usize, String::new());
+    shortcuts.truncate(MAX_WHEEL_ITEMS as usize);
+    shortcuts
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

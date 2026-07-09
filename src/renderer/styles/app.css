@@ -1063,6 +1063,13 @@ textarea {
 
 .wheel-preview-ring {
   --segment-deg: 45deg;
+  --wheel-item-count: 8;
+  --wheel-segment-gap: clamp(1.2deg, calc(var(--segment-deg) * 0.055), 2.5deg);
+  --wheel-segment-label-width: clamp(58px, calc(128px - var(--wheel-item-count) * 5px), 92px);
+  --wheel-segment-title-size: clamp(6px, calc(11px - var(--wheel-item-count) * 0.25px), 8px);
+  --wheel-segment-meta-size: clamp(5px, calc(10px - var(--wheel-item-count) * 0.25px), 7px);
+  --wheel-segment-index-size: clamp(15px, calc(25px - var(--wheel-item-count) * 0.5px), 19px);
+  --wheel-segment-icon-size: clamp(16px, calc(34px - var(--wheel-item-count) * 0.85px), 24px);
   position: relative;
   width: min(390px, 82vw);
   aspect-ratio: 1;
@@ -1080,34 +1087,30 @@ textarea {
   font-size: 8px;
 }
 
-.wheel-preview-segment .wheel-icon {
-  width: 24px;
-  height: 24px;
-}
-
 .wheel-preview-segment .wheel-segment-content {
-  top: 15%;
-  width: 92px;
-  gap: 2px;
+  top: clamp(12%, calc(20% - var(--wheel-item-count) * 0.42%), 16%);
+  width: var(--wheel-segment-label-width);
+  gap: clamp(1px, calc(5px - var(--wheel-item-count) * 0.25px), 2px);
 }
 
 .wheel-preview-segment .wheel-index {
   position: static;
-  min-width: 18px;
-  height: 18px;
-  font-size: 9px;
+  min-width: var(--wheel-segment-index-size);
+  height: var(--wheel-segment-index-size);
+  padding: 0 4px;
+  font-size: clamp(6px, calc(var(--wheel-segment-index-size) * 0.48), 9px);
   transform: none;
 }
 
 .wheel-preview-segment strong {
-  max-width: 90px;
-  font-size: 9px;
+  max-width: var(--wheel-segment-label-width);
+  font-size: var(--wheel-segment-title-size);
   line-height: 1.05;
 }
 
 .wheel-preview-segment small {
-  max-width: 90px;
-  font-size: 7px;
+  max-width: var(--wheel-segment-label-width);
+  font-size: var(--wheel-segment-meta-size);
   line-height: 1.05;
 }
 
@@ -1539,6 +1542,13 @@ kbd {
 
 .wheel-ring {
   --segment-deg: 45deg;
+  --wheel-item-count: 8;
+  --wheel-segment-gap: clamp(1.2deg, calc(var(--segment-deg) * 0.055), 2.5deg);
+  --wheel-segment-label-width: clamp(136px, calc(280px - var(--wheel-item-count) * 11px), 224px);
+  --wheel-segment-title-size: clamp(12px, calc(24px - var(--wheel-item-count) * 0.8px), 18px);
+  --wheel-segment-meta-size: clamp(10px, calc(17px - var(--wheel-item-count) * 0.35px), 13px);
+  --wheel-segment-index-size: clamp(22px, calc(38px - var(--wheel-item-count) * 1.25px), 28px);
+  --wheel-segment-icon-size: clamp(30px, calc(72px - var(--wheel-item-count) * 2.25px), 54px);
   position: relative;
   width: min(840px, calc(100vmin - 24px));
   aspect-ratio: 1;
@@ -1561,7 +1571,7 @@ kbd {
   inset: 0;
   z-index: 2;
   border-radius: 50%;
-  background: conic-gradient(from calc(var(--segment-deg) / -2), rgba(255, 255, 255, 0.28) 0 3deg, rgba(255, 255, 255, 0.16) 3deg calc(var(--segment-deg) - 3deg), transparent var(--segment-deg) 360deg);
+  background: conic-gradient(from calc(var(--segment-deg) / -2), rgba(255, 255, 255, 0.28) 0 var(--wheel-segment-gap), rgba(255, 255, 255, 0.16) var(--wheel-segment-gap) calc(var(--segment-deg) - var(--wheel-segment-gap)), transparent var(--segment-deg) 360deg);
   -webkit-mask: radial-gradient(circle, transparent 0 31%, #000 31.5% 100%);
   mask: radial-gradient(circle, transparent 0 31%, #000 31.5% 100%);
   pointer-events: none;
@@ -1597,11 +1607,11 @@ kbd {
     radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--wheel-segment-fill) 78%, white 22%), var(--wheel-segment-fill) 74%);
   -webkit-mask:
     radial-gradient(circle, transparent 0 31%, #000 31.8% 100%),
-    conic-gradient(from calc(var(--segment-deg) / -2), #000 0 calc(var(--segment-deg) - 2.5deg), transparent calc(var(--segment-deg) - 2.5deg) 360deg);
+    conic-gradient(from calc(var(--segment-deg) / -2), #000 0 calc(var(--segment-deg) - var(--wheel-segment-gap)), transparent calc(var(--segment-deg) - var(--wheel-segment-gap)) 360deg);
   -webkit-mask-composite: source-in;
   mask:
     radial-gradient(circle, transparent 0 31%, #000 31.8% 100%),
-    conic-gradient(from calc(var(--segment-deg) / -2), #000 0 calc(var(--segment-deg) - 2.5deg), transparent calc(var(--segment-deg) - 2.5deg) 360deg);
+    conic-gradient(from calc(var(--segment-deg) / -2), #000 0 calc(var(--segment-deg) - var(--wheel-segment-gap)), transparent calc(var(--segment-deg) - var(--wheel-segment-gap)) 360deg);
   mask-composite: intersect;
   color: var(--wheel-label);
   transform: rotate(var(--wheel-segment-rotation));
@@ -1618,10 +1628,10 @@ kbd {
   position: absolute;
   top: 13%;
   left: 50%;
-  width: 208px;
+  width: var(--wheel-segment-label-width);
   display: grid;
   justify-items: center;
-  gap: 6px;
+  gap: clamp(3px, calc(9px - var(--wheel-item-count) * 0.35px), 6px);
   transform: translate(-50%, -50%) rotate(var(--wheel-segment-content-rotation));
   text-align: center;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.54);
@@ -1629,22 +1639,22 @@ kbd {
 
 .wheel-index {
   position: static;
-  min-width: 28px;
-  height: 28px;
+  min-width: var(--wheel-segment-index-size);
+  height: var(--wheel-segment-index-size);
   display: grid;
   place-items: center;
   border-radius: 999px;
   background: color-mix(in srgb, var(--glass-shade) 82%, transparent);
   border: 1px solid var(--wheel-glass-edge);
   color: var(--wheel-label);
-  font-size: 16px;
+  font-size: clamp(12px, calc(var(--wheel-segment-index-size) * 0.58), 16px);
   font-weight: 760;
   box-shadow: inset 0 1px 0 var(--glass-highlight), 0 5px 14px rgba(0, 0, 0, 0.22);
 }
 
 .wheel-icon {
-  width: 54px;
-  height: 54px;
+  width: var(--wheel-segment-icon-size);
+  height: var(--wheel-segment-icon-size);
   display: grid;
   place-items: center;
   background: transparent;
@@ -1659,10 +1669,10 @@ kbd {
 }
 
 .wheel-segment-content strong {
-  max-width: 204px;
+  max-width: var(--wheel-segment-label-width);
   overflow: hidden;
   color: var(--wheel-label);
-  font-size: 18px;
+  font-size: var(--wheel-segment-title-size);
   font-weight: 800;
   line-height: 1.12;
   text-overflow: ellipsis;
@@ -1670,47 +1680,18 @@ kbd {
 }
 
 .wheel-segment small {
-  max-width: 204px;
+  max-width: var(--wheel-segment-label-width);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: color-mix(in srgb, var(--wheel-label) 82%, transparent);
   font-weight: 620;
-  font-size: 13px;
+  font-size: var(--wheel-segment-meta-size);
   line-height: 1.1;
 }
 
 .wheel-segment.active small {
   color: var(--wheel-label);
-}
-
-.wheel-preview-ring .wheel-segment-content {
-  top: 15%;
-  width: 92px;
-  gap: 2px;
-}
-
-.wheel-preview-ring .wheel-index {
-  min-width: 18px;
-  height: 18px;
-  font-size: 9px;
-}
-
-.wheel-preview-ring .wheel-icon {
-  width: 24px;
-  height: 24px;
-}
-
-.wheel-preview-ring .wheel-segment-content strong {
-  max-width: 90px;
-  font-size: 8px;
-  line-height: 1.05;
-}
-
-.wheel-preview-ring .wheel-segment-content small {
-  max-width: 90px;
-  font-size: 7px;
-  line-height: 1.05;
 }
 
 .wheel-center {

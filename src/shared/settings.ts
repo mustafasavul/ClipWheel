@@ -1,11 +1,12 @@
 import type { Settings } from './types';
 import { defaultWheelAppearance } from './wheelAppearance';
+import { defaultWheelItems } from './wheelLimits';
 
 export const defaultSettings: Settings = {
   startAtLogin: false,
   showTrayIcon: true,
   wheelPosition: 'center',
-  wheelItemCount: 8,
+  wheelItemCount: defaultWheelItems,
   theme: 'system',
   language: 'system',
   shortcuts: {

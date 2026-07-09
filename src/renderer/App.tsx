@@ -63,6 +63,7 @@ import { getSegmentIndex } from '../shared/radialGeometry';
 import { transformText, type TextAction } from '../shared/textActions';
 import { qrColorsForTheme, resolveTheme, type ResolvedTheme } from '../shared/theme';
 import { applyWheelAppearancePreset, defaultWheelAppearance, normalizeOpacity, wheelAppearancePresets, wheelAppearanceStyle, wheelSegmentStyle } from '../shared/wheelAppearance';
+import { clampWheelItemCount, maxWheelItems, wheelItemCountOptions } from '../shared/wheelLimits';
 import { clipwheelClient } from './api/clipwheelClient';
 import './styles/app.css';
 import 'highlight.js/styles/atom-one-dark.css';
@@ -90,13 +91,17 @@ const defaultPageSize = 10;
 const queryClient = new QueryClient();
 const dateTimeFormatters = new Map<string, Intl.DateTimeFormat>();
 const relativeTimeFormatters = new Map<string, Intl.RelativeTimeFormat>();
-const maxWheelShortcutItems = 12;
+const maxWheelShortcutItems = maxWheelItems;
 type ShortcutTarget =
   | { kind: 'openWheel' }
   | { kind: 'selectActiveItem' }
   | { kind: 'back' }
   | { kind: 'wheelItem'; index: number };
 type ShortcutScope = 'global' | 'wheel';
+
+function shortcutKey(target: ShortcutTarget): string {
+  return target.kind === 'wheelItem' ? `wheelItem-${target.index}` : target.kind;
+}
 
 interface I18nView {
   language: LanguageCode;
@@ -613,7 +618,6 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
   const { t } = useI18n();
   const [recordingShortcut, setRecordingShortcut] = useState<string | null>(null);
   const [shortcutError, setShortcutError] = useState<string | null>(null);
-  const shortcutKey = (target: ShortcutTarget) => target.kind === 'wheelItem' ? `wheelItem-${target.index}` : target.kind;
   const startShortcutRecording = async (target: ShortcutTarget) => {
     setShortcutError(null);
     if (target.kind === 'openWheel') {
@@ -653,13 +657,14 @@ function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRe
           <Toggle icon={<LogIn size={18} />} label={t('startAtLogin')} value={settings.startAtLogin} onChange={(value) => updateSettings({ startAtLogin: value })} />
           <Toggle icon={<Monitor size={18} />} label={t('showTrayIcon')} value={settings.showTrayIcon} onChange={(value) => updateSettings({ showTrayIcon: value })} />
           <SelectSetting icon={<MousePointer2 size={18} />} label={t('wheelPosition')} value={settings.wheelPosition} options={['center', 'cursor']} getOptionLabel={(value) => settingOptionLabel(value, t)} onChange={(value) => updateSettings({ wheelPosition: value as Settings['wheelPosition'] })} />
+          <SelectSetting icon={<Clipboard size={18} />} label={`${t('wheel')} ${t('item')}`} value={String(settings.wheelItemCount)} options={wheelItemCountOptions.map(String)} getOptionLabel={(value) => value} onChange={(value) => updateSettings({ wheelItemCount: clampWheelItemCount(Number(value)) })} />
           <SelectSetting icon={settings.theme === 'light' ? <Sun size={18} /> : settings.theme === 'dark' ? <Moon size={18} /> : <Monitor size={18} />} label={t('theme')} value={settings.theme} options={['system', 'dark', 'light']} getOptionLabel={(value) => settingOptionLabel(value, t)} onChange={(value) => updateSettings({ theme: value as Settings['theme'] })} />
           <SelectSetting icon={<Globe2 size={18} />} label={t('language')} value={settings.language} options={languageOptions} getOptionLabel={(value) => languageOptionLabel(value, t)} onChange={(value) => updateSettings({ language: value as Settings['language'] })} />
         </SettingsGrid>
       )}
       {activeTab === 'wheelAppearance' && (
         <div className="appearance-settings">
-          <WheelAppearancePreview appearance={settings.wheelAppearance} shortcuts={settings.shortcuts} />
+          <WheelAppearancePreview appearance={settings.wheelAppearance} count={settings.wheelItemCount} shortcuts={settings.shortcuts} />
           <div className="preset-panel">
             <span className="setting-label"><span className="setting-icon"><Palette size={18} /></span>{t('colorPresets')}</span>
             <div className="preset-grid">
@@ -811,7 +816,7 @@ function WheelSurface() {
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isQuickLookVisible, setQuickLookVisible] = useState(false);
-  const count = settings.wheelItemCount;
+  const count = clampWheelItemCount(settings.wheelItemCount);
   const wheelItems = items.slice(0, count);
   const activeItem = wheelItems[activeIndex] ?? null;
   const segmentDeg = 360 / count;
@@ -836,8 +841,9 @@ function WheelSurface() {
 
   const refresh = useCallback(async () => {
     const nextSettings = await clipwheelClient.getSettings();
-    const nextItems = await clipwheelClient.getRecentWheelItems(nextSettings.wheelItemCount);
-    setSettings(nextSettings);
+    const nextCount = clampWheelItemCount(nextSettings.wheelItemCount);
+    const nextItems = await clipwheelClient.getRecentWheelItems(nextCount);
+    setSettings({ ...nextSettings, wheelItemCount: nextCount });
     setItems(nextItems);
     setActiveIndex((current) => Math.min(current, Math.max(0, nextItems.length - 1)));
   }, []);
@@ -943,7 +949,7 @@ function WheelSurface() {
         if (!isShiftPressedRef.current) setQuickLookVisible(false);
       }}
     >
-      <div className="wheel-ring" style={{ '--segment-deg': `${segmentDeg}deg` } as React.CSSProperties}>
+      <div className="wheel-ring" style={{ '--segment-deg': `${segmentDeg}deg`, '--wheel-item-count': count } as React.CSSProperties}>
         <div className="wheel-active-slice" style={{ transform: `rotate(${activeIndex * segmentDeg}deg)` }} />
         <div className="wheel-inner-border" />
         {Array.from({ length: count }).map((_, index) => {
@@ -991,22 +997,22 @@ function WheelSurface() {
   );
 }
 
-function WheelAppearancePreview({ appearance, shortcuts }: { appearance: Settings['wheelAppearance']; shortcuts: Settings['shortcuts'] }) {
+function WheelAppearancePreview({ appearance, count, shortcuts }: { appearance: Settings['wheelAppearance']; count: Settings['wheelItemCount']; shortcuts: Settings['shortcuts'] }) {
   const { t } = useI18n();
-  const count = 8;
-  const segmentDeg = 360 / count;
+  const previewCount = clampWheelItemCount(count);
+  const segmentDeg = 360 / previewCount;
   return (
     <div className="wheel-preview-shell" style={wheelAppearanceStyle(appearance)}>
-      <div className="wheel-preview-ring" style={{ '--segment-deg': `${segmentDeg}deg` } as React.CSSProperties}>
+      <div className="wheel-preview-ring" style={{ '--segment-deg': `${segmentDeg}deg`, '--wheel-item-count': previewCount } as React.CSSProperties}>
         <div className="wheel-active-slice" />
         <div className="wheel-inner-border" />
-        {Array.from({ length: count }).map((_, index) => (
-          <span className={`wheel-segment wheel-preview-segment ${index === 0 ? 'active' : ''}`} style={wheelSegmentStyle(index, count, appearance)} key={index}>
+        {Array.from({ length: previewCount }).map((_, index) => (
+          <span className={`wheel-segment wheel-preview-segment ${index === 0 ? 'active' : ''}`} style={wheelSegmentStyle(index, previewCount, appearance)} key={index}>
             <span className="wheel-segment-content">
-              <span className="wheel-index">{index + 1}</span>
+              <span className="wheel-index">{formatShortcutForPlatform(shortcuts.wheelItems[index] || String(index + 1))}</span>
               <span className="wheel-icon">{index % 3 === 0 ? <Image size={16} /> : <Type size={16} />}</span>
-              <strong>{index === 0 ? t('selectedClip') : t('clipboard')}</strong>
-              <small>{index === 0 ? `${t('plainText')} • ${t('now')}` : `${t('item')} • 5m ago`}</small>
+              <strong>{index === 0 ? t('selectedClip') : `${t('item')} ${index + 1}`}</strong>
+              <small>{index === 0 ? `${t('plainText')} • ${t('now')}` : t('clipboard')}</small>
             </span>
           </span>
         ))}

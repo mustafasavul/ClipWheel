@@ -313,7 +313,9 @@ impl ClipRepository {
                 object.insert(row.key, value);
             }
         }
-        Ok(serde_json::from_value(settings_value)?)
+        Ok(crate::models::normalize_settings(serde_json::from_value(
+            settings_value,
+        )?))
     }
 
     pub fn update_settings(&self, patch: Value) -> Result<Settings> {
