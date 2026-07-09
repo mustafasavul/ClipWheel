@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   Braces,
+  CirclePause,
   Clipboard,
   Command,
   Copy,
@@ -290,6 +291,12 @@ function MainSurface() {
                 <div>
                   <p className="eyebrow">{t('clipboardHistory')}</p>
                   <h1>{t('recentCaptures')}</h1>
+                  {settings.pauseCapture && (
+                    <span className="capture-paused-badge">
+                      <CirclePause size={15} />
+                      {t('pauseCapture')}
+                    </span>
+                  )}
                 </div>
                 <div className="header-actions">
                   <button type="button" className="secondary-button" onClick={openWheelAppearanceSettings}><Palette size={18} /> {t('customizeWheel')}</button>
