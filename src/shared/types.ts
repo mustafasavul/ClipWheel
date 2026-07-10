@@ -211,6 +211,12 @@ export interface ClipboardSnapshot {
   formats: string[];
 }
 
+export interface MainNavigationRequest {
+  view: 'history' | 'settings';
+  settingsTab?: 'general' | 'wheelAppearance' | 'clipboard' | 'privacy' | 'cleanup' | 'shortcuts' | 'advanced';
+  selectedId?: string;
+}
+
 export interface AppApi {
   getItems(query?: HistoryQuery): Promise<ClipboardItem[]>;
   countItems(query?: HistoryQuery): Promise<number>;
@@ -232,4 +238,5 @@ export interface AppApi {
   onClipboardItem(handler: (item: ClipboardItem) => void): () => void;
   onItemsChanged(handler: () => void): () => void;
   onWheelOpened(handler: () => void): () => void;
+  onMainNavigationRequested(handler: (request: MainNavigationRequest) => void): () => void;
 }

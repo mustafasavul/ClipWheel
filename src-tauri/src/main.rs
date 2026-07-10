@@ -118,9 +118,40 @@ pub fn show_window(app: &AppHandle, name: &str) -> Result<()> {
             .unwrap_or_else(|| "center".into());
         position_wheel_window(app, &window, &wheel_position)?;
         window.emit("wheel-opened", ())?;
+    } else {
+        let view = if name == "settings" {
+            "settings"
+        } else {
+            "history"
+        };
+        window.emit("main-navigation-requested", serde_json::json!({ "view": view }))?;
     }
     window.show()?;
     window.set_focus()?;
+    Ok(())
+}
+
+pub fn show_main_view(
+    app: &AppHandle,
+    view: &str,
+    settings_tab: Option<&str>,
+    selected_id: Option<&str>,
+) -> Result<()> {
+    let Some(window) = app.get_webview_window("main") else {
+        return Ok(());
+    };
+    window.show()?;
+    window.set_focus()?;
+
+    let mut payload = serde_json::Map::new();
+    payload.insert("view".into(), serde_json::Value::String(view.into()));
+    if let Some(tab) = settings_tab {
+        payload.insert("settingsTab".into(), serde_json::Value::String(tab.into()));
+    }
+    if let Some(id) = selected_id {
+        payload.insert("selectedId".into(), serde_json::Value::String(id.into()));
+    }
+    window.emit("main-navigation-requested", serde_json::Value::Object(payload))?;
     Ok(())
 }
 

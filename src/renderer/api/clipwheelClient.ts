@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type Event } from '@tauri-apps/api/event';
-import type { AppApi, CleanupRequest, ClipboardFlagColor, ClipboardItem, HistoryQuery, Settings } from '../../shared/types';
+import type { AppApi, CleanupRequest, ClipboardFlagColor, ClipboardItem, HistoryQuery, MainNavigationRequest, Settings } from '../../shared/types';
 
 type InvokeFn = <T>(command: string, args?: Record<string, unknown>) => Promise<T>;
 type ListenFn = <T>(event: string, handler: (event: Event<T>) => void) => Promise<() => void>;
@@ -29,6 +29,7 @@ export function createClipwheelClient(dependencies: { invoke: InvokeFn; listen: 
     onClipboardItem: (handler: (item: ClipboardItem) => void) => subscribe(listenEvent, 'clipboard-item', handler),
     onItemsChanged: (handler: () => void) => subscribe(listenEvent, 'items-changed', handler),
     onWheelOpened: (handler: () => void) => subscribe(listenEvent, 'wheel-opened', handler),
+    onMainNavigationRequested: (handler: (request: MainNavigationRequest) => void) => subscribe(listenEvent, 'main-navigation-requested', handler),
   };
 }
 

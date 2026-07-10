@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useCallback, useMemo, useReducer } from 'react';
 import { CirclePause, Clipboard, Command, Palette, Settings as SettingsIcon, Shield } from 'lucide-react';
-import type { Settings } from '../../../shared/types';
+import type { MainNavigationRequest, Settings } from '../../../shared/types';
 import { defaultSettings } from '../../../shared/settings';
 import { resolveLanguage } from '../../../shared/i18n';
 import { appVersion } from '../../../shared/version';
@@ -44,7 +44,10 @@ export function MainSurface() {
   useApplyLanguage(i18n.language, i18n.direction);
 
   const onClipboardItem = useCallback(() => dispatch({ type: 'clipboardItem' }), []);
-  useClipwheelEvents({ onClipboardItem });
+  const onMainNavigationRequested = useCallback((request: MainNavigationRequest) => {
+    dispatch({ type: 'navigate', request });
+  }, []);
+  useClipwheelEvents({ onClipboardItem, onMainNavigationRequested });
 
   const refresh = useCallback(async () => {
     await Promise.all([itemsQuery.refetch(), countQuery.refetch(), settingsQuery.refetch()]);

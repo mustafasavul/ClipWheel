@@ -1,6 +1,6 @@
 import { createContext, use, useEffect, useMemo, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AppApi, CleanupRequest, ClipboardFlagColor, ClipboardItem, HistoryQuery, Settings } from '../../shared/types';
+import type { AppApi, CleanupRequest, ClipboardFlagColor, ClipboardItem, HistoryQuery, MainNavigationRequest, Settings } from '../../shared/types';
 import { clipwheelClient } from '../api/clipwheelClient';
 
 export const clipwheelQueryKeys = {
@@ -134,10 +134,14 @@ export function useDesktopActions() {
   }), [api]);
 }
 
-export function useClipwheelEvents(callbacks: { onClipboardItem?: () => void; onWheelOpened?: () => void } = {}) {
+export function useClipwheelEvents(callbacks: {
+  onClipboardItem?: () => void;
+  onWheelOpened?: () => void;
+  onMainNavigationRequested?: (request: MainNavigationRequest) => void;
+} = {}) {
   const api = useClipwheelApi();
   const queryClient = useQueryClient();
-  const { onClipboardItem, onWheelOpened } = callbacks;
+  const { onClipboardItem, onMainNavigationRequested, onWheelOpened } = callbacks;
   useEffect(() => {
     const invalidateItems = () => void queryClient.invalidateQueries({ queryKey: clipwheelQueryKeys.all });
     const disposeItems = api.onItemsChanged(invalidateItems);
@@ -150,12 +154,16 @@ export function useClipwheelEvents(callbacks: { onClipboardItem?: () => void; on
       invalidateItems();
       onWheelOpened?.();
     });
+    const disposeMainNavigation = api.onMainNavigationRequested((request) => {
+      onMainNavigationRequested?.(request);
+    });
     return () => {
       disposeItems();
       disposeClipboard();
       disposeWheel();
+      disposeMainNavigation();
     };
-  }, [api, onClipboardItem, onWheelOpened, queryClient]);
+  }, [api, onClipboardItem, onMainNavigationRequested, onWheelOpened, queryClient]);
 }
 
 function prependRecentCapture(queryClient: ReturnType<typeof useQueryClient>, item: ClipboardItem) {

@@ -2,7 +2,7 @@ import type React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import { defaultSettings } from '../../src/shared/settings';
-import type { AppApi, ClipboardItem } from '../../src/shared/types';
+import type { AppApi, ClipboardItem, MainNavigationRequest } from '../../src/shared/types';
 import { ClipwheelApiProvider } from '../../src/renderer/data/ClipwheelApiProvider';
 
 export const textItem: ClipboardItem = {
@@ -38,6 +38,7 @@ export function createTestApi(overrides: Partial<AppApi> = {}) {
   const listeners = {
     clipboard: new Set<(item: ClipboardItem) => void>(),
     items: new Set<() => void>(),
+    mainNavigation: new Set<(request: MainNavigationRequest) => void>(),
     wheel: new Set<() => void>(),
   };
   const api: AppApi = {
@@ -63,6 +64,7 @@ export function createTestApi(overrides: Partial<AppApi> = {}) {
     closeWheel: vi.fn(async () => undefined),
     onClipboardItem: (handler) => { listeners.clipboard.add(handler); return () => listeners.clipboard.delete(handler); },
     onItemsChanged: (handler) => { listeners.items.add(handler); return () => listeners.items.delete(handler); },
+    onMainNavigationRequested: (handler) => { listeners.mainNavigation.add(handler); return () => listeners.mainNavigation.delete(handler); },
     onWheelOpened: (handler) => { listeners.wheel.add(handler); return () => listeners.wheel.delete(handler); },
     ...overrides,
   };
@@ -70,6 +72,7 @@ export function createTestApi(overrides: Partial<AppApi> = {}) {
     api,
     emitClipboard: (item = textItem) => listeners.clipboard.forEach((listener) => listener(item)),
     emitItemsChanged: () => listeners.items.forEach((listener) => listener()),
+    emitMainNavigationRequested: (request: MainNavigationRequest) => listeners.mainNavigation.forEach((listener) => listener(request)),
     emitWheelOpened: () => listeners.wheel.forEach((listener) => listener()),
   };
 }

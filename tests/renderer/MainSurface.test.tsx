@@ -8,7 +8,7 @@ describe('MainSurface', () => {
     const secondItem = { ...textItem, id: 'item-2', title: 'Second capture', contentHash: 'hash-2' };
     const testApi = createTestApi();
     render(<MainSurface />, { wrapper: createTestWrapper(testApi.api) });
-    expect(await screen.findByText('First capture')).toBeInTheDocument();
+    expect(await screen.findAllByText('First capture')).not.toHaveLength(0);
     await userEvent.setup().click(screen.getAllByRole('button', { name: 'Copy' })[0]);
     expect(testApi.api.copyItem).toHaveBeenCalledWith('item-1');
 
@@ -26,6 +26,16 @@ describe('MainSurface', () => {
     await waitFor(() => expect(testApi.api.getItems).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'hello' })));
     await user.click(screen.getByRole('button', { name: 'Settings' }));
     expect(await screen.findByText('Start At Login')).toBeInTheDocument();
+  });
+
+  it('opens the requested view from tray navigation events', async () => {
+    const testApi = createTestApi();
+    render(<MainSurface />, { wrapper: createTestWrapper(testApi.api) });
+    expect(await screen.findAllByText('First capture')).not.toHaveLength(0);
+
+    act(() => testApi.emitMainNavigationRequested({ view: 'settings', settingsTab: 'shortcuts' }));
+
+    expect(await screen.findByRole('button', { name: 'Open radial wheel' })).toBeInTheDocument();
   });
 
   it('saves and deletes the current wheel appearance as a named preset', async () => {

@@ -1,4 +1,4 @@
-import type { HistoryQuery } from '../../../shared/types';
+import type { HistoryQuery, MainNavigationRequest } from '../../../shared/types';
 import type { SettingsTabId } from '../settings/settingsConfig';
 
 export interface HistoryUiState {
@@ -26,7 +26,8 @@ export type HistoryUiAction =
   | { type: 'page'; page: number }
   | { type: 'pageSize'; pageSize: number }
   | { type: 'settingsTab'; tab: SettingsTabId }
-  | { type: 'clipboardItem' };
+  | { type: 'clipboardItem' }
+  | { type: 'navigate'; request: MainNavigationRequest };
 
 export function historyUiReducer(state: HistoryUiState, action: HistoryUiAction): HistoryUiState {
   switch (action.type) {
@@ -37,5 +38,16 @@ export function historyUiReducer(state: HistoryUiState, action: HistoryUiAction)
     case 'pageSize': return { ...state, pageSize: action.pageSize, page: 1 };
     case 'settingsTab': return { ...state, settingsTab: action.tab };
     case 'clipboardItem': return { ...state, page: 1 };
+    case 'navigate': {
+      const { request } = action;
+      return {
+        ...state,
+        view: request.view,
+        selectedId: request.selectedId ?? state.selectedId,
+        settingsTab: request.settingsTab ?? state.settingsTab,
+        page: request.selectedId ? 1 : state.page,
+        query: request.selectedId ? initialHistoryUiState.query : state.query,
+      };
+    }
   }
 }

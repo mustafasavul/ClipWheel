@@ -41,8 +41,11 @@ fn ensure_tray_icon(app: &AppHandle) -> tauri::Result<()> {
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id().as_ref() {
-            "open" | "settings" => {
-                let _ = crate::show_window(app, "main");
+            "open" => {
+                let _ = crate::show_window(app, "history");
+            }
+            "settings" => {
+                let _ = crate::show_window(app, "settings");
             }
             "wheel" => {
                 let _ = crate::show_window(app, "wheel");
@@ -85,29 +88,20 @@ fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     let separator = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, "quit", "Quit ClipWheel", true, None::<&str>)?;
 
-    #[cfg(target_os = "macos")]
-    {
-        let recent_captures = build_recent_captures_submenu(app)?;
-        Menu::with_items(
-            app,
-            &[
-                &open,
-                &wheel,
-                &settings,
-                &recent_captures,
-                &separator,
-                &quit,
-            ],
-        )
-    }
-
-    #[cfg(not(target_os = "macos"))]
-    {
-        Menu::with_items(app, &[&open, &wheel, &settings, &separator, &quit])
-    }
+    let recent_captures = build_recent_captures_submenu(app)?;
+    Menu::with_items(
+        app,
+        &[
+            &open,
+            &wheel,
+            &settings,
+            &recent_captures,
+            &separator,
+            &quit,
+        ],
+    )
 }
 
-#[cfg(target_os = "macos")]
 fn build_recent_captures_submenu(app: &AppHandle) -> tauri::Result<Submenu<tauri::Wry>> {
     let items = app
         .try_state::<crate::AppState>()
@@ -156,7 +150,6 @@ fn build_recent_captures_submenu(app: &AppHandle) -> tauri::Result<Submenu<tauri
     Submenu::with_id_and_items(app, "recent-captures", "Recent Captures", true, &item_refs)
 }
 
-#[cfg(target_os = "macos")]
 fn recent_capture_label(item: &crate::models::ClipboardItem) -> String {
     let fallback = match item.item_type.as_str() {
         "image" => "Image",
@@ -172,7 +165,6 @@ fn recent_capture_label(item: &crate::models::ClipboardItem) -> String {
     truncate_menu_label(label)
 }
 
-#[cfg(target_os = "macos")]
 fn truncate_menu_label(label: &str) -> String {
     const MAX_CHARS: usize = 48;
     let sanitized = label.split_whitespace().collect::<Vec<_>>().join(" ");
@@ -200,6 +192,7 @@ fn restore_recent_capture(app: &AppHandle, item_id: &str) -> tauri::Result<()> {
         .restore(&item)
         .map_err(tauri::Error::Anyhow)?;
     app.emit("items-changed", ())?;
+    crate::show_main_view(app, "history", None, Some(item_id)).map_err(tauri::Error::Anyhow)?;
     Ok(())
 }
 

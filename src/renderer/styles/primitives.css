@@ -42,12 +42,29 @@ textarea {
 
 select {
   appearance: none;
+  color-scheme: dark;
   padding-right: 28px;
   background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
   background-position: calc(100% - 15px) 16px, calc(100% - 10px) 16px;
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
   text-transform: capitalize;
+}
+
+:root[data-theme="light"] select {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) select {
+    color-scheme: light;
+  }
+}
+
+select option,
+select optgroup {
+  color: var(--text);
+  background-color: var(--surface-solid);
 }
 
 input::placeholder,
@@ -74,4 +91,3 @@ textarea {
   padding: 0;
   background: transparent;
 }
-
