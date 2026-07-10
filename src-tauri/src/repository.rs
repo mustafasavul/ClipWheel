@@ -253,9 +253,6 @@ impl ClipRepository {
         if request.include_pinned != Some(true) {
             where_sql.push_str(" AND is_pinned = 0");
         }
-        if request.mode == "unpinned" {
-            where_sql.push_str(" AND is_pinned = 0");
-        }
         if request.mode == "type" {
             if let Some(item_type) = &request.item_type {
                 where_sql.push_str(&format!(" AND type = '{}'", sql_escape(item_type)));

@@ -174,7 +174,7 @@ export interface HistoryQuery {
 }
 
 export interface CleanupRequest {
-  mode: 'all' | 'unpinned' | 'older_than' | 'between' | 'type' | 'purge_deleted';
+  mode: 'all' | 'older_than' | 'between' | 'type' | 'purge_deleted';
   includePinned?: boolean;
   olderThan?: string;
   startDate?: string;

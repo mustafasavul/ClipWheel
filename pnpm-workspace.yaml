@@ -6,5 +6,15 @@ allowBuilds:
   fs-xattr: true
   macos-alias: true
 
-blockExoticSubdeps: false
+blockExoticSubdeps: true
+minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  - lru-cache@11.5.2
+  - tldts-core@7.4.7
+  - tldts@7.4.7
+  - tough-cookie@6.0.2
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - semver@6.3.1
+  - undici-types@6.21.0
 nodeLinker: hoisted

@@ -1,0 +1,44 @@
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+html.wheel-html,
+html.wheel-html body,
+body.wheel-body,
+body.wheel-body #root {
+  background: transparent;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition: border-color .22s cubic-bezier(0.16, 1, 0.3, 1), background .22s cubic-bezier(0.16, 1, 0.3, 1), color .22s cubic-bezier(0.16, 1, 0.3, 1), filter .22s cubic-bezier(0.16, 1, 0.3, 1), transform .18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+

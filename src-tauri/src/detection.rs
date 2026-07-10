@@ -12,7 +12,7 @@ pub fn detect_clipboard_type(
     has_image: bool,
     file_paths: &[String],
 ) -> TypeInfo {
-    let trimmed = text.trim();
+    let trimmed = detection_sample(text).trim();
     if has_image {
         return TypeInfo {
             item_type: "image".into(),
@@ -125,7 +125,7 @@ pub fn detect_content_signals(
             }
         }
     }
-    let trimmed = text.trim();
+    let trimmed = detection_sample(text).trim();
     if trimmed.contains("://") || trimmed.starts_with("www.") {
         signals.push(signal(
             "url",
@@ -153,11 +153,28 @@ fn signal(kind: &str, confidence: &str, language: Option<&str>) -> ContentSignal
 }
 
 fn is_url(text: &str) -> bool {
-    let lower = text.to_lowercase();
     !text.contains(char::is_whitespace)
-        && (lower.starts_with("http://")
-            || lower.starts_with("https://")
-            || lower.starts_with("www."))
+        && (starts_with_ignore_ascii_case(text, "http://")
+            || starts_with_ignore_ascii_case(text, "https://")
+            || starts_with_ignore_ascii_case(text, "www."))
+}
+
+fn starts_with_ignore_ascii_case(value: &str, prefix: &str) -> bool {
+    value
+        .get(..prefix.len())
+        .is_some_and(|candidate| candidate.eq_ignore_ascii_case(prefix))
+}
+
+fn detection_sample(text: &str) -> &str {
+    const MAX_DETECTION_BYTES: usize = 64 * 1024;
+    if text.len() <= MAX_DETECTION_BYTES {
+        return text;
+    }
+    let mut end = MAX_DETECTION_BYTES;
+    while !text.is_char_boundary(end) {
+        end -= 1;
+    }
+    &text[..end]
 }
 
 fn is_command_snippet(text: &str) -> bool {
@@ -203,4 +220,23 @@ fn detect_code_language(text: &str) -> String {
         return "python".into();
     }
     "unknown".into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn classifies_large_content_from_a_bounded_sample() {
+        let text = format!("const value = 1;{}", "x".repeat(2 * 1024 * 1024));
+        let result = detect_clipboard_type(&text, None, false, &[]);
+        assert_eq!(result.item_type, "code");
+        assert_eq!(result.code_language.as_deref(), Some("javascript"));
+    }
+
+    #[test]
+    fn keeps_url_detection_case_insensitive_without_allocating_a_lowercase_copy() {
+        let result = detect_clipboard_type("HTTPS://example.com", None, false, &[]);
+        assert_eq!(result.item_type, "url");
+    }
 }

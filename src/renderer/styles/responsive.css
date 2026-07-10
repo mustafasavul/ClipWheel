@@ -1,0 +1,84 @@
+@media (max-width: 1180px) {
+  .app-shell {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .sidebar {
+    padding: 20px 16px;
+  }
+
+  .workspace {
+    grid-template-columns: 1fr;
+    align-content: start;
+    overflow: auto;
+  }
+
+  .history-pane,
+  .detail-pane {
+    overflow: visible;
+  }
+
+  .history-list {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 980px) {
+  body {
+    overflow: auto;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    flex-direction: row;
+    align-items: center;
+    overflow: auto;
+    z-index: 2;
+    padding: 14px;
+  }
+
+  .privacy-note {
+    display: none;
+  }
+
+  .sidebar-version {
+    display: none;
+  }
+
+  .workspace {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .settings-page {
+    padding: 16px;
+  }
+
+  .filters,
+  .settings-grid,
+  .cleanup-panel,
+  .shortcut-setting,
+  .regex-row {
+    grid-template-columns: 1fr;
+  }
+
+  .shortcut-error {
+    grid-column: 1;
+  }
+
+  .pagination-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pagination-controls {
+    flex-wrap: wrap;
+  }
+}
+
