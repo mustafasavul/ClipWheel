@@ -73,7 +73,7 @@ pub fn copy_item(
     if let Some(window) = app.get_webview_window("wheel") {
         let _ = window.hide();
     }
-    app.emit("items-changed", ()).map_err(to_string)?;
+    emit_items_changed(&app)?;
     Ok(())
 }
 
@@ -84,7 +84,7 @@ pub fn delete_item(
     id: String,
 ) -> CommandResult<()> {
     state.repository.soft_delete(&id).map_err(to_string)?;
-    app.emit("items-changed", ()).map_err(to_string)?;
+    emit_items_changed(&app)?;
     Ok(())
 }
 
@@ -99,7 +99,7 @@ pub fn toggle_pin(
         .repository
         .update_flags(&id, Some(!item.is_pinned), None)
         .map_err(to_string)?;
-    app.emit("items-changed", ()).map_err(to_string)?;
+    emit_items_changed(&app)?;
     Ok(updated)
 }
 
@@ -114,7 +114,7 @@ pub fn toggle_favorite(
         .repository
         .update_flags(&id, None, Some(!item.is_favorite))
         .map_err(to_string)?;
-    app.emit("items-changed", ()).map_err(to_string)?;
+    emit_items_changed(&app)?;
     Ok(updated)
 }
 
@@ -129,7 +129,7 @@ pub fn update_item_title(
         .repository
         .update_item_title(&id, &title)
         .map_err(to_string)?;
-    app.emit("items-changed", ()).map_err(to_string)?;
+    emit_items_changed(&app)?;
     Ok(updated)
 }
 
@@ -144,7 +144,7 @@ pub fn set_item_flag(
         .repository
         .set_priority_flag(&id, flag)
         .map_err(to_string)?;
-    app.emit("items-changed", ()).map_err(to_string)?;
+    emit_items_changed(&app)?;
     Ok(updated)
 }
 
@@ -205,7 +205,7 @@ pub fn save_transformed_item(
             ),
         })
         .map_err(to_string)?;
-    app.emit("items-changed", ()).map_err(to_string)?;
+    emit_items_changed(&app)?;
     Ok(item)
 }
 
@@ -221,6 +221,7 @@ pub fn update_settings(
     settings: Value,
 ) -> CommandResult<Settings> {
     let has_shortcuts_patch = settings.get("shortcuts").is_some();
+    let has_tray_patch = settings.get("showTrayIcon").is_some();
     let next = state
         .repository
         .update_settings(settings)
@@ -228,7 +229,10 @@ pub fn update_settings(
     if has_shortcuts_patch {
         crate::register_shortcut(&app);
     }
-    app.emit("items-changed", ()).map_err(to_string)?;
+    if has_tray_patch {
+        crate::tray::sync_tray_icon(&app).map_err(to_string)?;
+    }
+    emit_items_changed(&app)?;
     Ok(next)
 }
 
@@ -244,7 +248,7 @@ pub fn cleanup(
     request: CleanupRequest,
 ) -> CommandResult<CleanupJob> {
     let job = state.repository.cleanup(request).map_err(to_string)?;
-    app.emit("items-changed", ()).map_err(to_string)?;
+    emit_items_changed(&app)?;
     Ok(job)
 }
 
@@ -272,6 +276,11 @@ pub fn close_wheel(app: AppHandle) -> CommandResult<()> {
 
 fn to_string(error: impl std::fmt::Display) -> String {
     error.to_string()
+}
+
+fn emit_items_changed(app: &AppHandle) -> CommandResult<()> {
+    crate::tray::refresh_tray_menu(app).map_err(to_string)?;
+    app.emit("items-changed", ()).map_err(to_string)
 }
 
 fn get_filtered_wheel_items(

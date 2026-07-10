@@ -199,6 +199,20 @@ impl ClipRepository {
             .collect())
     }
 
+    pub fn list_recent_captures(&self, limit: i64) -> Result<Vec<ClipboardItem>> {
+        let limit = limit.clamp(0, 20);
+        let mut conn = self.conn()?;
+        Ok(sql_query(format!(
+            "{} WHERE is_deleted = 0 ORDER BY created_at DESC LIMIT {}",
+            select_sql(""),
+            limit
+        ))
+        .load::<ClipboardRow>(&mut conn)?
+        .into_iter()
+        .map(row_to_item)
+        .collect())
+    }
+
     pub fn count_items(&self, query: HistoryQuery) -> Result<i64> {
         let where_sql = build_where(&query);
         let mut conn = self.conn()?;

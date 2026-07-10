@@ -4,6 +4,7 @@ mod detection;
 mod media;
 mod models;
 mod repository;
+mod tray;
 
 use anyhow::Result;
 use std::{
@@ -82,6 +83,7 @@ fn main() {
             clipboard.start();
             register_shortcut(app.handle());
             setup_windows(app.handle())?;
+            tray::sync_tray_icon(app.handle())?;
             Ok(())
         })
         .on_window_event(|window, event| {

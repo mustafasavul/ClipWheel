@@ -56,6 +56,7 @@ impl ClipboardService {
                     summary.content_text = None;
                     summary.content_html = None;
                     summary.content_rtf = None;
+                    let _ = crate::tray::refresh_tray_menu(&service.app);
                     let _ = service.app.emit("clipboard-item", &summary);
                     let _ = service.app.emit("items-changed", ());
                 }
