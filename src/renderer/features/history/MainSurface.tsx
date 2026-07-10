@@ -10,6 +10,7 @@ import { useApplyLanguage, useApplyTheme, useResolvedTheme } from '../../app/doc
 import { useClipwheelEvents, useDesktopActions, useHistoryCountQuery, useHistoryItemsQuery, useSettingsMutation, useSettingsQuery } from '../../data/clipwheelQueries';
 import { I18nContext, useLocale } from '../../i18n/I18nContext';
 import { SkeletonList } from '../../ui/SkeletonList';
+import clipwheelIcon from '../../assets/clipwheel-icon-transparent.png';
 import { Filters } from './Filters';
 import { HistoryList } from './HistoryList';
 import { Pagination } from './Pagination';
@@ -81,7 +82,7 @@ export function MainSurface() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand-mark">
-          <div className="brand-wheel"><Clipboard size={21} /></div>
+          <div className="brand-wheel"><img src={clipwheelIcon} alt="" aria-hidden="true" /></div>
           <div>
             <strong>ClipWheel</strong>
             <span>{t('localClipboardWheel')}</span>
