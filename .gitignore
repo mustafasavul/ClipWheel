@@ -25,6 +25,7 @@ dist/
 coverage/
 src-tauri/target/
 src-tauri/binaries/
+src-tauri/gen/schemas/
 
 # Local app data and logs
 *.log
