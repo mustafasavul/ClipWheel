@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createTranslator, getLanguageDirection, languageMetadata, languageOptions, loadLocaleMessages, resolveLanguage, supportedLanguages } from '../src/shared/i18n';
 import { getSegmentIndex, getSegmentRotation } from '../src/shared/radialGeometry';
 import { defaultSettings } from '../src/shared/settings';
-import { qrColorsForTheme, resolveTheme } from '../src/shared/theme';
+import { resolveTheme } from '../src/shared/theme';
 import { applyWheelAppearancePreset, createCustomWheelAppearancePreset, defaultWheelAppearance, normalizeOpacity, wheelAppearancePresetColors, wheelAppearancePresets, wheelAppearanceStyle, wheelSegmentStyle } from '../src/shared/wheelAppearance';
 
 describe('radial wheel geometry', () => {
@@ -34,11 +34,6 @@ describe('theme resolution', () => {
   it('resolves system theme from the device preference', () => {
     expect(resolveTheme('system', true)).toBe('dark');
     expect(resolveTheme('system', false)).toBe('light');
-  });
-
-  it('keeps QR colors high contrast for both themes', () => {
-    expect(qrColorsForTheme('dark')).toMatchObject({ dark: '#182018', light: '#f4f7ef' });
-    expect(qrColorsForTheme('light')).toMatchObject({ dark: '#172018', light: '#fbfcf8' });
   });
 });
 

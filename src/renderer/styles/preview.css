@@ -272,30 +272,6 @@
   height: 14px;
 }
 
-.regex-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 8px;
-}
-
-.detail-pane .regex-row {
-  gap: 7px;
-}
-
-.detail-pane .regex-row input,
-.detail-pane .regex-row button {
-  min-height: 34px;
-  font-size: 13px;
-}
-
-.regex-row button {
-  border: 0;
-  border-radius: 12px;
-  padding: 0 12px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: var(--accent-text);
-}
-
 .notice,
 .error-state {
   padding: 12px;
@@ -307,5 +283,4 @@
   color: var(--danger);
   background: var(--danger-bg);
 }
-
 

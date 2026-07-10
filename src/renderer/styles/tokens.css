@@ -42,7 +42,6 @@
   --danger-border: rgba(255, 142, 142, 0.2);
   --code-bg: rgba(8, 10, 9, 0.42);
   --modal-bg: rgba(10, 11, 12, 0.64);
-  --qr-bg: #f4f7ef;
   --shadow-soft: 0 22px 60px rgba(0, 0, 0, 0.26);
   --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.075);
   --focus-ring: rgba(200, 223, 159, 0.46);
@@ -100,7 +99,6 @@
   --danger-border: rgba(168, 45, 45, 0.28);
   --code-bg: rgba(245, 248, 241, 0.92);
   --modal-bg: rgba(24, 29, 24, 0.28);
-  --qr-bg: #fbfcf8;
   --shadow-soft: 0 24px 70px rgba(36, 49, 34, 0.13);
   --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.84);
   --focus-ring: rgba(81, 108, 62, 0.34);
@@ -157,7 +155,6 @@
     --danger-border: rgba(168, 45, 45, 0.28);
     --code-bg: rgba(245, 248, 241, 0.92);
     --modal-bg: rgba(24, 29, 24, 0.28);
-    --qr-bg: #fbfcf8;
     --shadow-soft: 0 24px 70px rgba(36, 49, 34, 0.13);
     --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.84);
     --focus-ring: rgba(81, 108, 62, 0.34);
@@ -176,5 +173,4 @@
 * {
   box-sizing: border-box;
 }
-
 

@@ -145,7 +145,7 @@ export function MainSurface() {
             </section>
 
             <section className="detail-pane">
-              <Suspense fallback={<div className="preview-panel" />}><PreviewPanel item={selected} onRefresh={refresh} resolvedTheme={resolvedTheme} /></Suspense>
+              <Suspense fallback={<div className="preview-panel" />}><PreviewPanel item={selected} onRefresh={refresh} /></Suspense>
             </section>
           </>
         ) : (

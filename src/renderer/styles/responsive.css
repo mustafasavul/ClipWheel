@@ -62,8 +62,7 @@
 
   .settings-grid,
   .cleanup-panel,
-  .shortcut-setting,
-  .regex-row {
+  .shortcut-setting {
     grid-template-columns: 1fr;
   }
 

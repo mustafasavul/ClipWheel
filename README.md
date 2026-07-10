@@ -17,7 +17,7 @@ ClipWheel is a privacy-first desktop clipboard manager for macOS and Windows. It
 - Right-side preview panel for text, code, rich text, URLs, images, and file references.
 - Item metadata including byte size, readable KB/MB size, text length, line count, file count, creation time, and last-used time.
 - Local image asset storage with thumbnails.
-- Text transformations, QR generation, pinning, favorites, and soft delete cleanup.
+- Text transformations, pinning, favorites, and soft delete cleanup.
 - System, dark, and light theme support. New installs default to the operating system theme, and users can override the theme in Settings.
 - Modern Settings UI with icon-backed controls and the app version shown in the sidebar footer.
 
@@ -82,7 +82,6 @@ Agents working on this repository must treat the refactored structure as a produ
 - Desktop API bridge: `@tauri-apps/api` through `src/renderer/api/clipwheelClient.ts`
 - UI icons: `lucide-react`
 - Code highlighting: `highlight.js`
-- QR generation: `qrcode`
 - HTML sanitization: `sanitize-html`
 - Testing: Vitest
 - Linting and type checks: ESLint, TypeScript

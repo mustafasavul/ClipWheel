@@ -23,7 +23,6 @@
     "@tauri-apps/api": "^2.9.0",
     "highlight.js": "^11.10.0",
     "lucide-react": "^0.468.0",
-    "qrcode": "^1.5.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "sanitize-html": "^2.13.1"
@@ -35,7 +34,6 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.10.1",
-    "@types/qrcode": "^1.5.5",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@types/sanitize-html": "^2.13.0",
