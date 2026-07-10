@@ -6,7 +6,7 @@ import {
 import type { Settings } from '../../../shared/types';
 import { appVersion } from '../../../shared/version';
 import { languageOptions } from '../../../shared/i18n';
-import { applyWheelAppearancePreset, defaultWheelAppearance, wheelAppearancePresets } from '../../../shared/wheelAppearance';
+import { defaultWheelAppearance } from '../../../shared/wheelAppearance';
 import { clampWheelItemCount, maxWheelItems, wheelItemCountOptions } from '../../../shared/wheelLimits';
 import { isValidGlobalShortcut, setShortcutValue, shortcutKey, type ShortcutTarget } from '../../../shared/shortcuts';
 import { useCleanupMutation, useDesktopActions } from '../../data/clipwheelQueries';
@@ -21,6 +21,7 @@ import { SettingsGrid } from '../../ui/SettingsGrid';
 import { ShortcutRecorder } from '../../ui/ShortcutRecorder';
 import { Toggle } from '../../ui/Toggle';
 import { WheelAppearancePreview } from './WheelAppearancePreview';
+import { WheelAppearancePresets } from './WheelAppearancePresets';
 import { settingsTabs, type SettingsTabId } from './settingsConfig';
 const maxWheelShortcutItems = maxWheelItems;
 
@@ -98,24 +99,7 @@ export function SettingsPanel({ settings, updateSettings, activeTab, setActiveTa
       {activeTab === 'wheelAppearance' && (
         <div className="appearance-settings">
           <WheelAppearancePreview appearance={settings.wheelAppearance} count={settings.wheelItemCount} shortcuts={settings.shortcuts} />
-          <div className="preset-panel">
-            <span className="setting-label"><span className="setting-icon"><Palette size={18} /></span>{t('colorPresets')}</span>
-            <div className="preset-grid">
-              {wheelAppearancePresets.map((preset) => (
-                <button
-                  type="button"
-                  className="preset-button"
-                  key={preset.id}
-                  onClick={() => updateSettings({ wheelAppearance: applyWheelAppearancePreset(settings.wheelAppearance, preset) })}
-                >
-                  <span className="preset-swatches" aria-hidden="true">
-                    {preset.colors.slice(0, 8).map((color, index) => <span key={`${preset.id}-${color}-${index}`} style={{ background: color }} />)}
-                  </span>
-                  <strong>{preset.label}</strong>
-                </button>
-              ))}
-            </div>
-          </div>
+          <WheelAppearancePresets settings={settings} updateSettings={updateSettings} />
           <SettingsGrid>
             <SelectSetting icon={<Palette size={18} />} label={t('colorMode')} value={settings.wheelAppearance.colorMode} options={['palette', 'single']} getOptionLabel={(value) => settingOptionLabel(value, t)} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, colorMode: value as Settings['wheelAppearance']['colorMode'] } })} />
             <ColorSetting label={t('segmentColor')} value={settings.wheelAppearance.segmentColor} onChange={(value) => updateSettings({ wheelAppearance: { ...settings.wheelAppearance, segmentColor: value } })} />

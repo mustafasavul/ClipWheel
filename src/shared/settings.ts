@@ -17,6 +17,7 @@ export const defaultSettings: Settings = {
     wheelItems: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='],
   },
   wheelAppearance: defaultWheelAppearance,
+  wheelAppearancePresets: [],
   capturePlainText: true,
   captureRichText: true,
   captureImages: true,

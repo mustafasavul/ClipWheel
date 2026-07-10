@@ -130,6 +130,7 @@ export interface Settings {
   language: LanguageSetting;
   shortcuts: ShortcutSettings;
   wheelAppearance: WheelAppearanceSettings;
+  wheelAppearancePresets: CustomWheelAppearancePreset[];
   capturePlainText: boolean;
   captureRichText: boolean;
   captureImages: boolean;
@@ -163,6 +164,12 @@ export interface WheelAppearanceSettings {
   panelOpacity: number;
   iconBackgroundColor: string;
   labelColor: string;
+}
+
+export interface CustomWheelAppearancePreset {
+  id: string;
+  name: string;
+  appearance: WheelAppearanceSettings;
 }
 
 export interface HistoryQuery {

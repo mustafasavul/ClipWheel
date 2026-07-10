@@ -34,6 +34,7 @@ export const textItem: ClipboardItem = {
 };
 
 export function createTestApi(overrides: Partial<AppApi> = {}) {
+  let currentSettings = defaultSettings;
   const listeners = {
     clipboard: new Set<(item: ClipboardItem) => void>(),
     items: new Set<() => void>(),
@@ -50,8 +51,11 @@ export function createTestApi(overrides: Partial<AppApi> = {}) {
     updateItemTitle: vi.fn(async (_id: string, title: string) => ({ ...textItem, title })),
     setItemFlag: vi.fn(async (_id: string, flag) => ({ ...textItem, priorityFlag: flag })),
     saveTransformedItem: vi.fn(async () => textItem),
-    getSettings: vi.fn(async () => defaultSettings),
-    updateSettings: vi.fn(async (patch) => ({ ...defaultSettings, ...patch })),
+    getSettings: vi.fn(async () => currentSettings),
+    updateSettings: vi.fn(async (patch) => {
+      currentSettings = { ...currentSettings, ...patch };
+      return currentSettings;
+    }),
     setShortcutCaptureActive: vi.fn(async () => undefined),
     cleanup: vi.fn(async () => ({ id: 'cleanup-1', action: 'all', criteriaJson: '{}', deletedCount: 1, createdAt: '2026-01-01T00:00:00.000Z' })),
     getImageDataUrl: vi.fn(async () => null),

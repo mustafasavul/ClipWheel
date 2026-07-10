@@ -3,7 +3,7 @@ import { createTranslator, getLanguageDirection, languageMetadata, languageOptio
 import { getSegmentIndex } from '../src/shared/radialGeometry';
 import { defaultSettings } from '../src/shared/settings';
 import { qrColorsForTheme, resolveTheme } from '../src/shared/theme';
-import { applyWheelAppearancePreset, defaultWheelAppearance, normalizeOpacity, wheelAppearancePresets, wheelAppearanceStyle, wheelSegmentStyle } from '../src/shared/wheelAppearance';
+import { applyWheelAppearancePreset, createCustomWheelAppearancePreset, defaultWheelAppearance, normalizeOpacity, wheelAppearancePresetColors, wheelAppearancePresets, wheelAppearanceStyle, wheelSegmentStyle } from '../src/shared/wheelAppearance';
 
 describe('radial wheel geometry', () => {
   it('maps cardinal directions to stable segment indices', () => {
@@ -57,6 +57,15 @@ describe('localization', () => {
 });
 
 describe('wheel appearance', () => {
+  it('starts without custom presets and snapshots custom appearance values', () => {
+    expect(defaultSettings.wheelAppearancePresets).toEqual([]);
+    const preset = createCustomWheelAppearancePreset('focus-lime', '  Focus Lime  ', defaultWheelAppearance);
+    expect(preset.name).toBe('Focus Lime');
+    expect(preset.appearance).not.toBe(defaultWheelAppearance);
+    expect(preset.appearance.paletteColors).not.toBe(defaultWheelAppearance.paletteColors);
+    expect(wheelAppearancePresetColors(preset.appearance)).toEqual([defaultWheelAppearance.segmentColor]);
+  });
+
   it('normalizes opacity values into the CSS range', () => {
     expect(normalizeOpacity(-1)).toBe(0);
     expect(normalizeOpacity(0.42)).toBe(0.42);

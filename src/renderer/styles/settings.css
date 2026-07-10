@@ -209,8 +209,16 @@
 
 .preset-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
   gap: 8px;
+}
+
+.preset-section-label {
+  color: var(--text-subtle);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 
 .preset-button {
@@ -218,8 +226,8 @@
   grid-template-columns: 48px 1fr;
   align-items: center;
   gap: 8px;
-  min-height: 40px;
-  padding: 7px 9px;
+  min-height: 48px;
+  padding: 8px 10px;
   border: 1px solid var(--control-edge);
   border-radius: 12px;
   background: var(--control-fill);
@@ -237,8 +245,9 @@
   overflow: hidden;
   color: var(--text-strong);
   font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .preset-swatches {
@@ -251,6 +260,99 @@
   height: 8px;
   border-radius: 999px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.custom-preset-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.custom-preset-header > span:last-child {
+  color: var(--text-subtle);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.custom-preset-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.custom-preset-apply {
+  min-width: 0;
+}
+
+.preset-delete-button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  border: 1px solid var(--control-edge);
+  border-radius: 10px;
+  background: var(--control-fill);
+  color: var(--text-muted);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+.preset-delete-button:hover {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.preset-delete-button:active,
+.preset-button:active {
+  transform: translateY(1px);
+}
+
+.preset-empty-state {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--control-edge);
+  border-radius: 11px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.preset-save-form {
+  display: grid;
+  gap: 7px;
+  padding-top: 2px;
+}
+
+.preset-save-form > label {
+  color: var(--text-strong);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.preset-save-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) auto;
+  gap: 8px;
+}
+
+.preset-save-row input {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+}
+
+.preset-save-row .primary-button {
+  min-height: 38px;
+  white-space: nowrap;
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: 11px;
+  line-height: 1.3;
 }
 
 .color-setting-control {
@@ -649,4 +751,3 @@ kbd {
   width: 320px;
   height: 320px;
 }
-

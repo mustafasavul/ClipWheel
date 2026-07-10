@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { WheelAppearanceSettings } from './types';
+import type { CustomWheelAppearancePreset, WheelAppearanceSettings } from './types';
 
 export interface WheelAppearancePreset {
   id: string;
@@ -7,6 +7,8 @@ export interface WheelAppearancePreset {
   colors: string[];
   values: Pick<WheelAppearanceSettings, 'colorMode' | 'paletteColors' | 'segmentColor' | 'activeColor' | 'activeLineColor' | 'ringLineColor' | 'panelColor' | 'iconBackgroundColor' | 'labelColor'>;
 }
+
+export const maxCustomWheelAppearancePresets = 24;
 
 export const wheelPalette = [
   '#b22f2b',
@@ -172,6 +174,23 @@ export function applyWheelAppearancePreset(appearance: WheelAppearanceSettings, 
     ...appearance,
     ...preset.values,
   };
+}
+
+export function createCustomWheelAppearancePreset(id: string, name: string, appearance: WheelAppearanceSettings): CustomWheelAppearancePreset {
+  return {
+    id,
+    name: name.trim(),
+    appearance: {
+      ...appearance,
+      paletteColors: [...appearance.paletteColors],
+    },
+  };
+}
+
+export function wheelAppearancePresetColors(appearance: WheelAppearanceSettings): string[] {
+  return appearance.colorMode === 'palette' && appearance.paletteColors.length > 0
+    ? appearance.paletteColors
+    : [appearance.segmentColor];
 }
 
 export function wheelAppearanceStyle(appearance: WheelAppearanceSettings): CSSProperties {

@@ -666,6 +666,27 @@ mod tests {
     }
 
     #[test]
+    fn persists_custom_wheel_appearance_presets() {
+        let (_dir, repo) = test_repo();
+        let appearance = serde_json::to_value(crate::models::WheelAppearanceSettings::default())
+            .expect("appearance");
+        let updated = repo
+            .update_settings(serde_json::json!({
+                "wheelAppearancePresets": [{
+                    "id": "focus-lime",
+                    "name": "Focus Lime",
+                    "appearance": appearance,
+                }]
+            }))
+            .expect("settings");
+
+        assert_eq!(updated.wheel_appearance_presets.len(), 1);
+        assert_eq!(updated.wheel_appearance_presets[0].name, "Focus Lime");
+        let reloaded = repo.get_settings().expect("reloaded settings");
+        assert_eq!(reloaded.wheel_appearance_presets[0].id, "focus-lime");
+    }
+
+    #[test]
     fn max_history_items_soft_deletes_oldest_unpinned_items() {
         let (_dir, repo) = test_repo();
         repo.update_settings(serde_json::json!({ "maxHistoryItems": 2 }))

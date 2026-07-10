@@ -94,6 +94,8 @@ pub struct Settings {
     #[serde(default)]
     pub shortcuts: ShortcutSettings,
     pub wheel_appearance: WheelAppearanceSettings,
+    #[serde(default)]
+    pub wheel_appearance_presets: Vec<CustomWheelAppearancePreset>,
     pub capture_plain_text: bool,
     pub capture_rich_text: bool,
     pub capture_images: bool,
@@ -175,6 +177,14 @@ pub struct WheelAppearanceSettings {
     pub label_color: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CustomWheelAppearancePreset {
+    pub id: String,
+    pub name: String,
+    pub appearance: WheelAppearanceSettings,
+}
+
 fn default_wheel_color_mode() -> String {
     "single".into()
 }
@@ -197,16 +207,16 @@ impl Default for WheelAppearanceSettings {
         Self {
             color_mode: "single".into(),
             palette_colors: default_wheel_palette_colors(),
-            segment_color: "#6f7d89".into(),
-            segment_opacity: 0.86,
-            active_color: "#c3d0dc".into(),
-            active_opacity: 0.34,
-            active_line_color: "#dce7f0".into(),
-            ring_line_color: "#20272d".into(),
-            panel_color: "#101519".into(),
-            panel_opacity: 0.94,
-            icon_background_color: "#182027".into(),
-            label_color: "#f1f6fb".into(),
+            segment_color: "#1c252c".into(),
+            segment_opacity: 0.94,
+            active_color: "#8eb45a".into(),
+            active_opacity: 0.38,
+            active_line_color: "#b8ef7a".into(),
+            ring_line_color: "#2c3740".into(),
+            panel_color: "#091116".into(),
+            panel_opacity: 0.96,
+            icon_background_color: "#151e24".into(),
+            label_color: "#e8edf0".into(),
         }
     }
 }
@@ -223,6 +233,7 @@ impl Default for Settings {
             language: "system".into(),
             shortcuts: ShortcutSettings::default(),
             wheel_appearance: WheelAppearanceSettings::default(),
+            wheel_appearance_presets: Vec::new(),
             capture_plain_text: true,
             capture_rich_text: true,
             capture_images: true,
@@ -246,7 +257,21 @@ pub fn normalize_settings(mut settings: Settings) -> Settings {
     settings.wheel_item_count = clamp_wheel_item_count(settings.wheel_item_count);
     settings.wheel_item_ids = normalize_wheel_item_ids(settings.wheel_item_ids);
     settings.shortcuts.wheel_items = normalize_wheel_item_shortcuts(settings.shortcuts.wheel_items);
+    settings.wheel_appearance_presets =
+        normalize_wheel_appearance_presets(settings.wheel_appearance_presets);
     settings
+}
+
+fn normalize_wheel_appearance_presets(
+    mut presets: Vec<CustomWheelAppearancePreset>,
+) -> Vec<CustomWheelAppearancePreset> {
+    presets.retain(|preset| !preset.id.trim().is_empty() && !preset.name.trim().is_empty());
+    presets.truncate(24);
+    for preset in &mut presets {
+        preset.id = preset.id.trim().chars().take(80).collect();
+        preset.name = preset.name.trim().chars().take(48).collect();
+    }
+    presets
 }
 
 fn normalize_wheel_item_ids(mut ids: Vec<String>) -> Vec<String> {

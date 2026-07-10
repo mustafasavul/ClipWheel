@@ -28,6 +28,27 @@ describe('MainSurface', () => {
     expect(await screen.findByText('Start At Login')).toBeInTheDocument();
   });
 
+  it('saves and deletes the current wheel appearance as a named preset', async () => {
+    const testApi = createTestApi();
+    const user = userEvent.setup();
+    render(<MainSurface />, { wrapper: createTestWrapper(testApi.api) });
+
+    await user.click(await screen.findByRole('button', { name: 'Settings' }));
+    await user.click(await screen.findByRole('button', { name: 'Wheel Appearance' }));
+    expect(screen.getByRole('button', { name: 'Mono Slate' })).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Preset Name'), 'Focus Lime');
+    await user.click(screen.getByRole('button', { name: 'Save Preset' }));
+
+    await waitFor(() => expect(testApi.api.updateSettings).toHaveBeenCalledWith(expect.objectContaining({
+      wheelAppearancePresets: [expect.objectContaining({ name: 'Focus Lime' })],
+    })));
+    expect(await screen.findByRole('button', { name: 'Focus Lime' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Delete Focus Lime' }));
+    await waitFor(() => expect(testApi.api.updateSettings).toHaveBeenLastCalledWith({ wheelAppearancePresets: [] }));
+  });
+
   it('inserts a clipboard event into Recent Captures before the fallback refetch completes', async () => {
     const testApi = createTestApi();
     render(<MainSurface />, { wrapper: createTestWrapper(testApi.api) });
