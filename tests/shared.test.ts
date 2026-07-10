@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createTranslator, getLanguageDirection, languageMetadata, languageOptions, loadLocaleMessages, resolveLanguage, supportedLanguages } from '../src/shared/i18n';
-import { getSegmentIndex } from '../src/shared/radialGeometry';
+import { getSegmentIndex, getSegmentRotation } from '../src/shared/radialGeometry';
 import { defaultSettings } from '../src/shared/settings';
 import { qrColorsForTheme, resolveTheme } from '../src/shared/theme';
 import { applyWheelAppearancePreset, createCustomWheelAppearancePreset, defaultWheelAppearance, normalizeOpacity, wheelAppearancePresetColors, wheelAppearancePresets, wheelAppearanceStyle, wheelSegmentStyle } from '../src/shared/wheelAppearance';
@@ -11,6 +11,18 @@ describe('radial wheel geometry', () => {
     expect(getSegmentIndex(center, { x: 100, y: 0 }, 8)).toBe(0);
     expect(getSegmentIndex(center, { x: 200, y: 100 }, 8)).toBe(2);
     expect(getSegmentIndex(center, { x: 100, y: 200 }, 8)).toBe(4);
+  });
+
+  it('aligns every supported wheel item with its hover rotation', () => {
+    const center = { x: 100, y: 100 };
+    for (let count = 4; count <= 12; count += 1) {
+      for (let index = 0; index < count; index += 1) {
+        const rotation = getSegmentRotation(index, count);
+        const radians = (rotation - 90) * (Math.PI / 180);
+        const point = { x: center.x + Math.cos(radians) * 80, y: center.y + Math.sin(radians) * 80 };
+        expect(getSegmentIndex(center, point, count)).toBe(index);
+      }
+    }
   });
 });
 describe('theme resolution', () => {

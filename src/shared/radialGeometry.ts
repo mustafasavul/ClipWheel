@@ -14,6 +14,11 @@ export function getSegmentIndex(center: Point, point: Point, segmentCount: numbe
   return Math.floor((angle + segmentSize / 2) / segmentSize) % segmentCount;
 }
 
+export function getSegmentRotation(index: number, segmentCount: number): number {
+  if (!Number.isFinite(index) || !Number.isFinite(segmentCount) || segmentCount <= 0) return 0;
+  return (index * 360) / segmentCount;
+}
+
 export function getSegmentTransform(index: number, segmentCount: number, radius: number): string {
   const angle = (index / segmentCount) * Math.PI * 2 - Math.PI / 2;
   const x = Math.cos(angle) * radius;

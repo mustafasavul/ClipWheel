@@ -222,14 +222,17 @@
 .wheel-center::after {
   content: "";
   position: absolute;
-  top: -15px;
-  left: 50%;
-  width: 7px;
-  height: 7px;
+  inset: -18px;
   border-radius: 50%;
-  background: var(--wheel-active-line);
-  transform: translateX(-50%);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wheel-active-line) 16%, transparent);
+  background: radial-gradient(
+    circle at 50% 5px,
+    var(--wheel-active-line) 0 3px,
+    color-mix(in srgb, var(--wheel-active-line) 18%, transparent) 3.5px 6px,
+    transparent 6.5px
+  );
+  transform: rotate(var(--wheel-active-rotation));
+  transition: transform .24s cubic-bezier(.16, 1, .3, 1);
+  pointer-events: none;
 }
 
 .wheel-center strong {

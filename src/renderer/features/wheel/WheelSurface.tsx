@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Clipboard } from 'lucide-react';
 import { defaultSettings } from '../../../shared/settings';
 import { resolveLanguage } from '../../../shared/i18n';
-import { getSegmentIndex } from '../../../shared/radialGeometry';
+import { getSegmentIndex, getSegmentRotation } from '../../../shared/radialGeometry';
 import { wheelAppearanceStyle, wheelSegmentStyle } from '../../../shared/wheelAppearance';
 import { clampWheelItemCount } from '../../../shared/wheelLimits';
 import { formatShortcutForPlatform, isShiftEvent, matchesShortcut } from '../../../shared/shortcuts';
@@ -28,7 +28,8 @@ export function WheelSurface() {
   const wheelItems = items.slice(0, count);
   const activeItem = wheelItems[activeIndex] ?? null;
   const segmentDeg = 360 / count;
-  const activeAngle = activeIndex * segmentDeg - 90;
+  const activeRotation = getSegmentRotation(activeIndex, count);
+  const activeAngle = activeRotation - 90;
   const quickLookSide = Math.cos((activeAngle * Math.PI) / 180) >= 0 ? 'left' : 'right';
   const resolvedTheme = useResolvedTheme(settings.theme);
   const language = resolveLanguage(settings.language);
@@ -148,10 +149,10 @@ export function WheelSurface() {
         style={{
           '--segment-deg': `${segmentDeg}deg`,
           '--wheel-item-count': count,
-          '--wheel-active-rotation': `${activeIndex * segmentDeg}deg`,
+          '--wheel-active-rotation': `${activeRotation}deg`,
         } as React.CSSProperties}
       >
-        <div className="wheel-active-slice" style={{ transform: `rotate(${activeIndex * segmentDeg}deg)` }} />
+        <div className="wheel-active-slice" style={{ transform: `rotate(${activeRotation}deg)` }} />
         <div className="wheel-inner-border" />
         {Array.from({ length: count }).map((_, index) => {
           const item = wheelItems[index];
