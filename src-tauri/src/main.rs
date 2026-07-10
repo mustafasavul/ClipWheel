@@ -124,7 +124,10 @@ pub fn show_window(app: &AppHandle, name: &str) -> Result<()> {
         } else {
             "history"
         };
-        window.emit("main-navigation-requested", serde_json::json!({ "view": view }))?;
+        window.emit(
+            "main-navigation-requested",
+            serde_json::json!({ "view": view }),
+        )?;
     }
     window.show()?;
     window.set_focus()?;
@@ -151,7 +154,10 @@ pub fn show_main_view(
     if let Some(id) = selected_id {
         payload.insert("selectedId".into(), serde_json::Value::String(id.into()));
     }
-    window.emit("main-navigation-requested", serde_json::Value::Object(payload))?;
+    window.emit(
+        "main-navigation-requested",
+        serde_json::Value::Object(payload),
+    )?;
     Ok(())
 }
 
@@ -233,14 +239,13 @@ fn position_wheel_window(
     let monitor_position = monitor.position();
     let (x, y) = if wheel_position == "cursor" {
         clamp_window_position(
-            cursor.x.round() as i32 - half_width,
-            cursor.y.round() as i32 - half_height,
-            window_size.width as i32,
-            window_size.height as i32,
-            monitor_position.x,
-            monitor_position.y,
-            monitor_size.width as i32,
-            monitor_size.height as i32,
+            (
+                cursor.x.round() as i32 - half_width,
+                cursor.y.round() as i32 - half_height,
+            ),
+            (window_size.width as i32, window_size.height as i32),
+            (monitor_position.x, monitor_position.y),
+            (monitor_size.width as i32, monitor_size.height as i32),
         )
     } else {
         (
@@ -254,15 +259,15 @@ fn position_wheel_window(
 }
 
 fn clamp_window_position(
-    x: i32,
-    y: i32,
-    window_width: i32,
-    window_height: i32,
-    monitor_x: i32,
-    monitor_y: i32,
-    monitor_width: i32,
-    monitor_height: i32,
+    position: (i32, i32),
+    window_size: (i32, i32),
+    monitor_origin: (i32, i32),
+    monitor_size: (i32, i32),
 ) -> (i32, i32) {
+    let (x, y) = position;
+    let (window_width, window_height) = window_size;
+    let (monitor_x, monitor_y) = monitor_origin;
+    let (monitor_width, monitor_height) = monitor_size;
     let max_x = monitor_x + monitor_width - window_width;
     let max_y = monitor_y + monitor_height - window_height;
     let clamped_x = if max_x < monitor_x {
@@ -323,15 +328,15 @@ mod tests {
     #[test]
     fn keeps_cursor_window_inside_monitor_bounds() {
         assert_eq!(
-            clamp_window_position(100, 80, 400, 300, 0, 0, 1440, 900),
+            clamp_window_position((100, 80), (400, 300), (0, 0), (1440, 900)),
             (100, 80)
         );
         assert_eq!(
-            clamp_window_position(-120, -90, 400, 300, 0, 0, 1440, 900),
+            clamp_window_position((-120, -90), (400, 300), (0, 0), (1440, 900)),
             (0, 0)
         );
         assert_eq!(
-            clamp_window_position(1300, 820, 400, 300, 0, 0, 1440, 900),
+            clamp_window_position((1300, 820), (400, 300), (0, 0), (1440, 900)),
             (1040, 600)
         );
     }
@@ -339,7 +344,7 @@ mod tests {
     #[test]
     fn pins_oversized_window_to_monitor_origin() {
         assert_eq!(
-            clamp_window_position(40, 50, 1600, 1000, 100, 200, 1440, 900),
+            clamp_window_position((40, 50), (1600, 1000), (100, 200), (1440, 900)),
             (100, 200)
         );
     }

@@ -348,20 +348,17 @@ fn matches_history_query(item: &ClipboardItem, query: &HistoryQuery) -> bool {
             return false;
         }
     }
-    match query.date_filter.as_deref() {
-        Some("custom") => {
-            if let Some(start) = &query.start_date {
-                if item.created_at < *start {
-                    return false;
-                }
-            }
-            if let Some(end) = &query.end_date {
-                if item.created_at > *end {
-                    return false;
-                }
+    if let Some("custom") = query.date_filter.as_deref() {
+        if let Some(start) = &query.start_date {
+            if item.created_at < *start {
+                return false;
             }
         }
-        _ => {}
+        if let Some(end) = &query.end_date {
+            if item.created_at > *end {
+                return false;
+            }
+        }
     }
     true
 }

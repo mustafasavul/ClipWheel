@@ -483,9 +483,8 @@ fn build_where(query: &HistoryQuery) -> String {
             clauses.push(format!("type = '{}'", sql_escape(item_type)));
         }
     }
-    match query.collection_filter.as_deref() {
-        Some("favorites") => clauses.push("is_favorite = 1".into()),
-        _ => {}
+    if let Some("favorites") = query.collection_filter.as_deref() {
+        clauses.push("is_favorite = 1".into());
     }
     if let Some(flag) = query
         .flag_filter
@@ -508,16 +507,13 @@ fn build_where(query: &HistoryQuery) -> String {
         let search = sql_escape(search);
         clauses.push(format!("(title LIKE '%{search}%' OR preview_text LIKE '%{search}%' OR content_text LIKE '%{search}%' OR url LIKE '%{search}%')"));
     }
-    match query.date_filter.as_deref() {
-        Some("custom") => {
-            if let Some(start) = &query.start_date {
-                clauses.push(format!("created_at >= '{}'", sql_escape(start)));
-            }
-            if let Some(end) = &query.end_date {
-                clauses.push(format!("created_at <= '{}'", sql_escape(end)));
-            }
+    if let Some("custom") = query.date_filter.as_deref() {
+        if let Some(start) = &query.start_date {
+            clauses.push(format!("created_at >= '{}'", sql_escape(start)));
         }
-        _ => {}
+        if let Some(end) = &query.end_date {
+            clauses.push(format!("created_at <= '{}'", sql_escape(end)));
+        }
     }
     if clauses.is_empty() {
         String::new()
@@ -595,6 +591,23 @@ fn now() -> String {
 
 fn sql_escape(value: &str) -> String {
     value.replace('\'', "''")
+}
+
+fn electron_db_path() -> PathBuf {
+    let home = std::env::var("HOME").unwrap_or_default();
+    if cfg!(target_os = "macos") {
+        PathBuf::from(home).join("Library/Application Support/ClipWheel/clipwheel.sqlite")
+    } else if cfg!(target_os = "windows") {
+        std::env::var("APPDATA")
+            .map(PathBuf::from)
+            .unwrap_or_default()
+            .join("ClipWheel/clipwheel.sqlite")
+    } else {
+        std::env::var("XDG_CONFIG_HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| PathBuf::from(home).join(".config"))
+            .join("ClipWheel/clipwheel.sqlite")
+    }
 }
 
 #[cfg(test)]
@@ -769,22 +782,5 @@ mod tests {
         assert!(deleted_second.is_deleted);
         let deleted_third = repo.get_item(&third.id).expect("deleted third");
         assert!(deleted_third.is_deleted);
-    }
-}
-
-fn electron_db_path() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_default();
-    if cfg!(target_os = "macos") {
-        PathBuf::from(home).join("Library/Application Support/ClipWheel/clipwheel.sqlite")
-    } else if cfg!(target_os = "windows") {
-        std::env::var("APPDATA")
-            .map(PathBuf::from)
-            .unwrap_or_default()
-            .join("ClipWheel/clipwheel.sqlite")
-    } else {
-        std::env::var("XDG_CONFIG_HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| PathBuf::from(home).join(".config"))
-            .join("ClipWheel/clipwheel.sqlite")
     }
 }
