@@ -1,5 +1,6 @@
 use std::{
-    fs,
+    fs::{self, File},
+    io::BufWriter,
     path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -9,7 +10,10 @@ use std::{
 
 use anyhow::Result;
 use arboard::{Clipboard, ImageData};
-use image::{ImageBuffer, ImageReader, Rgba};
+use image::{
+    codecs::png::{CompressionType, FilterType as PngFilterType, PngEncoder},
+    ExtendedColorType, ImageBuffer, ImageEncoder, ImageReader, Rgba,
+};
 use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Emitter};
 use tokio::time::{self, Duration};
@@ -44,11 +48,15 @@ impl ClipboardService {
         self.running.store(true, Ordering::SeqCst);
         let service = self.clone();
         tauri::async_runtime::spawn(async move {
-            let mut interval = time::interval(Duration::from_millis(750));
+            let mut interval = time::interval(Duration::from_millis(250));
             while service.running.load(Ordering::SeqCst) {
                 interval.tick().await;
                 if let Ok(Some(item)) = service.capture() {
-                    let _ = service.app.emit("clipboard-item", &item);
+                    let mut summary = item.clone();
+                    summary.content_text = None;
+                    summary.content_html = None;
+                    summary.content_rtf = None;
+                    let _ = service.app.emit("clipboard-item", &summary);
                     let _ = service.app.emit("items-changed", ());
                 }
             }
@@ -230,9 +238,10 @@ fn should_capture_type(item_type: &str, settings: &Settings) -> bool {
 
 fn detect_file_paths(text: &str) -> Vec<String> {
     text.lines()
-        .map(|line| line.trim().trim_start_matches("file://").to_string())
+        .map(|line| line.trim().trim_start_matches("file://"))
         .filter(|line| line.starts_with('/') || line.as_bytes().get(1) == Some(&b':'))
         .filter(|line| Path::new(line).exists())
+        .map(str::to_string)
         .collect()
 }
 
@@ -293,7 +302,19 @@ fn make_preview(item_type: &str, text: &str, file_paths: &[String]) -> String {
 }
 
 fn single_line(text: &str) -> String {
-    text.split_whitespace().collect::<Vec<_>>().join(" ")
+    let mut result = String::with_capacity(80);
+    for word in text.split_whitespace() {
+        if !result.is_empty() {
+            result.push(' ');
+        }
+        for character in word.chars() {
+            if result.chars().count() >= 80 {
+                return result;
+            }
+            result.push(character);
+        }
+    }
+    result
 }
 
 fn hash_content(parts: &[&[u8]]) -> String {
@@ -334,8 +355,8 @@ fn save_image_assets(
     let image_path = media_dir.join(format!("{id}.png"));
     let thumbnail_path = media_dir.join(format!("{id}-thumb.png"));
     let rgba = rgba_image_from_clipboard(image)?;
-    rgba.save(&image_path)?;
-    let thumbnail_width = 360;
+    save_rgba_png(&image_path, &rgba)?;
+    let thumbnail_width = rgba.width().min(360);
     let thumbnail_height = ((rgba.height() as f32)
         * (thumbnail_width as f32 / rgba.width().max(1) as f32))
         .round()
@@ -344,15 +365,27 @@ fn save_image_assets(
         &rgba,
         thumbnail_width,
         thumbnail_height,
-        image::imageops::FilterType::Lanczos3,
+        image::imageops::FilterType::Triangle,
     );
-    thumbnail.save(&thumbnail_path)?;
+    save_rgba_png(&thumbnail_path, &thumbnail)?;
 
     Ok(SavedImage {
         image_path: Some(image_path.to_string_lossy().to_string()),
         thumbnail_path: Some(thumbnail_path.to_string_lossy().to_string()),
         size_bytes: Some(size_bytes),
     })
+}
+
+fn save_rgba_png(path: &Path, image: &ImageBuffer<Rgba<u8>, Vec<u8>>) -> Result<()> {
+    let writer = BufWriter::new(File::create(path)?);
+    PngEncoder::new_with_quality(writer, CompressionType::Fast, PngFilterType::NoFilter)
+        .write_image(
+            image.as_raw(),
+            image.width(),
+            image.height(),
+            ExtendedColorType::Rgba8,
+        )?;
+    Ok(())
 }
 
 #[cfg(target_os = "macos")]
@@ -406,4 +439,39 @@ fn load_image_data(path: &str) -> Result<ImageData<'static>> {
         height,
         bytes: image.into_raw().into(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::borrow::Cow;
+
+    #[test]
+    fn writes_fast_png_assets_that_remain_decodable() {
+        let directory = tempfile::tempdir().expect("tempdir");
+        let image = ImageData {
+            width: 2,
+            height: 2,
+            bytes: Cow::Owned(vec![255; 2 * 2 * 4]),
+        };
+        let saved = save_image_assets(directory.path(), &image, 1).expect("save image");
+        let image_path = saved.image_path.expect("image path");
+        let thumbnail_path = saved.thumbnail_path.expect("thumbnail path");
+        assert_eq!(
+            ImageReader::open(image_path)
+                .unwrap()
+                .decode()
+                .unwrap()
+                .width(),
+            2
+        );
+        assert_eq!(
+            ImageReader::open(thumbnail_path)
+                .unwrap()
+                .decode()
+                .unwrap()
+                .width(),
+            2
+        );
+    }
 }
