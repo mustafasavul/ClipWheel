@@ -44,6 +44,7 @@ pub struct ClipboardItem {
     pub file_paths: Vec<String>,
     pub format_info: ClipboardFormatInfo,
     pub content_signals: Vec<ContentSignal>,
+    pub priority_flag: Option<String>,
     pub url: Option<String>,
     pub code_language: Option<String>,
     pub source_app: Option<String>,
@@ -267,6 +268,7 @@ pub struct HistoryQuery {
     #[serde(rename = "type")]
     pub item_type: Option<String>,
     pub collection_filter: Option<String>,
+    pub flag_filter: Option<String>,
     pub date_filter: Option<String>,
     pub start_date: Option<String>,
     pub end_date: Option<String>,

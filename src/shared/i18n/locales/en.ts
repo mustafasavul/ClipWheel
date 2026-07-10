@@ -172,9 +172,21 @@ export const enMessages = {
   'wheel': 'Wheel',
   'wheelAppearance': 'Wheel Appearance',
   'wheelAria': 'ClipWheel radial clipboard wheel',
-  'wheelPosition': 'Wheel Position'
+  'wheelPosition': 'Wheel Position',
+  'allFlags': 'All flags',
+  'blueFlag': 'Blue flag',
+  'editItem': 'Edit item name',
+  'flag': 'Flag',
+  'greenFlag': 'Green flag',
+  'itemName': 'Item name',
+  'itemNameRequired': 'Enter an item name before saving.',
+  'noFlag': 'No flag',
+  'orangeFlag': 'Orange flag',
+  'purpleFlag': 'Purple flag',
+  'redFlag': 'Red flag',
+  'yellowFlag': 'Yellow flag',
 } as const;
 
-export type LocaleMessages = { [Key in keyof typeof enMessages]: string };
+export type LocaleMessages = { [Key in keyof typeof enMessages]?: string };
 
 export default enMessages;

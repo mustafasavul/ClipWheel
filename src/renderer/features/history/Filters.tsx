@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react';
-import type { ClipboardItemType, HistoryQuery } from '../../../shared/types';
+import { clipboardFlagColors, type ClipboardFlagColor, type ClipboardItemType, type HistoryQuery } from '../../../shared/types';
 import { useI18n } from '../../i18n/I18nContext';
-import { labelForCollectionFilter, labelForType } from '../../presentation/formatters';
+import { labelForCollectionFilter, labelForFlag, labelForType } from '../../presentation/formatters';
 
 const typeOptions: Array<ClipboardItemType | 'all'> = ['all', 'plain_text', 'rich_text', 'code', 'url', 'image', 'file_reference', 'command'];
 const collectionFilterOptions: Array<NonNullable<HistoryQuery['collectionFilter']>> = ['all', 'wheel', 'favorites'];
@@ -23,6 +23,11 @@ export function Filters({ query, onChange }: { query: HistoryQuery; onChange: (p
       </select>
       <select aria-label={t('filter')} value={query.collectionFilter ?? 'all'} onChange={(event) => updateQuery({ collectionFilter: event.target.value as HistoryQuery['collectionFilter'] })}>
         {collectionFilterOptions.map((filter) => <option key={filter} value={filter}>{labelForCollectionFilter(filter, t)}</option>)}
+      </select>
+      <select aria-label={t('flag')} value={query.flagFilter ?? 'all'} onChange={(event) => updateQuery({ flagFilter: event.target.value as ClipboardFlagColor | 'all' | 'none' })}>
+        <option value="all">{t('allFlags')}</option>
+        <option value="none">{t('noFlag')}</option>
+        {clipboardFlagColors.map((flag) => <option key={flag} value={flag}>{labelForFlag(flag, t)}</option>)}
       </select>
       <select aria-label={t('allDates')} value={query.dateFilter ?? 'all'} onChange={(event) => updateQuery({ dateFilter: event.target.value as HistoryQuery['dateFilter'] })}>
         <option value="all">{t('allDates')}</option>

@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type Event } from '@tauri-apps/api/event';
-import type { AppApi, CleanupRequest, ClipboardItem, HistoryQuery, Settings } from '../../shared/types';
+import type { AppApi, CleanupRequest, ClipboardFlagColor, ClipboardItem, HistoryQuery, Settings } from '../../shared/types';
 
 type InvokeFn = <T>(command: string, args?: Record<string, unknown>) => Promise<T>;
 type ListenFn = <T>(event: string, handler: (event: Event<T>) => void) => Promise<() => void>;
@@ -16,6 +16,8 @@ export function createClipwheelClient(dependencies: { invoke: InvokeFn; listen: 
     deleteItem: (id: string) => invokeCommand<void>('delete_item', { id }),
     togglePin: (id: string) => invokeCommand<ClipboardItem>('toggle_pin', { id }),
     toggleFavorite: (id: string) => invokeCommand<ClipboardItem>('toggle_favorite', { id }),
+    updateItemTitle: (id: string, title: string) => invokeCommand<ClipboardItem>('update_item_title', { id, title }),
+    setItemFlag: (id: string, flag: ClipboardFlagColor | null) => invokeCommand<ClipboardItem>('set_item_flag', { id, flag }),
     saveTransformedItem: (id: string, text: string, title: string) => invokeCommand<ClipboardItem>('save_transformed_item', { id, text, title }),
     getSettings: () => invokeCommand<Settings>('get_settings'),
     updateSettings: (settings: Partial<Settings>) => invokeCommand<Settings>('update_settings', { settings }),

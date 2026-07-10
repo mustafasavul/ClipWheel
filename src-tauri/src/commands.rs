@@ -119,6 +119,36 @@ pub fn toggle_favorite(
 }
 
 #[tauri::command]
+pub fn update_item_title(
+    app: AppHandle,
+    state: tauri::State<'_, AppState>,
+    id: String,
+    title: String,
+) -> CommandResult<ClipboardItem> {
+    let updated = state
+        .repository
+        .update_item_title(&id, &title)
+        .map_err(to_string)?;
+    app.emit("items-changed", ()).map_err(to_string)?;
+    Ok(updated)
+}
+
+#[tauri::command]
+pub fn set_item_flag(
+    app: AppHandle,
+    state: tauri::State<'_, AppState>,
+    id: String,
+    flag: Option<String>,
+) -> CommandResult<ClipboardItem> {
+    let updated = state
+        .repository
+        .set_priority_flag(&id, flag)
+        .map_err(to_string)?;
+    app.emit("items-changed", ()).map_err(to_string)?;
+    Ok(updated)
+}
+
+#[tauri::command]
 pub fn save_transformed_item(
     app: AppHandle,
     state: tauri::State<'_, AppState>,
@@ -294,6 +324,17 @@ fn matches_history_query(item: &ClipboardItem, query: &HistoryQuery) -> bool {
                 .unwrap_or_default()
                 .to_lowercase()
                 .contains(&search)
+        {
+            return false;
+        }
+    }
+    if let Some(flag) = query
+        .flag_filter
+        .as_ref()
+        .filter(|value| !value.is_empty() && value.as_str() != "all")
+    {
+        if (flag == "none" && item.priority_flag.is_some())
+            || (flag != "none" && item.priority_flag.as_deref() != Some(flag))
         {
             return false;
         }

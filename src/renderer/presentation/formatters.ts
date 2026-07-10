@@ -1,4 +1,4 @@
-import type { ClipboardItem, ClipboardItemType, HistoryQuery } from '../../shared/types';
+import type { ClipboardFlagColor, ClipboardItem, ClipboardItemType, HistoryQuery } from '../../shared/types';
 import { languageMetadata, type I18nKey, type LanguageCode, type Translator } from '../../shared/i18n';
 import type { I18nView } from '../i18n/I18nContext';
 
@@ -29,6 +29,19 @@ export function labelForCollectionFilter(filter: NonNullable<HistoryQuery['colle
   if (filter === 'wheel') return t('wheel');
   if (filter === 'favorites') return t('favorite');
   return t('all');
+}
+
+export function labelForFlag(flag: ClipboardFlagColor | null, t: Translator): string {
+  if (!flag) return t('noFlag');
+  const labels: Record<ClipboardFlagColor, I18nKey> = {
+    red: 'redFlag',
+    orange: 'orangeFlag',
+    yellow: 'yellowFlag',
+    green: 'greenFlag',
+    blue: 'blueFlag',
+    purple: 'purpleFlag',
+  };
+  return t(labels[flag]);
 }
 
 export function cleanupConfirmMessage(action: CleanupActionId, t: Translator): string {

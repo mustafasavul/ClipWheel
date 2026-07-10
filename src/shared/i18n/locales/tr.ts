@@ -174,7 +174,19 @@ export const trMessages: LocaleMessages = {
   'wheel': 'Tekerlek',
   'wheelAppearance': 'Tekerlek Görünümü',
   'wheelAria': 'ClipWheel radyal pano tekerleği',
-  'wheelPosition': 'Tekerlek Konumu'
+  'wheelPosition': 'Tekerlek Konumu',
+  'allFlags': 'Tüm flagler',
+  'blueFlag': 'Mavi flag',
+  'editItem': 'Öğe ismini düzenle',
+  'flag': 'Flag',
+  'greenFlag': 'Yeşil flag',
+  'itemName': 'Öğe ismi',
+  'itemNameRequired': 'Kaydetmeden önce bir öğe ismi girin.',
+  'noFlag': 'Flag yok',
+  'orangeFlag': 'Turuncu flag',
+  'purpleFlag': 'Mor flag',
+  'redFlag': 'Kırmızı flag',
+  'yellowFlag': 'Sarı flag',
 };
 
 export default trMessages;

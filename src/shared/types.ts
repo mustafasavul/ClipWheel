@@ -70,6 +70,9 @@ export interface ContentSignal {
   metadata?: Record<string, string | number | boolean>;
 }
 
+export const clipboardFlagColors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'] as const;
+export type ClipboardFlagColor = (typeof clipboardFlagColors)[number];
+
 export interface ClipboardItem {
   id: string;
   type: ClipboardItemType;
@@ -83,6 +86,7 @@ export interface ClipboardItem {
   filePaths: string[];
   formatInfo: ClipboardFormatInfo;
   contentSignals: ContentSignal[];
+  priorityFlag: ClipboardFlagColor | null;
   url: string | null;
   codeLanguage: CodeLanguage | null;
   sourceApp: string | null;
@@ -165,6 +169,7 @@ export interface HistoryQuery {
   search?: string;
   type?: ClipboardItemType | 'all';
   collectionFilter?: 'all' | 'wheel' | 'favorites';
+  flagFilter?: ClipboardFlagColor | 'all' | 'none';
   dateFilter?: 'all' | 'today' | 'last7' | 'last30' | 'custom';
   startDate?: string;
   endDate?: string;
@@ -207,6 +212,8 @@ export interface AppApi {
   deleteItem(id: string): Promise<void>;
   togglePin(id: string): Promise<ClipboardItem>;
   toggleFavorite(id: string): Promise<ClipboardItem>;
+  updateItemTitle(id: string, title: string): Promise<ClipboardItem>;
+  setItemFlag(id: string, flag: ClipboardFlagColor | null): Promise<ClipboardItem>;
   saveTransformedItem(id: string, text: string, title: string): Promise<ClipboardItem>;
   getSettings(): Promise<Settings>;
   updateSettings(settings: Partial<Settings>): Promise<Settings>;

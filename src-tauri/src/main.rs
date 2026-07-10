@@ -54,6 +54,8 @@ fn main() {
             commands::delete_item,
             commands::toggle_pin,
             commands::toggle_favorite,
+            commands::update_item_title,
+            commands::set_item_flag,
             commands::save_transformed_item,
             commands::get_settings,
             commands::update_settings,

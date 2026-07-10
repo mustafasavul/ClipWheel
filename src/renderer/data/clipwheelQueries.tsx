@@ -1,6 +1,6 @@
 import { createContext, use, useEffect, useMemo, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AppApi, CleanupRequest, ClipboardItem, HistoryQuery, Settings } from '../../shared/types';
+import type { AppApi, CleanupRequest, ClipboardFlagColor, ClipboardItem, HistoryQuery, Settings } from '../../shared/types';
 import { clipwheelClient } from '../api/clipwheelClient';
 
 export const clipwheelQueryKeys = {
@@ -101,6 +101,14 @@ export function useItemMutations() {
     remove: useMutation({ mutationFn: (id: string) => api.deleteItem(id), onSuccess: invalidateItems }),
     togglePin: useMutation({ mutationFn: (id: string) => api.togglePin(id), onSuccess: invalidateItems }),
     toggleFavorite: useMutation({ mutationFn: (id: string) => api.toggleFavorite(id), onSuccess: invalidateItems }),
+    updateTitle: useMutation({
+      mutationFn: ({ id, title }: { id: string; title: string }) => api.updateItemTitle(id, title),
+      onSuccess: invalidateItems,
+    }),
+    setFlag: useMutation({
+      mutationFn: ({ id, flag }: { id: string; flag: ClipboardFlagColor | null }) => api.setItemFlag(id, flag),
+      onSuccess: invalidateItems,
+    }),
     transform: useMutation({
       mutationFn: ({ id, text, title }: { id: string; text: string; title: string }) => api.saveTransformedItem(id, text, title),
       onSuccess: invalidateItems,
@@ -172,6 +180,7 @@ function isUnfilteredFirstPage(query: HistoryQuery | undefined): boolean {
     && !query?.search?.trim()
     && (!query?.type || query.type === 'all')
     && (!query?.collectionFilter || query.collectionFilter === 'all')
+    && (!query?.flagFilter || query.flagFilter === 'all')
     && (!query?.dateFilter || query.dateFilter === 'all')
     && query?.includeDeleted !== true;
 }

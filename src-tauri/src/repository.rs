@@ -66,6 +66,8 @@ struct ClipboardRow {
     is_pinned: i32,
     #[diesel(sql_type = Integer)]
     is_favorite: i32,
+    #[diesel(sql_type = Nullable<Text>)]
+    priority_flag: Option<String>,
     #[diesel(sql_type = Integer)]
     is_deleted: i32,
     #[diesel(sql_type = Text)]
@@ -205,6 +207,44 @@ impl ClipRepository {
         ))
         .get_result::<CountRow>(&mut conn)?;
         Ok(row.count)
+    }
+
+    pub fn update_item_title(&self, id: &str, title: &str) -> Result<ClipboardItem> {
+        let title = title.trim();
+        anyhow::ensure!(!title.is_empty(), "Item name cannot be empty");
+        anyhow::ensure!(
+            title.chars().count() <= 120,
+            "Item name cannot exceed 120 characters"
+        );
+
+        let now = now();
+        let mut conn = self.conn()?;
+        sql_query("UPDATE clipboard_items SET title = ?, updated_at = ? WHERE id = ?")
+            .bind::<Text, _>(title)
+            .bind::<Text, _>(&now)
+            .bind::<Text, _>(id)
+            .execute(&mut conn)?;
+        self.get_item(id)
+    }
+
+    pub fn set_priority_flag(&self, id: &str, flag: Option<String>) -> Result<ClipboardItem> {
+        if let Some(value) = flag.as_deref() {
+            anyhow::ensure!(
+                matches!(
+                    value,
+                    "red" | "orange" | "yellow" | "green" | "blue" | "purple"
+                ),
+                "Unsupported flag color"
+            );
+        }
+        let now = now();
+        let mut conn = self.conn()?;
+        sql_query("UPDATE clipboard_items SET priority_flag = ?, updated_at = ? WHERE id = ?")
+            .bind::<Nullable<Text>, _>(&flag)
+            .bind::<Text, _>(&now)
+            .bind::<Text, _>(id)
+            .execute(&mut conn)?;
+        self.get_item(id)
     }
 
     pub fn update_flags(
@@ -413,8 +453,9 @@ impl ClipRepository {
 fn select_sql(where_sql: &str) -> String {
     format!(
         "SELECT id, type as type_, title, preview_text, content_text, content_html, content_rtf, image_path,
-        thumbnail_path, file_paths_json, formats_json, content_signals_json, url, code_language, source_app, size_bytes, content_hash,
-        is_pinned, is_favorite, is_deleted, created_at, updated_at, last_used_at, deleted_at FROM clipboard_items {where_sql}"
+        thumbnail_path, file_paths_json, formats_json, content_signals_json,
+        url, code_language, source_app, size_bytes, content_hash,
+        is_pinned, is_favorite, priority_flag, is_deleted, created_at, updated_at, last_used_at, deleted_at FROM clipboard_items {where_sql}"
     )
 }
 
@@ -431,6 +472,18 @@ fn build_where(query: &HistoryQuery) -> String {
     match query.collection_filter.as_deref() {
         Some("favorites") => clauses.push("is_favorite = 1".into()),
         _ => {}
+    }
+    if let Some(flag) = query
+        .flag_filter
+        .as_ref()
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty() && *value != "all")
+    {
+        if flag == "none" {
+            clauses.push("priority_flag IS NULL".into());
+        } else {
+            clauses.push(format!("priority_flag = '{}'", sql_escape(flag)));
+        }
     }
     if let Some(search) = query
         .search
@@ -494,6 +547,7 @@ fn row_to_item(row: ClipboardRow) -> ClipboardItem {
         file_paths: parse_json(row.file_paths_json).unwrap_or_default(),
         format_info: parse_json(row.formats_json).unwrap_or_else(|| default_format_info("unknown")),
         content_signals: parse_json(row.content_signals_json).unwrap_or_default(),
+        priority_flag: row.priority_flag,
         url: row.url,
         code_language: row.code_language,
         source_app: row.source_app,
@@ -580,6 +634,35 @@ mod tests {
         assert!(items
             .iter()
             .all(|item| item.content_hash == "duplicate-hash"));
+    }
+
+    #[test]
+    fn updates_item_name_and_filters_by_priority_flag() {
+        let (_dir, repo) = test_repo();
+        let item = repo
+            .create_item(text_input("original", "metadata-hash"))
+            .expect("item");
+
+        let renamed = repo
+            .update_item_title(&item.id, "Release checklist")
+            .expect("title");
+        let flagged = repo
+            .set_priority_flag(&item.id, Some("red".into()))
+            .expect("flag");
+
+        assert_eq!(renamed.title, "Release checklist");
+        assert_eq!(flagged.priority_flag.as_deref(), Some("red"));
+        let filtered = repo
+            .list_items(HistoryQuery {
+                flag_filter: Some("red".into()),
+                ..Default::default()
+            })
+            .expect("filtered items");
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered[0].id, item.id);
+        assert!(repo
+            .set_priority_flag(&item.id, Some("neon".into()))
+            .is_err());
     }
 
     #[test]

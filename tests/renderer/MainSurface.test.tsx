@@ -36,4 +36,26 @@ describe('MainSurface', () => {
     act(() => testApi.emitClipboard(instantItem));
     expect(screen.getAllByText('Instant capture')).not.toHaveLength(0);
   });
+
+  it('renames an item inline and flags it from a popover without opening a dialog', async () => {
+    const testApi = createTestApi();
+    const user = userEvent.setup();
+    render(<MainSurface />, { wrapper: createTestWrapper(testApi.api) });
+
+    await user.click(await screen.findByRole('button', { name: 'Edit item name' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    const nameInput = screen.getByLabelText('Item name');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Release checklist');
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => expect(testApi.api.updateItemTitle).toHaveBeenCalledWith('item-1', 'Release checklist'));
+    await user.click(screen.getAllByRole('button', { name: 'Flag' })[0]);
+    expect(screen.getByRole('menu', { name: 'Flag' })).toBeInTheDocument();
+    await user.click(screen.getByRole('menuitemradio', { name: 'Red flag' }));
+    await waitFor(() => expect(testApi.api.setItemFlag).toHaveBeenCalledWith('item-1', 'red'));
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Flag' }), 'red');
+    await waitFor(() => expect(testApi.api.getItems).toHaveBeenLastCalledWith(expect.objectContaining({ flagFilter: 'red' })));
+  });
 });
