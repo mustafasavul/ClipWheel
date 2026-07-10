@@ -110,7 +110,7 @@
 .wheel-preview-ring {
   --segment-deg: 45deg;
   --wheel-item-count: 8;
-  --wheel-segment-gap: clamp(1.2deg, calc(var(--segment-deg) * 0.055), 2.5deg);
+  --wheel-segment-gap: clamp(1.1deg, calc(var(--segment-deg) * 0.045), 2deg);
   --wheel-segment-label-width: clamp(58px, calc(128px - var(--wheel-item-count) * 5px), 92px);
   --wheel-segment-title-size: clamp(6px, calc(11px - var(--wheel-item-count) * 0.25px), 8px);
   --wheel-segment-meta-size: clamp(5px, calc(10px - var(--wheel-item-count) * 0.25px), 7px);
@@ -120,13 +120,11 @@
   width: min(390px, 82vw);
   aspect-ratio: 1;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 34% 20%, var(--glass-highlight), transparent 20%),
-    rgba(var(--bg-rgb), 0.18);
-  border: 2px solid var(--wheel-glass-edge);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--wheel-ring-line) 88%, var(--wheel-label) 12%);
   overflow: visible;
   transform: translateZ(0);
-  box-shadow: inset 0 1px 0 var(--glass-highlight), inset 0 -18px 48px rgba(var(--bg-rgb), 0.18), 0 22px 56px rgba(var(--bg-rgb), 0.2);
+  box-shadow: 0 22px 56px rgba(var(--bg-rgb), 0.2), inset 0 0 0 3px color-mix(in srgb, var(--wheel-ring-line) 60%, transparent);
 }
 
 .wheel-preview-segment {
@@ -651,5 +649,4 @@ kbd {
   width: 320px;
   height: 320px;
 }
-
 

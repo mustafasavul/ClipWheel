@@ -143,7 +143,14 @@ export function WheelSurface() {
         if (!isShiftPressedRef.current) setQuickLookVisible(false);
       }}
     >
-      <div className="wheel-ring" style={{ '--segment-deg': `${segmentDeg}deg`, '--wheel-item-count': count } as React.CSSProperties}>
+      <div
+        className="wheel-ring"
+        style={{
+          '--segment-deg': `${segmentDeg}deg`,
+          '--wheel-item-count': count,
+          '--wheel-active-rotation': `${activeIndex * segmentDeg}deg`,
+        } as React.CSSProperties}
+      >
         <div className="wheel-active-slice" style={{ transform: `rotate(${activeIndex * segmentDeg}deg)` }} />
         <div className="wheel-inner-border" />
         {Array.from({ length: count }).map((_, index) => {
@@ -154,13 +161,14 @@ export function WheelSurface() {
               key={index}
               className={`wheel-segment ${index === activeIndex ? 'active' : ''}`}
               style={wheelSegmentStyle(index, count, settings.wheelAppearance)}
+              aria-pressed={index === activeIndex}
               onClick={() => item && void mutations.copy.mutateAsync(item.id)}
             >
               <span className="wheel-segment-content">
                 <span className="wheel-index">{index + 1}</span>
                 <span className="wheel-icon">{item ? <ClipboardTypeIcon type={item.type} /> : <Clipboard size={22} />}</span>
                 <strong>{item ? item.title : t('empty')}</strong>
-                <small>{item ? wheelSegmentMeta(item, i18n) : t('noItem')}</small>
+                <small>{item ? (index === activeIndex ? t('selectedClip') : wheelSegmentMeta(item, i18n)) : t('noItem')}</small>
               </span>
             </button>
           );

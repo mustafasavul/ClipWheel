@@ -65,19 +65,21 @@ describe('wheel appearance', () => {
 
   it('converts saved wheel colors into CSS variables', () => {
     expect(wheelAppearanceStyle(defaultWheelAppearance)).toMatchObject({
-      '--wheel-ring-line': 'rgba(32, 39, 45, 0.2)',
-      '--wheel-active': 'rgba(195, 208, 220, 0.34)',
-      '--wheel-active-line': 'rgba(220, 231, 240, 0.88)',
-      '--wheel-label': '#f1f6fb',
-      '--wheel-panel': 'rgba(16, 21, 25, 0.94)',
-      '--wheel-icon-bg': '#182027',
+      '--wheel-ring-line': 'rgba(44, 55, 64, 0.2)',
+      '--wheel-active': 'rgba(142, 180, 90, 0.38)',
+      '--wheel-active-line': 'rgba(184, 239, 122, 0.88)',
+      '--wheel-label': '#e8edf0',
+      '--wheel-panel': 'rgba(9, 17, 22, 0.96)',
+      '--wheel-panel-solid': '#091116',
+      '--wheel-chip-text': '#091116',
+      '--wheel-icon-bg': '#151e24',
     });
   });
 
   it('uses mono color by default and palette colors when requested', () => {
     expect(defaultWheelAppearance.colorMode).toBe('single');
     expect(wheelSegmentStyle(1, 8, defaultWheelAppearance)).toMatchObject({
-      '--wheel-segment-fill': 'rgba(111, 125, 137, 0.86)',
+      '--wheel-segment-fill': 'rgba(28, 37, 44, 0.94)',
       '--wheel-segment-rotation': '45deg',
     });
     expect(wheelSegmentStyle(1, 8, { ...defaultWheelAppearance, colorMode: 'palette', paletteColors: ['#123456', '#abcdef'], segmentOpacity: 0.5 })).toMatchObject({
@@ -95,7 +97,7 @@ describe('wheel appearance', () => {
     const coolAppearance = applyWheelAppearancePreset(defaultWheelAppearance, cool!);
     expect(coolAppearance.colorMode).toBe('palette');
     expect(wheelSegmentStyle(1, 8, coolAppearance)).toMatchObject({
-      '--wheel-segment-fill': 'rgba(28, 126, 158, 0.86)',
+      '--wheel-segment-fill': 'rgba(28, 126, 158, 0.94)',
     });
 
     const mono = wheelAppearancePresets.find((preset) => preset.id === 'mono-slate');
@@ -120,13 +122,13 @@ describe('wheel appearance', () => {
     const auroraAppearance = applyWheelAppearancePreset(defaultWheelAppearance, aurora!);
     expect(auroraAppearance.paletteColors).toEqual(aurora!.colors);
     expect(wheelSegmentStyle(3, 8, auroraAppearance)).toMatchObject({
-      '--wheel-segment-fill': 'rgba(192, 132, 252, 0.86)',
+      '--wheel-segment-fill': 'rgba(192, 132, 252, 0.94)',
     });
 
     const roseAppearance = applyWheelAppearancePreset(defaultWheelAppearance, monoRose!);
     expect(roseAppearance.paletteColors).toEqual(defaultWheelAppearance.paletteColors);
     expect(wheelSegmentStyle(3, 8, roseAppearance)).toMatchObject({
-      '--wheel-segment-fill': 'rgba(251, 113, 133, 0.86)',
+      '--wheel-segment-fill': 'rgba(251, 113, 133, 0.94)',
     });
   });
 });

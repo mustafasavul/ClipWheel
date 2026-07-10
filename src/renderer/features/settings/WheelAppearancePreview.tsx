@@ -12,7 +12,7 @@ export function WheelAppearancePreview({ appearance, count, shortcuts }: { appea
   const segmentDeg = 360 / previewCount;
   return (
     <div className="wheel-preview-shell" style={wheelAppearanceStyle(appearance)}>
-      <div className="wheel-preview-ring" style={{ '--segment-deg': `${segmentDeg}deg`, '--wheel-item-count': previewCount } as React.CSSProperties}>
+      <div className="wheel-preview-ring" style={{ '--segment-deg': `${segmentDeg}deg`, '--wheel-item-count': previewCount, '--wheel-active-rotation': '0deg' } as React.CSSProperties}>
         <div className="wheel-active-slice" />
         <div className="wheel-inner-border" />
         {Array.from({ length: previewCount }).map((_, index) => (

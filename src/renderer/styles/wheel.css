@@ -12,7 +12,7 @@
 .wheel-ring {
   --segment-deg: 45deg;
   --wheel-item-count: 8;
-  --wheel-segment-gap: clamp(1.2deg, calc(var(--segment-deg) * 0.055), 2.5deg);
+  --wheel-segment-gap: clamp(1.1deg, calc(var(--segment-deg) * 0.045), 2deg);
   --wheel-segment-label-width: clamp(136px, calc(280px - var(--wheel-item-count) * 11px), 224px);
   --wheel-segment-title-size: clamp(12px, calc(24px - var(--wheel-item-count) * 0.8px), 18px);
   --wheel-segment-meta-size: clamp(10px, calc(17px - var(--wheel-item-count) * 0.35px), 13px);
@@ -24,15 +24,11 @@
   border-radius: 50%;
   overflow: visible;
   isolation: isolate;
-  background:
-    radial-gradient(circle at 34% 22%, var(--glass-highlight), transparent 18%),
-    radial-gradient(circle at 50% 50%, rgba(var(--bg-rgb), 0.1), rgba(var(--bg-rgb), 0.22));
-  border: 2px solid var(--wheel-glass-edge);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--wheel-ring-line) 88%, var(--wheel-label) 12%);
   box-shadow:
-    0 24px 74px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 var(--glass-highlight),
-    inset 0 0 0 8px rgba(255, 255, 255, 0.035),
-    inset 0 -36px 70px rgba(var(--bg-rgb), 0.18);
+    0 30px 72px rgba(2, 7, 10, 0.34),
+    inset 0 0 0 5px color-mix(in srgb, var(--wheel-ring-line) 60%, transparent);
 }
 
 .wheel-active-slice {
@@ -40,9 +36,14 @@
   inset: 0;
   z-index: 2;
   border-radius: 50%;
-  background: conic-gradient(from calc(var(--segment-deg) / -2), rgba(255, 255, 255, 0.28) 0 var(--wheel-segment-gap), rgba(255, 255, 255, 0.16) var(--wheel-segment-gap) calc(var(--segment-deg) - var(--wheel-segment-gap)), transparent var(--segment-deg) 360deg);
-  -webkit-mask: radial-gradient(circle, transparent 0 31%, #000 31.5% 100%);
-  mask: radial-gradient(circle, transparent 0 31%, #000 31.5% 100%);
+  background: conic-gradient(
+    from calc(var(--segment-deg) / -2),
+    transparent 0 var(--wheel-segment-gap),
+    var(--wheel-active) var(--wheel-segment-gap) calc(var(--segment-deg) - var(--wheel-segment-gap)),
+    transparent calc(var(--segment-deg) - var(--wheel-segment-gap)) 360deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 0 31.5%, #000 32% 99%, transparent 99.4%);
+  mask: radial-gradient(circle, transparent 0 31.5%, #000 32% 99%, transparent 99.4%);
   pointer-events: none;
 }
 
@@ -51,16 +52,16 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: conic-gradient(from calc(var(--segment-deg) / -2), var(--wheel-active-line) 0 2px, transparent 2px calc(var(--segment-deg) - 2px), var(--wheel-active-line) calc(var(--segment-deg) - 2px) var(--segment-deg), transparent var(--segment-deg));
+  background: conic-gradient(from calc(var(--segment-deg) / -2), var(--wheel-active-line) 0 1px, transparent 1px calc(var(--segment-deg) - 1px), var(--wheel-active-line) calc(var(--segment-deg) - 1px) var(--segment-deg), transparent var(--segment-deg));
 }
 
 .wheel-inner-border {
   position: absolute;
-  inset: 31%;
+  inset: 30.6%;
   z-index: 1;
   border-radius: 50%;
-  border: 2px solid var(--wheel-glass-edge);
-  box-shadow: 0 0 0 1px rgba(var(--bg-rgb), 0.22), inset 0 1px 0 var(--glass-highlight);
+  border: 8px solid color-mix(in srgb, var(--wheel-panel-solid) 80%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--wheel-ring-line) 82%, var(--wheel-label) 18%);
   pointer-events: none;
 }
 
@@ -71,9 +72,9 @@
   border: 0;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--wheel-segment-fill) 68%, white 32%), transparent 16%),
-    linear-gradient(170deg, rgba(255, 255, 255, 0.18), transparent 35%),
-    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--wheel-segment-fill) 78%, white 22%), var(--wheel-segment-fill) 74%);
+    radial-gradient(circle at 50% 13%, color-mix(in srgb, var(--wheel-segment-fill) 93%, var(--wheel-label) 7%), transparent 25%),
+    linear-gradient(165deg, color-mix(in srgb, var(--wheel-label) 4%, transparent), transparent 36%),
+    radial-gradient(circle at 50% 16%, color-mix(in srgb, var(--wheel-segment-fill) 96%, var(--wheel-label) 4%), var(--wheel-segment-fill) 72%);
   -webkit-mask:
     radial-gradient(circle, transparent 0 31%, #000 31.8% 100%),
     conic-gradient(from calc(var(--segment-deg) / -2), #000 0 calc(var(--segment-deg) - var(--wheel-segment-gap)), transparent calc(var(--segment-deg) - var(--wheel-segment-gap)) 360deg);
@@ -85,12 +86,20 @@
   color: var(--wheel-label);
   transform: rotate(var(--wheel-segment-rotation));
   transform-origin: 50% 50%;
-  transition: filter .18s ease, opacity .18s ease;
+  transition: filter .22s cubic-bezier(.16, 1, .3, 1), opacity .22s cubic-bezier(.16, 1, .3, 1);
+}
+
+.wheel-segment:hover {
+  filter: brightness(1.08);
+}
+
+.wheel-segment:active {
+  filter: brightness(1.12);
 }
 
 .wheel-segment.active {
   z-index: 2;
-  filter: brightness(1.16) saturate(1.14) drop-shadow(0 12px 20px color-mix(in srgb, var(--wheel-segment-fill) 42%, transparent));
+  filter: brightness(1.15) saturate(1.04);
 }
 
 .wheel-segment-content {
@@ -113,12 +122,18 @@
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--glass-shade) 82%, transparent);
-  border: 1px solid var(--wheel-glass-edge);
+  background: color-mix(in srgb, var(--wheel-panel-solid) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--wheel-label) 22%, transparent);
   color: var(--wheel-label);
   font-size: clamp(12px, calc(var(--wheel-segment-index-size) * 0.58), 16px);
   font-weight: 760;
-  box-shadow: inset 0 1px 0 var(--glass-highlight), 0 5px 14px rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--wheel-label) 12%, transparent), 0 5px 14px rgba(2, 7, 10, 0.22);
+}
+
+.wheel-segment.active .wheel-index {
+  border-color: var(--wheel-active-line);
+  color: var(--wheel-active-line);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--wheel-label) 16%, transparent);
 }
 
 .wheel-icon {
@@ -160,12 +175,12 @@
 }
 
 .wheel-segment.active small {
-  color: var(--wheel-label);
+  color: var(--wheel-active-line);
 }
 
 .wheel-center {
   position: absolute;
-  inset: 33%;
+  inset: 34.2%;
   z-index: 3;
   border-radius: 50%;
   display: grid;
@@ -174,14 +189,47 @@
   gap: 9px;
   padding: 28px;
   text-align: center;
-  color: var(--text);
+  color: var(--wheel-label);
   background:
-    radial-gradient(circle at 35% 22%, var(--glass-highlight), transparent 24%),
-    color-mix(in srgb, var(--wheel-panel) 92%, transparent);
-  border: 2px solid var(--wheel-glass-edge);
+    radial-gradient(circle at 35% 18%, color-mix(in srgb, var(--wheel-label) 8%, transparent), transparent 27%),
+    radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--wheel-panel-solid) 84%, transparent), var(--wheel-panel));
+  border: 1px solid color-mix(in srgb, var(--wheel-label) 24%, var(--wheel-ring-line));
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-shadow), 0 14px 40px rgba(var(--bg-rgb), 0.34);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--wheel-label) 12%, transparent),
+    inset 0 -22px 44px rgba(2, 7, 10, 0.2),
+    0 14px 30px rgba(2, 7, 10, 0.3);
+}
+
+.wheel-center::before {
+  content: "";
+  position: absolute;
+  inset: -13px;
+  z-index: -1;
+  border-radius: 50%;
+  background: conic-gradient(
+    from calc(var(--segment-deg) / -2 - 90deg),
+    var(--wheel-active-line) 0 var(--segment-deg),
+    color-mix(in srgb, var(--wheel-ring-line) 88%, transparent) var(--segment-deg) 360deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 0 88%, #000 89% 100%);
+  mask: radial-gradient(circle, transparent 0 88%, #000 89% 100%);
+  transform: rotate(var(--wheel-active-rotation));
+  transition: transform .24s cubic-bezier(.16, 1, .3, 1);
+}
+
+.wheel-center::after {
+  content: "";
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--wheel-active-line);
+  transform: translateX(-50%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wheel-active-line) 16%, transparent);
 }
 
 .wheel-center strong {
@@ -189,7 +237,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--text-strong);
+  color: var(--wheel-label);
   font-size: 18px;
   line-height: 1.12;
 }
@@ -197,7 +245,7 @@
 .wheel-center-meta {
   max-width: 220px;
   overflow: hidden;
-  color: color-mix(in srgb, var(--text-muted) 88%, var(--wheel-label));
+  color: color-mix(in srgb, var(--wheel-label) 72%, transparent);
   font-size: 12px;
   font-weight: 700;
   line-height: 1.15;
@@ -209,7 +257,7 @@
   display: grid;
   gap: 6px;
   margin-top: 6px;
-  color: var(--text-muted);
+  color: color-mix(in srgb, var(--wheel-label) 72%, transparent);
   font-size: 12px;
   text-align: left;
 }
@@ -223,8 +271,11 @@
 
 .wheel-hints kbd {
   min-width: 44px;
+  border: 1px solid color-mix(in srgb, var(--wheel-label) 18%, transparent);
   border-radius: 5px;
   padding: 3px 6px;
+  background: color-mix(in srgb, var(--wheel-icon-bg) 88%, transparent);
+  color: var(--wheel-label);
   font-size: 11px;
   text-align: center;
 }
@@ -350,11 +401,11 @@
 .type-chip {
   border-radius: 999px;
   padding: 5px 9px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: var(--accent-text);
+  background: var(--wheel-active-line);
+  color: var(--wheel-chip-text);
   font-size: 12px;
   font-weight: 700;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 30%, transparent);
 }
 
 @keyframes row-in {
@@ -374,5 +425,3 @@
     background-position: -220% 0;
   }
 }
-
-

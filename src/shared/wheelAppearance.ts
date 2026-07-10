@@ -22,28 +22,28 @@ export const wheelPalette = [
 export const defaultWheelAppearance: WheelAppearanceSettings = {
   colorMode: 'single',
   paletteColors: [...wheelPalette],
-  segmentColor: '#6f7d89',
-  segmentOpacity: 0.86,
-  activeColor: '#c3d0dc',
-  activeOpacity: 0.34,
-  activeLineColor: '#dce7f0',
-  ringLineColor: '#20272d',
-  panelColor: '#101519',
-  panelOpacity: 0.94,
-  iconBackgroundColor: '#182027',
-  labelColor: '#f1f6fb',
+  segmentColor: '#1c252c',
+  segmentOpacity: 0.94,
+  activeColor: '#8eb45a',
+  activeOpacity: 0.38,
+  activeLineColor: '#b8ef7a',
+  ringLineColor: '#2c3740',
+  panelColor: '#091116',
+  panelOpacity: 0.96,
+  iconBackgroundColor: '#151e24',
+  labelColor: '#e8edf0',
 };
 
 export const wheelAppearancePresets: WheelAppearancePreset[] = [
-  createPreset('mono-slate', 'Mono Slate', ['#6f7d89'], {
+  createPreset('mono-slate', 'Mono Slate', ['#1c252c'], {
     colorMode: 'single',
-    segmentColor: '#6f7d89',
-    activeColor: '#c3d0dc',
-    activeLineColor: '#dce7f0',
-    ringLineColor: '#20272d',
-    panelColor: '#101519',
-    iconBackgroundColor: '#182027',
-    labelColor: '#f1f6fb',
+    segmentColor: '#1c252c',
+    activeColor: '#8eb45a',
+    activeLineColor: '#b8ef7a',
+    ringLineColor: '#2c3740',
+    panelColor: '#091116',
+    iconBackgroundColor: '#151e24',
+    labelColor: '#e8edf0',
   }),
   createPreset('mono-ink', 'Mono Ink', ['#2f3a44'], {
     colorMode: 'single',
@@ -181,6 +181,8 @@ export function wheelAppearanceStyle(appearance: WheelAppearanceSettings): CSSPr
     '--wheel-active-line': hexToRgba(appearance.activeLineColor, 0.88),
     '--wheel-label': appearance.labelColor,
     '--wheel-panel': hexToRgba(appearance.panelColor, appearance.panelOpacity),
+    '--wheel-panel-solid': appearance.panelColor,
+    '--wheel-chip-text': appearance.panelColor,
     '--wheel-icon-bg': appearance.iconBackgroundColor,
   } as CSSProperties;
 }
