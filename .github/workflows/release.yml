@@ -79,6 +79,6 @@ jobs:
           tagName: v__VERSION__
           releaseName: ClipWheel v__VERSION__
           releaseBody: See the assets below to download and install this version.
-          releaseDraft: true
+          releaseDraft: false
           prerelease: ${{ contains(github.ref_name, '-rc.') || contains(github.ref_name, '-beta.') || contains(github.ref_name, '-alpha.') }}
           args: ${{ matrix.args }}
