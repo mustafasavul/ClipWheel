@@ -1,3 +1,4 @@
+mod app_updates;
 mod clipboard_service;
 mod commands;
 mod detection;
@@ -27,6 +28,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
@@ -65,6 +67,8 @@ fn main() {
             commands::get_image_data_url,
             commands::show_window,
             commands::close_wheel,
+            app_updates::check_update,
+            app_updates::install_update,
         ])
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir()?;
@@ -80,6 +84,7 @@ fn main() {
                 shortcut_capture_active: AtomicBool::new(false),
             };
             app.manage(state);
+            app.manage(app_updates::PendingUpdate::default());
             clipboard.start();
             register_shortcut(app.handle());
             setup_windows(app.handle())?;

@@ -11,3 +11,4 @@
 - Changed the default theme to `system` for new settings records in both renderer defaults and Rust defaults.
 - Removed legacy Electron runtime files, Forge config, and `better-sqlite3` usage.
 - Added manual version tracking and release documentation.
+- Added GitHub Release packaging, Tauri updater configuration, in-app update controls, and Homebrew tap documentation.

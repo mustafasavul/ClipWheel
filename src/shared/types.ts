@@ -217,6 +217,18 @@ export interface MainNavigationRequest {
   selectedId?: string;
 }
 
+export interface UpdateMetadata {
+  version: string;
+  currentVersion: string;
+  date: string | null;
+  body: string | null;
+}
+
+export type UpdateDownloadEvent =
+  | { event: 'Started'; data: { contentLength: number | null } }
+  | { event: 'Progress'; data: { chunkLength: number } }
+  | { event: 'Finished' };
+
 export interface AppApi {
   getItems(query?: HistoryQuery): Promise<ClipboardItem[]>;
   countItems(query?: HistoryQuery): Promise<number>;
@@ -235,6 +247,8 @@ export interface AppApi {
   getImageDataUrl(id: string): Promise<string | null>;
   showWindow(name: 'history' | 'settings' | 'wheel'): Promise<void>;
   closeWheel(): Promise<void>;
+  checkUpdate(): Promise<UpdateMetadata | null>;
+  installUpdate(onEvent: (event: UpdateDownloadEvent) => void): Promise<void>;
   onClipboardItem(handler: (item: ClipboardItem) => void): () => void;
   onItemsChanged(handler: () => void): () => void;
   onWheelOpened(handler: () => void): () => void;

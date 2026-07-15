@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useMemo, useReducer } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { CirclePause, Clipboard, Command, Palette, Settings as SettingsIcon, Shield } from 'lucide-react';
 import type { MainNavigationRequest, Settings } from '../../../shared/types';
 import { defaultSettings } from '../../../shared/settings';
@@ -7,7 +7,7 @@ import { appVersion } from '../../../shared/version';
 import { clampWheelItemCount } from '../../../shared/wheelLimits';
 import { normalizeWheelItemIds } from '../../../shared/shortcuts';
 import { useApplyLanguage, useApplyTheme, useResolvedTheme } from '../../app/documentPreferences';
-import { useClipwheelEvents, useDesktopActions, useHistoryCountQuery, useHistoryItemsQuery, useSettingsMutation, useSettingsQuery } from '../../data/clipwheelQueries';
+import { useClipwheelApi, useClipwheelEvents, useDesktopActions, useHistoryCountQuery, useHistoryItemsQuery, useSettingsMutation, useSettingsQuery } from '../../data/clipwheelQueries';
 import { I18nContext, useLocale } from '../../i18n/I18nContext';
 import { SkeletonList } from '../../ui/SkeletonList';
 import clipwheelIcon from '../../assets/clipwheel-icon-transparent.png';
@@ -19,6 +19,7 @@ import { historyUiReducer, initialHistoryUiState } from './historyState';
 const PreviewPanel = lazy(() => import('../preview/PreviewPanel').then((module) => ({ default: module.PreviewPanel })));
 const SettingsPanel = lazy(() => import('../settings/SettingsPanel').then((module) => ({ default: module.SettingsPanel })));
 export function MainSurface() {
+  const api = useClipwheelApi();
   const desktop = useDesktopActions();
   const [ui, dispatch] = useReducer(historyUiReducer, initialHistoryUiState);
   const { page, pageSize, query, selectedId, settingsTab: tab, view } = ui;
@@ -48,6 +49,30 @@ export function MainSurface() {
     dispatch({ type: 'navigate', request });
   }, []);
   useClipwheelEvents({ onClipboardItem, onMainNavigationRequested });
+  useEffect(() => {
+    if (!window.localStorage) return;
+    const storageKey = 'clipwheel:last-update-check';
+    const now = Date.now();
+    let lastCheck = 0;
+    try {
+      lastCheck = Number(window.localStorage.getItem(storageKey) ?? 0);
+    } catch {
+      return;
+    }
+    if (Number.isFinite(lastCheck) && now - lastCheck < 24 * 60 * 60 * 1_000) return;
+    try {
+      window.localStorage.setItem(storageKey, String(now));
+    } catch {
+      return;
+    }
+    void api.checkUpdate().catch(() => {
+      try {
+        window.localStorage.removeItem(storageKey);
+      } catch {
+        // Ignore storage errors; update checks remain manual from Settings.
+      }
+    });
+  }, [api]);
 
   const refresh = useCallback(async () => {
     await Promise.all([itemsQuery.refetch(), countQuery.refetch(), settingsQuery.refetch()]);

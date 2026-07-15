@@ -1,12 +1,13 @@
 # ClipWheel
 
-ClipWheel is a privacy-first desktop clipboard manager for macOS and Windows. It captures copied text, code, URLs, images, and file references locally, then lets you restore recent items through a radial clipboard wheel or a full history window.
+ClipWheel is a privacy-first desktop clipboard manager for macOS, Windows, and Linux. It captures copied text, code, URLs, images, and file references locally, then lets you restore recent items through a radial clipboard wheel or a full history window.
 
 ## Privacy Model
 
 - Local-first storage only.
 - SQLite database and image assets live in the local Tauri app data folder.
 - No telemetry, analytics, accounts, cloud sync, or external services.
+- The updater only checks the public GitHub Releases metadata URL configured in the app.
 - Clipboard content is stored as copied; no cloud service, external classifier, or masking layer is applied.
 
 ## Current Features
@@ -97,7 +98,26 @@ pnpm test
 pnpm tauri build
 ```
 
-Tauri is configured for local desktop bundle outputs. CI should run install, lint, typecheck, version check, test, and Tauri build before publishing artifacts.
+Tauri is configured for local desktop bundle outputs and updater artifacts. Release builds require `TAURI_SIGNING_PRIVATE_KEY` and optionally `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. CI smoke packaging uses `pnpm package:ci` so pull requests can build without release signing secrets.
+
+## Installers
+
+GitHub Releases provide draft-reviewed desktop installers for each public version:
+
+| Asset | Platform |
+| --- | --- |
+| `ClipWheel_VERSION_aarch64.dmg` | macOS Apple Silicon |
+| `ClipWheel_VERSION_x64.dmg` | macOS Intel |
+| `ClipWheel_VERSION_x64_en-US.msi` | Windows x64 MSI |
+| `ClipWheel_VERSION_x64-setup.exe` | Windows x64 NSIS installer |
+| `ClipWheel_VERSION_amd64.AppImage` | Linux universal AppImage |
+| `ClipWheel_VERSION_amd64.deb` | Debian/Ubuntu |
+
+Homebrew uses a custom tap:
+
+```bash
+brew install --cask mustafasavul/tap/clipwheel
+```
 
 ## Versioning
 
@@ -109,7 +129,7 @@ Version sources are kept in sync across `package.json`, `src-tauri/Cargo.toml`, 
 pnpm version:check
 ```
 
-Updates are manual local release installs for now. ClipWheel does not use an external auto-update service, telemetry, accounts, or cloud checks.
+ClipWheel checks `https://github.com/mustafasavul/ClipWheel/releases/latest/download/latest.json` for signed release updates. It does not use telemetry, accounts, cloud sync, or a custom update server.
 
 ## Shortcuts
 
@@ -125,10 +145,11 @@ Updates are manual local release installs for now. ClipWheel does not use an ext
 - Capture controls for plain text, rich text, images, file references, code, and duplicate handling.
 - Privacy controls for pause capture, ignored source apps, and clear-on-quit behavior.
 - Cleanup actions use soft delete by default, with explicit purge for deleted records.
+- Update controls for checking GitHub Releases and installing signed updates in place.
 
 ## Roadmap
 
-- Signed and notarized release builds
+- Apple notarized and Windows trusted release builds
 - Configurable global shortcut recording
 - Native file clipboard restore
 - Import/export for local backups
@@ -140,4 +161,4 @@ Updates are manual local release installs for now. ClipWheel does not use an ext
 - File references initially restore as text paths.
 - Source app detection is a placeholder because cross-platform active-app APIs differ.
 - Existing installs that already saved `dark` or `light` keep that user choice. New default settings use `system`.
-- The first public builds are unsigned. macOS Gatekeeper and Windows SmartScreen may warn until signing is configured.
+- The first public OS installers may be unsigned or ad-hoc signed. macOS Gatekeeper and Windows SmartScreen may warn until Apple notarization and Windows trusted signing are configured.

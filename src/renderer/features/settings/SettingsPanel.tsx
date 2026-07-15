@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 import {
-  Braces, Clipboard, Copy, File, Globe2, Image, LogIn, Monitor, Moon,
-  MousePointer2, Palette, Shield, Star, Sun, Trash2, Type,
+  Braces, Clipboard, Copy, Download, File, Globe2, Image, LogIn, Monitor, Moon,
+  MousePointer2, Palette, RefreshCw, Shield, Star, Sun, Trash2, Type,
 } from 'lucide-react';
-import type { Settings } from '../../../shared/types';
+import type { Settings, UpdateMetadata } from '../../../shared/types';
 import { appVersion } from '../../../shared/version';
 import { languageOptions } from '../../../shared/i18n';
 import { defaultWheelAppearance } from '../../../shared/wheelAppearance';
 import { clampWheelItemCount, maxWheelItems, wheelItemCountOptions } from '../../../shared/wheelLimits';
 import { isValidGlobalShortcut, setShortcutValue, shortcutKey, type ShortcutTarget } from '../../../shared/shortcuts';
-import { useCleanupMutation, useDesktopActions } from '../../data/clipwheelQueries';
+import { useCleanupMutation, useClipwheelApi, useDesktopActions } from '../../data/clipwheelQueries';
 import { useI18n } from '../../i18n/I18nContext';
-import { cleanupConfirmMessage, languageOptionLabel, labelFromToken, settingOptionLabel, type CleanupActionId } from '../../presentation/formatters';
+import { cleanupConfirmMessage, formatBytes, languageOptionLabel, settingOptionLabel, type CleanupActionId } from '../../presentation/formatters';
 import { ColorSetting } from '../../ui/ColorSetting';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { NumberSetting } from '../../ui/NumberSetting';
@@ -24,6 +24,7 @@ import { WheelAppearancePreview } from './WheelAppearancePreview';
 import { WheelAppearancePresets } from './WheelAppearancePresets';
 import { settingsTabs, type SettingsTabId } from './settingsConfig';
 const maxWheelShortcutItems = maxWheelItems;
+type UpdateStatus = 'idle' | 'checking' | 'available' | 'upToDate' | 'downloading' | 'ready' | 'error';
 
 export function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRefresh }: {
   settings: Settings;
@@ -32,12 +33,18 @@ export function SettingsPanel({ settings, updateSettings, activeTab, setActiveTa
   setActiveTab: (tab: SettingsTabId) => void;
   onRefresh: () => Promise<void>;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
+  const api = useClipwheelApi();
   const desktop = useDesktopActions();
   const cleanupMutation = useCleanupMutation();
   const [recordingShortcut, setRecordingShortcut] = useState<string | null>(null);
   const [shortcutError, setShortcutError] = useState<string | null>(null);
   const [pendingCleanup, setPendingCleanup] = useState<CleanupActionId | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle');
+  const [updateMetadata, setUpdateMetadata] = useState<UpdateMetadata | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [downloadedBytes, setDownloadedBytes] = useState(0);
+  const [downloadTotalBytes, setDownloadTotalBytes] = useState<number | null>(null);
   const startShortcutRecording = async (target: ShortcutTarget) => {
     setShortcutError(null);
     if (target.kind === 'openWheel') {
@@ -79,6 +86,61 @@ export function SettingsPanel({ settings, updateSettings, activeTab, setActiveTa
     setPendingCleanup(null);
     await onRefresh();
   };
+  const checkForUpdates = async () => {
+    setUpdateStatus('checking');
+    setUpdateError(null);
+    setDownloadedBytes(0);
+    setDownloadTotalBytes(null);
+    try {
+      const update = await api.checkUpdate();
+      setUpdateMetadata(update);
+      setUpdateStatus(update ? 'available' : 'upToDate');
+    } catch (error) {
+      setUpdateError(error instanceof Error ? error.message : String(error));
+      setUpdateStatus('error');
+    }
+  };
+  const installAvailableUpdate = async () => {
+    setUpdateStatus('downloading');
+    setUpdateError(null);
+    setDownloadedBytes(0);
+    setDownloadTotalBytes(null);
+    try {
+      await api.installUpdate((event) => {
+        if (event.event === 'Started') {
+          setDownloadTotalBytes(event.data.contentLength);
+          return;
+        }
+        if (event.event === 'Progress') {
+          setDownloadedBytes((current) => current + event.data.chunkLength);
+          return;
+        }
+        setUpdateStatus('ready');
+      });
+      setUpdateStatus('ready');
+    } catch (error) {
+      setUpdateError(error instanceof Error ? error.message : String(error));
+      setUpdateStatus('error');
+    }
+  };
+  const updateSummary = updateStatus === 'available' && updateMetadata
+    ? `${t('updateAvailable')}: ${updateMetadata.version}`
+    : updateStatus === 'upToDate'
+      ? t('updateUpToDate')
+      : updateStatus === 'checking'
+        ? t('updateChecking')
+        : updateStatus === 'downloading'
+          ? t('updateDownloading')
+          : updateStatus === 'ready'
+            ? t('updateReady')
+            : updateStatus === 'error'
+              ? t('updateFailed')
+              : t('updateIdle');
+  const downloadSummary = downloadTotalBytes
+    ? `${formatBytes(downloadedBytes, locale, t)} / ${formatBytes(downloadTotalBytes, locale, t)}`
+    : downloadedBytes > 0
+      ? formatBytes(downloadedBytes, locale, t)
+      : null;
   return (
     <>
       <div className="settings-panel">
@@ -222,10 +284,26 @@ export function SettingsPanel({ settings, updateSettings, activeTab, setActiveTa
       {activeTab === 'advanced' && (
         <SettingsGrid>
           <Toggle icon={<Clipboard size={18} />} label={t('autoPasteAfterRestore')} value={settings.autoPaste} onChange={(value) => updateSettings({ autoPaste: value })} />
-          <div className="setting-field app-version-card">
+          <div className="setting-field app-version-card wide">
             <span>{t('updates')}</span>
-            <strong>{labelFromToken(appVersion.updateMode, t)}</strong>
+            <strong>{updateSummary}</strong>
             <small>{t('updatesDescription')}</small>
+            <dl className="update-metadata">
+              <div><dt>{t('appVersion')}</dt><dd>{appVersion.version}</dd></div>
+              <div><dt>{t('channel')}</dt><dd>{appVersion.channel}</dd></div>
+              <div><dt>{t('updateMode')}</dt><dd>{appVersion.updateMode}</dd></div>
+              {downloadSummary && <div><dt>{t('download')}</dt><dd>{downloadSummary}</dd></div>}
+            </dl>
+            {updateMetadata?.body && <small className="update-notes">{updateMetadata.body}</small>}
+            {updateError && <small className="update-error">{updateError}</small>}
+            <div className="update-actions">
+              <button type="button" className="secondary-button" disabled={updateStatus === 'checking' || updateStatus === 'downloading'} onClick={() => void checkForUpdates()}>
+                <RefreshCw size={17} /> {t('checkForUpdates')}
+              </button>
+              <button type="button" className="primary-button" disabled={updateStatus !== 'available'} onClick={() => void installAvailableUpdate()}>
+                <Download size={17} /> {t('installUpdate')}
+              </button>
+            </div>
           </div>
         </SettingsGrid>
       )}

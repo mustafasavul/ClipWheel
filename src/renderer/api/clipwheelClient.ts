@@ -1,6 +1,6 @@
-import { invoke } from '@tauri-apps/api/core';
+import { Channel, invoke } from '@tauri-apps/api/core';
 import { listen, type Event } from '@tauri-apps/api/event';
-import type { AppApi, CleanupRequest, ClipboardFlagColor, ClipboardItem, HistoryQuery, MainNavigationRequest, Settings } from '../../shared/types';
+import type { AppApi, CleanupRequest, ClipboardFlagColor, ClipboardItem, HistoryQuery, MainNavigationRequest, Settings, UpdateDownloadEvent, UpdateMetadata } from '../../shared/types';
 
 type InvokeFn = <T>(command: string, args?: Record<string, unknown>) => Promise<T>;
 type ListenFn = <T>(event: string, handler: (event: Event<T>) => void) => Promise<() => void>;
@@ -26,6 +26,12 @@ export function createClipwheelClient(dependencies: { invoke: InvokeFn; listen: 
     getImageDataUrl: (id: string) => invokeCommand<string | null>('get_image_data_url', { id }),
     showWindow: (name: 'history' | 'settings' | 'wheel') => invokeCommand<void>('show_window', { name }),
     closeWheel: () => invokeCommand<void>('close_wheel'),
+    checkUpdate: () => invokeCommand<UpdateMetadata | null>('check_update'),
+    installUpdate: (onEvent: (event: UpdateDownloadEvent) => void) => {
+      const onEventChannel = new Channel<UpdateDownloadEvent>();
+      onEventChannel.onmessage = onEvent;
+      return invokeCommand<void>('install_update', { onEvent: onEventChannel });
+    },
     onClipboardItem: (handler: (item: ClipboardItem) => void) => subscribe(listenEvent, 'clipboard-item', handler),
     onItemsChanged: (handler: () => void) => subscribe(listenEvent, 'items-changed', handler),
     onWheelOpened: (handler: () => void) => subscribe(listenEvent, 'wheel-opened', handler),

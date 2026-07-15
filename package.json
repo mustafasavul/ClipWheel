@@ -10,6 +10,7 @@
     "dev:renderer": "vite --config vite.renderer.config.ts",
     "build:renderer": "vite build --config vite.renderer.config.ts",
     "package": "tauri build",
+    "package:ci": "tauri build --config src-tauri/tauri.ci.conf.json",
     "make": "tauri build",
     "tauri": "tauri",
     "lint": "eslint .",

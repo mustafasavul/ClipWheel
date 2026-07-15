@@ -13,9 +13,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-latest, windows-latest, ubuntu-22.04]
     steps:
       - uses: actions/checkout@v4
+      - name: Install Linux desktop dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
       - uses: pnpm/action-setup@v4
         with:
           version: 9
@@ -23,12 +28,14 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
+      - run: pnpm version:check
       - run: pnpm test
-      - run: pnpm make
+      - run: pnpm package:ci
       - uses: actions/upload-artifact@v4
         with:
           name: clipwheel-${{ matrix.os }}
-          path: out/make/**
+          path: src-tauri/target/release/bundle/**

@@ -62,7 +62,8 @@
 
   .settings-grid,
   .cleanup-panel,
-  .shortcut-setting {
+  .shortcut-setting,
+  .update-metadata {
     grid-template-columns: 1fr;
   }
 

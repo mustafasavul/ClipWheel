@@ -62,6 +62,8 @@ export function createTestApi(overrides: Partial<AppApi> = {}) {
     getImageDataUrl: vi.fn(async () => null),
     showWindow: vi.fn(async () => undefined),
     closeWheel: vi.fn(async () => undefined),
+    checkUpdate: vi.fn(async () => null),
+    installUpdate: vi.fn(async () => undefined),
     onClipboardItem: (handler) => { listeners.clipboard.add(handler); return () => listeners.clipboard.delete(handler); },
     onItemsChanged: (handler) => { listeners.items.add(handler); return () => listeners.items.delete(handler); },
     onMainNavigationRequested: (handler) => { listeners.mainNavigation.add(handler); return () => listeners.mainNavigation.delete(handler); },
