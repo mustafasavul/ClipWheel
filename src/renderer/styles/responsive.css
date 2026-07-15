@@ -63,6 +63,8 @@
   .settings-grid,
   .cleanup-panel,
   .shortcut-setting,
+  .update-actions,
+  .update-card-header,
   .update-metadata {
     grid-template-columns: 1fr;
   }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  Braces, Clipboard, Copy, Download, File, Globe2, Image, LogIn, Monitor, Moon,
+  Braces, Clipboard, Copy, Download, ExternalLink, File, Github, Globe2, Image, LogIn, Monitor, Moon,
   MousePointer2, Palette, RefreshCw, Shield, Star, Sun, Trash2, Type,
 } from 'lucide-react';
 import type { Settings, UpdateMetadata } from '../../../shared/types';
@@ -24,6 +24,7 @@ import { WheelAppearancePreview } from './WheelAppearancePreview';
 import { WheelAppearancePresets } from './WheelAppearancePresets';
 import { settingsTabs, type SettingsTabId } from './settingsConfig';
 const maxWheelShortcutItems = maxWheelItems;
+const githubProjectUrl = 'https://github.com/mustafasavul/ClipWheel';
 type UpdateStatus = 'idle' | 'checking' | 'available' | 'upToDate' | 'downloading' | 'ready' | 'error';
 
 export function SettingsPanel({ settings, updateSettings, activeTab, setActiveTab, onRefresh }: {
@@ -285,9 +286,18 @@ export function SettingsPanel({ settings, updateSettings, activeTab, setActiveTa
         <SettingsGrid>
           <Toggle icon={<Clipboard size={18} />} label={t('autoPasteAfterRestore')} value={settings.autoPaste} onChange={(value) => updateSettings({ autoPaste: value })} />
           <div className="setting-field app-version-card wide">
-            <span>{t('updates')}</span>
-            <strong>{updateSummary}</strong>
-            <small>{t('updatesDescription')}</small>
+            <div className="update-card-header">
+              <div>
+                <span>{t('updates')}</span>
+                <strong>{updateSummary}</strong>
+                <small>{t('updatesDescription')}</small>
+              </div>
+              <button type="button" className="secondary-button github-link-button" onClick={() => void desktop.openExternalUrl(githubProjectUrl)}>
+                <Github size={16} />
+                {t('githubProject')}
+                <ExternalLink size={13} />
+              </button>
+            </div>
             <dl className="update-metadata">
               <div><dt>{t('appVersion')}</dt><dd>{appVersion.version}</dd></div>
               <div><dt>{t('channel')}</dt><dd>{appVersion.channel}</dd></div>

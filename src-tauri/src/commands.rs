@@ -1,6 +1,8 @@
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager};
 
+const GITHUB_PROJECT_URL: &str = "https://github.com/mustafasavul/ClipWheel";
+
 use crate::{
     media,
     models::{
@@ -267,6 +269,14 @@ pub fn show_window(app: AppHandle, name: String) -> CommandResult<()> {
 }
 
 #[tauri::command]
+pub fn open_external_url(url: String) -> CommandResult<()> {
+    if url != GITHUB_PROJECT_URL {
+        return Err("Unsupported external URL.".into());
+    }
+    open_url(&url).map_err(to_string)
+}
+
+#[tauri::command]
 pub fn close_wheel(app: AppHandle) -> CommandResult<()> {
     if let Some(window) = app.get_webview_window("wheel") {
         window.hide().map_err(to_string)?;
@@ -281,6 +291,30 @@ fn to_string(error: impl std::fmt::Display) -> String {
 fn emit_items_changed(app: &AppHandle) -> CommandResult<()> {
     crate::tray::refresh_tray_menu(app).map_err(to_string)?;
     app.emit("items-changed", ()).map_err(to_string)
+}
+
+#[cfg(target_os = "macos")]
+fn open_url(url: &str) -> std::io::Result<()> {
+    std::process::Command::new("open")
+        .arg(url)
+        .spawn()
+        .map(|_| ())
+}
+
+#[cfg(target_os = "windows")]
+fn open_url(url: &str) -> std::io::Result<()> {
+    std::process::Command::new("cmd")
+        .args(["/C", "start", "", url])
+        .spawn()
+        .map(|_| ())
+}
+
+#[cfg(target_os = "linux")]
+fn open_url(url: &str) -> std::io::Result<()> {
+    std::process::Command::new("xdg-open")
+        .arg(url)
+        .spawn()
+        .map(|_| ())
 }
 
 fn get_filtered_wheel_items(

@@ -61,6 +61,7 @@ export function createTestApi(overrides: Partial<AppApi> = {}) {
     cleanup: vi.fn(async () => ({ id: 'cleanup-1', action: 'all', criteriaJson: '{}', deletedCount: 1, createdAt: '2026-01-01T00:00:00.000Z' })),
     getImageDataUrl: vi.fn(async () => null),
     showWindow: vi.fn(async () => undefined),
+    openExternalUrl: vi.fn(async () => undefined),
     closeWheel: vi.fn(async () => undefined),
     checkUpdate: vi.fn(async () => null),
     installUpdate: vi.fn(async () => undefined),

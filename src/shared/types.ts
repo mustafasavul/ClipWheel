@@ -246,6 +246,7 @@ export interface AppApi {
   cleanup(request: CleanupRequest): Promise<CleanupJob>;
   getImageDataUrl(id: string): Promise<string | null>;
   showWindow(name: 'history' | 'settings' | 'wheel'): Promise<void>;
+  openExternalUrl(url: string): Promise<void>;
   closeWheel(): Promise<void>;
   checkUpdate(): Promise<UpdateMetadata | null>;
   installUpdate(onEvent: (event: UpdateDownloadEvent) => void): Promise<void>;

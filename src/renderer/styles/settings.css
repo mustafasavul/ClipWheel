@@ -456,17 +456,44 @@
 }
 
 .app-version-card {
-  align-content: center;
-  gap: 4px;
+  align-content: start;
+  gap: 12px;
 }
 
 .app-version-card strong {
   color: var(--text-strong);
   font-size: 20px;
+  line-height: 1.12;
 }
 
 .app-version-card small {
   color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.update-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+}
+
+.update-card-header > div {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.update-card-header > div > span {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.github-link-button {
+  min-height: 34px;
+  padding: 0 11px;
+  white-space: nowrap;
 }
 
 .update-metadata {
@@ -524,13 +551,18 @@
 }
 
 .update-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(190px, max-content));
   gap: 8px;
+  align-items: center;
 }
 
 .update-actions button {
-  min-width: 174px;
+  min-width: 0;
+  width: 100%;
+  min-height: 42px;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 .setting-field.wide {

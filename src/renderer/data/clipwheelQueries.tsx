@@ -129,6 +129,7 @@ export function useDesktopActions() {
   const api = useClipwheelApi();
   return useMemo(() => ({
     closeWheel: () => api.closeWheel(),
+    openExternalUrl: (url: string) => api.openExternalUrl(url),
     setShortcutCaptureActive: (active: boolean) => api.setShortcutCaptureActive(active),
     showWindow: (name: 'history' | 'settings' | 'wheel') => api.showWindow(name),
   }), [api]);

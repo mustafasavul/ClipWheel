@@ -66,6 +66,7 @@ fn main() {
             commands::cleanup,
             commands::get_image_data_url,
             commands::show_window,
+            commands::open_external_url,
             commands::close_wheel,
             app_updates::check_update,
             app_updates::install_update,

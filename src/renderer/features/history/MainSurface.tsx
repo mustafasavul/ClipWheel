@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useReducer } from 'react';
-import { CirclePause, Clipboard, Command, Palette, Settings as SettingsIcon, Shield } from 'lucide-react';
+import { CirclePause, Clipboard, Command, ExternalLink, Github, Palette, RefreshCw, Settings as SettingsIcon, Shield } from 'lucide-react';
 import type { MainNavigationRequest, Settings } from '../../../shared/types';
 import { defaultSettings } from '../../../shared/settings';
 import { resolveLanguage } from '../../../shared/i18n';
@@ -18,6 +18,7 @@ import { historyUiReducer, initialHistoryUiState } from './historyState';
 
 const PreviewPanel = lazy(() => import('../preview/PreviewPanel').then((module) => ({ default: module.PreviewPanel })));
 const SettingsPanel = lazy(() => import('../settings/SettingsPanel').then((module) => ({ default: module.SettingsPanel })));
+const githubProjectUrl = 'https://github.com/mustafasavul/ClipWheel';
 export function MainSurface() {
   const api = useClipwheelApi();
   const desktop = useDesktopActions();
@@ -104,6 +105,10 @@ export function MainSurface() {
     dispatch({ type: 'show', view: 'settings' });
     dispatch({ type: 'settingsTab', tab: 'wheelAppearance' });
   };
+  const openUpdateSettings = () => {
+    dispatch({ type: 'show', view: 'settings' });
+    dispatch({ type: 'settingsTab', tab: 'advanced' });
+  };
 
   return (
     <I18nContext.Provider value={i18n}>
@@ -124,8 +129,18 @@ export function MainSurface() {
           <p>{t('privacyNote')}</p>
         </div>
         <div className="sidebar-version">
-          <span>{t('appVersion')}</span>
+          <div className="sidebar-version-header">
+            <span>{t('appVersion')}</span>
+            <button type="button" className="sidebar-icon-button" title={t('openUpdateSettings')} aria-label={t('openUpdateSettings')} onClick={openUpdateSettings}>
+              <RefreshCw size={14} />
+            </button>
+          </div>
           <strong>{appVersion.version}</strong>
+          <button type="button" className="sidebar-link-button" onClick={() => void desktop.openExternalUrl(githubProjectUrl)}>
+            <Github size={14} />
+            <span>{t('githubProject')}</span>
+            <ExternalLink size={12} />
+          </button>
         </div>
       </aside>
 

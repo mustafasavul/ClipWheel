@@ -25,6 +25,7 @@ export function createClipwheelClient(dependencies: { invoke: InvokeFn; listen: 
     cleanup: (request: CleanupRequest) => invokeCommand('cleanup', { request }),
     getImageDataUrl: (id: string) => invokeCommand<string | null>('get_image_data_url', { id }),
     showWindow: (name: 'history' | 'settings' | 'wheel') => invokeCommand<void>('show_window', { name }),
+    openExternalUrl: (url: string) => invokeCommand<void>('open_external_url', { url }),
     closeWheel: () => invokeCommand<void>('close_wheel'),
     checkUpdate: () => invokeCommand<UpdateMetadata | null>('check_update'),
     installUpdate: (onEvent: (event: UpdateDownloadEvent) => void) => {
