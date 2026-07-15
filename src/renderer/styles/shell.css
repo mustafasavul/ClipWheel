@@ -6,9 +6,9 @@
   min-height: 0;
   overflow: hidden;
   background:
-    radial-gradient(circle at 14% 12%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 28%),
+    radial-gradient(circle at 14% 12%, color-mix(in srgb, var(--accent) var(--ambient-accent-wash), transparent), transparent 28%),
     radial-gradient(circle at 86% 10%, var(--app-sheen), transparent 26%),
-    radial-gradient(circle at 70% 88%, color-mix(in srgb, var(--accent-strong) 13%, transparent), transparent 30%),
+    radial-gradient(circle at 70% 88%, color-mix(in srgb, var(--accent-strong) var(--ambient-strong-wash), transparent), transparent 30%),
     linear-gradient(135deg, var(--bg), var(--bg-soft));
 }
 
@@ -21,7 +21,7 @@
     linear-gradient(115deg, transparent 0 28%, rgba(255, 255, 255, 0.055) 34%, transparent 42% 100%),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.035), transparent 34%);
   mix-blend-mode: screen;
-  opacity: .55;
+  opacity: var(--ambient-overlay-opacity);
 }
 
 .app-shell > * {
@@ -319,4 +319,3 @@ h1 {
 h2 {
   font-size: 20px;
 }
-
