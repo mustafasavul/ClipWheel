@@ -303,8 +303,8 @@ fn open_url(url: &str) -> std::io::Result<()> {
 
 #[cfg(target_os = "windows")]
 fn open_url(url: &str) -> std::io::Result<()> {
-    std::process::Command::new("cmd")
-        .args(["/C", "start", "", url])
+    std::process::Command::new("explorer.exe")
+        .arg(url)
         .spawn()
         .map(|_| ())
 }

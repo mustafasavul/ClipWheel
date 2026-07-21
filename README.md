@@ -121,7 +121,7 @@ brew install --cask mustafasavul/tap/clipwheel
 
 ## Versioning
 
-Current app version: `0.1.0`
+Current app version: `0.1.1`
 
 Version sources are kept in sync across `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json`, and `src/shared/version.ts`.
 

@@ -1,6 +1,6 @@
 [package]
 name = "clipwheel"
-version = "0.1.0"
+version = "0.1.1"
 description = "Privacy-first radial clipboard manager"
 authors = ["ClipWheel Contributors"]
 license = "MIT"

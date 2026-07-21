@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 - 2026-07-21
+
+- Prevented the release application from opening a console window on Windows.
+- Removed the Windows `cmd.exe` hop when opening the project URL.
+
 ## 0.1.0 - 2026-07-06
 
 - Migrated the app runtime from Electron to Tauri v2 with a Rust backend.

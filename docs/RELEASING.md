@@ -36,7 +36,7 @@ pnpm package:ci
 2. Tag the exact commit:
 
 ```bash
-git tag v0.1.0
+git tag v0.1.1
 git push origin main --tags
 ```
 
@@ -56,6 +56,7 @@ git push origin main --tags
 - Install the package on each supported platform.
 - Verify app launch, clipboard capture, settings persistence, and local SQLite migration.
 - Verify the updater by installing the prior version, publishing an RC tag, checking for updates in Settings, installing, and confirming data remains intact.
+- On Windows, confirm installation, first launch, autostart, and opening the GitHub link never show a console window.
 - On macOS and Windows, document expected Gatekeeper or SmartScreen warnings until trusted signing is enabled.
 
 ## Homebrew Tap
