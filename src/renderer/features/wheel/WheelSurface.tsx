@@ -6,8 +6,8 @@ import { getSegmentIndex, getSegmentRotation } from '../../../shared/radialGeome
 import { wheelAppearanceStyle, wheelSegmentStyle } from '../../../shared/wheelAppearance';
 import { clampWheelItemCount } from '../../../shared/wheelLimits';
 import { formatShortcutForPlatform, isShiftEvent, matchesShortcut } from '../../../shared/shortcuts';
-import { useClipwheelEvents, useDesktopActions, useItemMutations, useSettingsQuery, useWheelItemsQuery } from '../../data/clipwheelQueries';
-import { useApplyLanguage, useApplyTheme, useResolvedTheme } from '../../app/documentPreferences';
+import { useClipwheelApi, useClipwheelEvents, useDesktopActions, useItemMutations, useSettingsQuery, useWheelItemsQuery } from '../../data/clipwheelQueries';
+import { useApplyLanguage, useApplyLocaleStrings, useApplyTheme, useResolvedTheme } from '../../app/documentPreferences';
 import { I18nContext, useLocale } from '../../i18n/I18nContext';
 import { labelForType, wheelSegmentMeta } from '../../presentation/formatters';
 import { ClipboardTypeIcon } from '../../ui/ClipboardTypeIcon';
@@ -16,6 +16,7 @@ import { WheelQuickLook } from './WheelQuickLook';
 export function WheelSurface() {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const isShiftPressedRef = useRef(false);
+  const api = useClipwheelApi();
   const mutations = useItemMutations();
   const desktop = useDesktopActions();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -38,6 +39,7 @@ export function WheelSurface() {
 
   useApplyTheme(resolvedTheme);
   useApplyLanguage(i18n.language, i18n.direction);
+  useApplyLocaleStrings(api, t);
 
   useEffect(() => {
     document.documentElement.classList.add('wheel-html');

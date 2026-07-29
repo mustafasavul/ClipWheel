@@ -60,6 +60,7 @@ export function createTestApi(overrides: Partial<AppApi> = {}) {
       return currentSettings;
     }),
     setShortcutCaptureActive: vi.fn(async () => undefined),
+    setLocaleStrings: vi.fn(async () => undefined),
     cleanup: vi.fn(async () => ({ id: 'cleanup-1', action: 'all', criteriaJson: '{}', deletedCount: 1, createdAt: '2026-01-01T00:00:00.000Z' })),
     getImageDataUrl: vi.fn(async () => null),
     showWindow: vi.fn(async () => undefined),

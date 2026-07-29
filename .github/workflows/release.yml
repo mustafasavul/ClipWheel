@@ -61,6 +61,16 @@ jobs:
       - run: pnpm version:check
       - run: pnpm test
 
+      - name: Build release notes from CHANGELOG
+        id: notes
+        shell: bash
+        run: |
+          {
+            echo 'body<<CLIPWHEEL_NOTES_EOF'
+            node scripts/release-notes.mjs
+            echo 'CLIPWHEEL_NOTES_EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -69,7 +79,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: ClipWheel v__VERSION__
-          releaseBody: See the assets below to download and install this version.
+          releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           prerelease: ${{ contains(github.ref_name, '-rc.') || contains(github.ref_name, '-beta.') || contains(github.ref_name, '-alpha.') }}
           args: ${{ matrix.args }}

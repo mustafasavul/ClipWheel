@@ -349,11 +349,7 @@ impl ClipRepository {
         }
 
         let mut conn = self.conn()?;
-        let changes = if request.mode == "purge_deleted" {
-            sql_query("DELETE FROM clipboard_items WHERE is_deleted = 1").execute(&mut conn)?
-        } else {
-            sql_query(format!("UPDATE clipboard_items SET is_deleted = 1, deleted_at = '{}', updated_at = '{}' WHERE {where_sql}", sql_escape(&now), sql_escape(&now))).execute(&mut conn)?
-        } as i64;
+        let changes = sql_query(format!("UPDATE clipboard_items SET is_deleted = 1, deleted_at = '{}', updated_at = '{}' WHERE {where_sql}", sql_escape(&now), sql_escape(&now))).execute(&mut conn)? as i64;
 
         let job = CleanupJob {
             id: Uuid::new_v4().to_string(),

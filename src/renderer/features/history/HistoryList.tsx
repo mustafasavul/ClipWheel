@@ -54,8 +54,8 @@ export function HistoryList({
       setEditingTitleId(null);
       setRowError(null);
       await onRefresh();
-    } catch (error) {
-      setRowError({ id: item.id, message: error instanceof Error ? error.message : String(error) });
+    } catch {
+      setRowError({ id: item.id, message: t('itemUpdateFailed') });
     }
   };
 
@@ -65,8 +65,8 @@ export function HistoryList({
       setFlagPickerId(null);
       setRowError(null);
       await onRefresh();
-    } catch (error) {
-      setRowError({ id: item.id, message: error instanceof Error ? error.message : String(error) });
+    } catch {
+      setRowError({ id: item.id, message: t('itemUpdateFailed') });
     }
   };
   if (!items.length) {

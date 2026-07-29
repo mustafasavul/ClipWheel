@@ -422,3 +422,10 @@ fn matches_history_query(item: &ClipboardItem, query: &HistoryQuery) -> bool {
     }
     true
 }
+
+#[tauri::command]
+pub fn set_locale_strings(app: AppHandle, strings: crate::models::LocaleStrings) -> CommandResult<()> {
+    crate::models::set_locale_strings(strings);
+    crate::tray::refresh_tray_menu(&app).map_err(to_string)?;
+    Ok(())
+}

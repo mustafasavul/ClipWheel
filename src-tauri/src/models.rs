@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::sync::{OnceLock, RwLock};
 
 pub const MIN_WHEEL_ITEMS: i64 = 4;
 pub const DEFAULT_WHEEL_ITEMS: i64 = 8;
@@ -334,5 +335,70 @@ pub fn default_format_info(platform: &str) -> ClipboardFormatInfo {
         has_image: false,
         has_files: false,
         platform: platform.into(),
+    }
+}
+
+/// Kullanici arayuzu dili yalnizca renderer tarafinda bilinir. Tepsi menusu ve
+/// yakalama sirasinda uretilen basliklar Rust tarafinda olustugu icin renderer
+/// dil degistikce bu tabloyu `set_locale_strings` ile gunceller.
+/// ponytail: surec genelinde tek bir arayuz dili var, bu yuzden global tutuluyor;
+/// pencere basina dil gerekirse AppState icine tasinmali.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LocaleStrings {
+    pub tray_open: String,
+    pub tray_wheel: String,
+    pub tray_settings: String,
+    pub tray_quit: String,
+    pub tray_recent_captures: String,
+    pub tray_no_recent_captures: String,
+    pub tray_untitled_capture: String,
+    pub image: String,
+    pub files: String,
+    pub url: String,
+    pub capture_image_title: String,
+    pub capture_image_preview: String,
+    /// `{count}` yer tutucusu dosya sayisiyla degistirilir.
+    pub capture_file_count_one: String,
+    pub capture_file_count_other: String,
+}
+
+impl Default for LocaleStrings {
+    fn default() -> Self {
+        Self {
+            tray_open: "Open ClipWheel".into(),
+            tray_wheel: "Open Wheel".into(),
+            tray_settings: "Settings".into(),
+            tray_quit: "Quit ClipWheel".into(),
+            tray_recent_captures: "Recent Captures".into(),
+            tray_no_recent_captures: "No Recent Captures".into(),
+            tray_untitled_capture: "Untitled Capture".into(),
+            image: "Image".into(),
+            files: "Files".into(),
+            url: "URL".into(),
+            capture_image_title: "Screenshot or image".into(),
+            capture_image_preview: "Image captured locally".into(),
+            capture_file_count_one: "{count} file".into(),
+            capture_file_count_other: "{count} files".into(),
+        }
+    }
+}
+
+static LOCALE_STRINGS: OnceLock<RwLock<LocaleStrings>> = OnceLock::new();
+
+fn locale_cell() -> &'static RwLock<LocaleStrings> {
+    LOCALE_STRINGS.get_or_init(|| RwLock::new(LocaleStrings::default()))
+}
+
+pub fn locale_strings() -> LocaleStrings {
+    locale_cell()
+        .read()
+        .map(|guard| guard.clone())
+        .unwrap_or_default()
+}
+
+pub fn set_locale_strings(next: LocaleStrings) {
+    if let Ok(mut guard) = locale_cell().write() {
+        *guard = next;
     }
 }

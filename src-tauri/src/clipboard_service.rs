@@ -270,13 +270,17 @@ fn raw_formats(
 }
 
 fn make_title(item_type: &str, text: &str, file_paths: &[String]) -> String {
+    let labels = crate::models::locale_strings();
     match item_type {
-        "image" => "Screenshot or image".into(),
-        "file_reference" => format!(
-            "{} file{}",
-            file_paths.len(),
-            if file_paths.len() == 1 { "" } else { "s" }
-        ),
+        "image" => labels.capture_image_title,
+        "file_reference" => {
+            let template = if file_paths.len() == 1 {
+                &labels.capture_file_count_one
+            } else {
+                &labels.capture_file_count_other
+            };
+            template.replace("{count}", &file_paths.len().to_string())
+        }
         "url" => single_line(text)
             .trim_start_matches("https://")
             .trim_start_matches("http://")
@@ -296,7 +300,7 @@ fn make_title(item_type: &str, text: &str, file_paths: &[String]) -> String {
 
 fn make_preview(item_type: &str, text: &str, file_paths: &[String]) -> String {
     match item_type {
-        "image" => "Image captured locally".into(),
+        "image" => crate::models::locale_strings().capture_image_preview,
         "file_reference" => file_paths.join("\n"),
         _ => text.chars().take(600).collect(),
     }

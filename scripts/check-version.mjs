@@ -24,6 +24,20 @@ if (unique.size !== 1) {
 }
 
 const [version] = unique;
+
+// tauri-action derives the release tag from tauri.conf.json (`v__VERSION__`), not
+// from the tag that triggered the workflow. If the two disagree, pushing `v0.2.0`
+// silently publishes to `v0.1.1` instead. Fail loudly rather than mis-release.
+if (process.env.GITHUB_REF_TYPE === 'tag') {
+  const tag = process.env.GITHUB_REF_NAME;
+  if (tag !== `v${version}`) {
+    console.error(`Tag mismatch: pushed tag is ${tag} but the app version is ${version}.`);
+    console.error(`Push v${version}, or bump the version to match ${tag}.`);
+    process.exit(1);
+  }
+  console.log(`Tag ${tag} matches the app version.`);
+}
+
 console.log(`ClipWheel version ${version}`);
 
 function matchVersion(content, pattern, file) {

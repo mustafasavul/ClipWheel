@@ -6,7 +6,7 @@ import { resolveLanguage } from '../../../shared/i18n';
 import { appVersion } from '../../../shared/version';
 import { clampWheelItemCount } from '../../../shared/wheelLimits';
 import { normalizeWheelItemIds } from '../../../shared/shortcuts';
-import { useApplyLanguage, useApplyTheme, useResolvedTheme } from '../../app/documentPreferences';
+import { useApplyLanguage, useApplyLocaleStrings, useApplyTheme, useResolvedTheme } from '../../app/documentPreferences';
 import { useClipwheelApi, useClipwheelEvents, useDesktopActions, useHistoryCountQuery, useHistoryItemsQuery, useSettingsMutation, useSettingsQuery, useWheelItemsQuery } from '../../data/clipwheelQueries';
 import { I18nContext, useLocale } from '../../i18n/I18nContext';
 import { SkeletonList } from '../../ui/SkeletonList';
@@ -46,6 +46,7 @@ export function MainSurface() {
 
   useApplyTheme(resolvedTheme);
   useApplyLanguage(i18n.language, i18n.direction);
+  useApplyLocaleStrings(api, t);
 
   const onClipboardItem = useCallback(() => dispatch({ type: 'clipboardItem' }), []);
   const onMainNavigationRequested = useCallback((request: MainNavigationRequest) => {

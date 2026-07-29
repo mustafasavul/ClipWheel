@@ -82,11 +82,12 @@ pub fn refresh_tray_menu(app: &AppHandle) -> tauri::Result<()> {
 }
 
 fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
-    let open = MenuItem::with_id(app, "open", "Open ClipWheel", true, None::<&str>)?;
-    let wheel = MenuItem::with_id(app, "wheel", "Open Wheel", true, None::<&str>)?;
-    let settings = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
+    let labels = crate::models::locale_strings();
+    let open = MenuItem::with_id(app, "open", labels.tray_open, true, None::<&str>)?;
+    let wheel = MenuItem::with_id(app, "wheel", labels.tray_wheel, true, None::<&str>)?;
+    let settings = MenuItem::with_id(app, "settings", labels.tray_settings, true, None::<&str>)?;
     let separator = PredefinedMenuItem::separator(app)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit ClipWheel", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", labels.tray_quit, true, None::<&str>)?;
 
     let recent_captures = build_recent_captures_submenu(app)?;
     Menu::with_items(
@@ -103,6 +104,7 @@ fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
 }
 
 fn build_recent_captures_submenu(app: &AppHandle) -> tauri::Result<Submenu<tauri::Wry>> {
+    let labels = crate::models::locale_strings();
     let items = app
         .try_state::<crate::AppState>()
         .and_then(|state| {
@@ -117,14 +119,14 @@ fn build_recent_captures_submenu(app: &AppHandle) -> tauri::Result<Submenu<tauri
         let empty = MenuItem::with_id(
             app,
             "recent-captures-empty",
-            "No Recent Captures",
+            labels.tray_no_recent_captures,
             false,
             None::<&str>,
         )?;
         return Submenu::with_id_and_items(
             app,
             "recent-captures",
-            "Recent Captures",
+            labels.tray_recent_captures,
             true,
             &[&empty],
         );
@@ -136,7 +138,7 @@ fn build_recent_captures_submenu(app: &AppHandle) -> tauri::Result<Submenu<tauri
             MenuItem::with_id(
                 app,
                 format!("{RECENT_CAPTURE_MENU_PREFIX}{}", item.id),
-                recent_capture_label(&item),
+                recent_capture_label(&item, &labels),
                 true,
                 None::<&str>,
             )
@@ -147,14 +149,17 @@ fn build_recent_captures_submenu(app: &AppHandle) -> tauri::Result<Submenu<tauri
         .map(|item| item as &dyn tauri::menu::IsMenuItem<tauri::Wry>)
         .collect::<Vec<_>>();
 
-    Submenu::with_id_and_items(app, "recent-captures", "Recent Captures", true, &item_refs)
+    Submenu::with_id_and_items(app, "recent-captures", labels.tray_recent_captures, true, &item_refs)
 }
 
-fn recent_capture_label(item: &crate::models::ClipboardItem) -> String {
+fn recent_capture_label(
+    item: &crate::models::ClipboardItem,
+    labels: &crate::models::LocaleStrings,
+) -> String {
     let fallback = match item.item_type.as_str() {
-        "image" => "Image",
-        "file_reference" => "Files",
-        "url" => item.url.as_deref().unwrap_or("URL"),
+        "image" => labels.image.as_str(),
+        "file_reference" => labels.files.as_str(),
+        "url" => item.url.as_deref().unwrap_or(labels.url.as_str()),
         _ => item.preview_text.as_str(),
     };
     let label = if item.title.trim().is_empty() {
@@ -162,10 +167,10 @@ fn recent_capture_label(item: &crate::models::ClipboardItem) -> String {
     } else {
         item.title.as_str()
     };
-    truncate_menu_label(label)
+    truncate_menu_label(label, labels)
 }
 
-fn truncate_menu_label(label: &str) -> String {
+fn truncate_menu_label(label: &str, labels: &crate::models::LocaleStrings) -> String {
     const MAX_CHARS: usize = 48;
     let sanitized = label.split_whitespace().collect::<Vec<_>>().join(" ");
     let mut chars = sanitized.chars();
@@ -173,7 +178,7 @@ fn truncate_menu_label(label: &str) -> String {
     if chars.next().is_some() {
         format!("{truncated}...")
     } else if truncated.is_empty() {
-        "Untitled Capture".into()
+        labels.tray_untitled_capture.clone()
     } else {
         truncated
     }

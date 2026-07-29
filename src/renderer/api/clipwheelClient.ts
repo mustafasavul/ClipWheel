@@ -1,6 +1,6 @@
 import { Channel, invoke } from '@tauri-apps/api/core';
 import { listen, type Event } from '@tauri-apps/api/event';
-import type { AppApi, CleanupRequest, ClipboardFlagColor, ClipboardItem, HistoryQuery, MainNavigationRequest, Settings, UpdateDownloadEvent, UpdateMetadata } from '../../shared/types';
+import type { AppApi, CleanupRequest, ClipboardFlagColor, ClipboardItem, HistoryQuery, LocaleStrings, MainNavigationRequest, Settings, UpdateDownloadEvent, UpdateMetadata } from '../../shared/types';
 
 type InvokeFn = <T>(command: string, args?: Record<string, unknown>) => Promise<T>;
 type ListenFn = <T>(event: string, handler: (event: Event<T>) => void) => Promise<() => void>;
@@ -24,6 +24,7 @@ export function createClipwheelClient(dependencies: { invoke: InvokeFn; listen: 
     getSettings: () => invokeCommand<Settings>('get_settings'),
     updateSettings: (settings: Partial<Settings>) => invokeCommand<Settings>('update_settings', { settings }),
     setShortcutCaptureActive: (active: boolean) => invokeCommand<void>('set_shortcut_capture_active', { active }),
+    setLocaleStrings: (strings: LocaleStrings) => invokeCommand<void>('set_locale_strings', { strings }),
     cleanup: (request: CleanupRequest) => invokeCommand('cleanup', { request }),
     getImageDataUrl: (id: string) => invokeCommand<string | null>('get_image_data_url', { id }),
     showWindow: (name: 'history' | 'settings' | 'wheel') => invokeCommand<void>('show_window', { name }),

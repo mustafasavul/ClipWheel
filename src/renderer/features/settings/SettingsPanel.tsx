@@ -11,7 +11,7 @@ import { clampWheelItemCount, maxWheelItems, wheelItemCountOptions } from '../..
 import { isValidGlobalShortcut, setShortcutValue, shortcutKey, type ShortcutTarget } from '../../../shared/shortcuts';
 import { useCleanupMutation, useClipwheelApi, useDesktopActions } from '../../data/clipwheelQueries';
 import { useI18n } from '../../i18n/I18nContext';
-import { cleanupConfirmMessage, formatBytes, languageOptionLabel, settingOptionLabel, type CleanupActionId } from '../../presentation/formatters';
+import { formatBytes, languageOptionLabel, settingOptionLabel, type CleanupActionId } from '../../presentation/formatters';
 import { ColorSetting } from '../../ui/ColorSetting';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
 import { NumberSetting } from '../../ui/NumberSetting';
@@ -79,7 +79,6 @@ export function SettingsPanel({ settings, updateSettings, activeTab, setActiveTa
   }, [desktop, recordingShortcut]);
   const cleanupActions: Array<{ id: CleanupActionId; label: string; description: string }> = [
     { id: 'all', label: t('clearHistory'), description: t('clearHistoryDescription') },
-    { id: 'purge_deleted', label: t('purgeDeleted'), description: t('purgeDeletedDescription') },
   ];
   const activeCleanupAction = cleanupActions.find((action) => action.id === pendingCleanup) ?? null;
   const runCleanup = async (action: CleanupActionId) => {
@@ -321,7 +320,7 @@ export function SettingsPanel({ settings, updateSettings, activeTab, setActiveTa
       {activeCleanupAction && (
         <ConfirmDialog
           title={t('confirmCleanup')}
-          body={cleanupConfirmMessage(activeCleanupAction.id, t)}
+          body={t('cleanupConfirmClearHistory')}
           confirmLabel={t('continue')}
           cancelLabel={t('cancel')}
           onCancel={() => setPendingCleanup(null)}

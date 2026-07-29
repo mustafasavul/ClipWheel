@@ -1,9 +1,10 @@
 import type { CSSProperties } from 'react';
+import type { I18nKey } from './i18n';
 import type { CustomWheelAppearancePreset, WheelAppearanceSettings } from './types';
 
 export interface WheelAppearancePreset {
   id: string;
-  label: string;
+  labelKey: I18nKey;
   colors: string[];
   values: Pick<WheelAppearanceSettings, 'colorMode' | 'paletteColors' | 'segmentColor' | 'activeColor' | 'activeLineColor' | 'ringLineColor' | 'panelColor' | 'iconBackgroundColor' | 'labelColor'>;
 }
@@ -37,7 +38,7 @@ export const defaultWheelAppearance: WheelAppearanceSettings = {
 };
 
 export const wheelAppearancePresets: WheelAppearancePreset[] = [
-  createPreset('mono-slate', 'Mono Slate', ['#1c252c'], {
+  createPreset('mono-slate', 'presetMonoSlate', ['#1c252c'], {
     colorMode: 'single',
     segmentColor: '#1c252c',
     activeColor: '#8eb45a',
@@ -47,7 +48,7 @@ export const wheelAppearancePresets: WheelAppearancePreset[] = [
     iconBackgroundColor: '#151e24',
     labelColor: '#e8edf0',
   }),
-  createPreset('mono-ink', 'Mono Ink', ['#2f3a44'], {
+  createPreset('mono-ink', 'presetMonoInk', ['#2f3a44'], {
     colorMode: 'single',
     segmentColor: '#2f3a44',
     activeColor: '#93a4b5',
@@ -57,7 +58,7 @@ export const wheelAppearancePresets: WheelAppearancePreset[] = [
     iconBackgroundColor: '#111923',
     labelColor: '#f8fafc',
   }),
-  createPreset('mono-paper', 'Mono Paper', ['#e5e7eb'], {
+  createPreset('mono-paper', 'presetMonoPaper', ['#e5e7eb'], {
     colorMode: 'single',
     segmentColor: '#e5e7eb',
     activeColor: '#64748b',
@@ -67,7 +68,7 @@ export const wheelAppearancePresets: WheelAppearancePreset[] = [
     iconBackgroundColor: '#f1f5f9',
     labelColor: '#111827',
   }),
-  createPreset('aurora', 'Aurora', ['#2dd4bf', '#38bdf8', '#818cf8', '#c084fc', '#f0abfc', '#67e8f9', '#5eead4', '#a7f3d0'], {
+  createPreset('aurora', 'presetAurora', ['#2dd4bf', '#38bdf8', '#818cf8', '#c084fc', '#f0abfc', '#67e8f9', '#5eead4', '#a7f3d0'], {
     colorMode: 'palette',
     segmentColor: '#256d73',
     activeColor: '#b8fff4',
@@ -77,7 +78,7 @@ export const wheelAppearancePresets: WheelAppearancePreset[] = [
     iconBackgroundColor: '#102428',
     labelColor: '#eefdfb',
   }),
-  createPreset('ember', 'Ember', ['#7f1d1d', '#b91c1c', '#dc2626', '#ea580c', '#f97316', '#f59e0b', '#b45309', '#92400e'], {
+  createPreset('ember', 'presetEmber', ['#7f1d1d', '#b91c1c', '#dc2626', '#ea580c', '#f97316', '#f59e0b', '#b45309', '#92400e'], {
     colorMode: 'palette',
     segmentColor: '#b45309',
     activeColor: '#fed7aa',
@@ -87,7 +88,7 @@ export const wheelAppearancePresets: WheelAppearancePreset[] = [
     iconBackgroundColor: '#24130f',
     labelColor: '#fff7ed',
   }),
-  createPreset('rainbow', 'Rainbow', [...wheelPalette], {
+  createPreset('rainbow', 'presetRainbow', [...wheelPalette], {
     colorMode: 'palette',
     segmentColor: '#1f2a1d',
     activeColor: '#c8df9f',
@@ -97,7 +98,7 @@ export const wheelAppearancePresets: WheelAppearancePreset[] = [
     iconBackgroundColor: '#151c1f',
     labelColor: '#eef4e9',
   }),
-  createPreset('warm', 'Warm', ['#a92929', '#d95c20', '#e08824', '#d2a414', '#bf7a22', '#984429', '#7d2d35', '#b35045'], {
+  createPreset('warm', 'presetWarm', ['#a92929', '#d95c20', '#e08824', '#d2a414', '#bf7a22', '#984429', '#7d2d35', '#b35045'], {
     colorMode: 'palette',
     segmentColor: '#9a3a20',
     activeColor: '#ffd08a',
@@ -107,7 +108,7 @@ export const wheelAppearancePresets: WheelAppearancePreset[] = [
     iconBackgroundColor: '#211511',
     labelColor: '#fff4e4',
   }),
-  createPreset('cool', 'Cool', ['#235d9f', '#1c7e9e', '#15918b', '#2b9b6b', '#4d86c7', '#3f5bb2', '#5b4bad', '#227c92'], {
+  createPreset('cool', 'presetCool', ['#235d9f', '#1c7e9e', '#15918b', '#2b9b6b', '#4d86c7', '#3f5bb2', '#5b4bad', '#227c92'], {
     colorMode: 'palette',
     segmentColor: '#1f667d',
     activeColor: '#9ee7ff',
@@ -117,7 +118,7 @@ export const wheelAppearancePresets: WheelAppearancePreset[] = [
     iconBackgroundColor: '#14222a',
     labelColor: '#eefaff',
   }),
-  createPreset('forest', 'Forest', ['#456b2f', '#5f7f2f', '#7a8b32', '#3f7c4a', '#2f7d64', '#36715d', '#566b3a', '#6b6e32'], {
+  createPreset('forest', 'presetForest', ['#456b2f', '#5f7f2f', '#7a8b32', '#3f7c4a', '#2f7d64', '#36715d', '#566b3a', '#6b6e32'], {
     colorMode: 'palette',
     segmentColor: '#456b2f',
     activeColor: '#c8df9f',
@@ -127,7 +128,7 @@ export const wheelAppearancePresets: WheelAppearancePreset[] = [
     iconBackgroundColor: '#182112',
     labelColor: '#f0f7e6',
   }),
-  createPreset('candy', 'Candy', ['#f472b6', '#fb7185', '#f9a8d4', '#c084fc', '#a78bfa', '#60a5fa', '#22d3ee', '#2dd4bf'], {
+  createPreset('candy', 'presetCandy', ['#f472b6', '#fb7185', '#f9a8d4', '#c084fc', '#a78bfa', '#60a5fa', '#22d3ee', '#2dd4bf'], {
     colorMode: 'palette',
     segmentColor: '#d946ef',
     activeColor: '#fbcfe8',
@@ -137,7 +138,7 @@ export const wheelAppearancePresets: WheelAppearancePreset[] = [
     iconBackgroundColor: '#26172d',
     labelColor: '#fff5fb',
   }),
-  createPreset('mineral', 'Mineral', ['#64748b', '#475569', '#0f766e', '#0e7490', '#2563eb', '#4f46e5', '#7c3aed', '#475569'], {
+  createPreset('mineral', 'presetMineral', ['#64748b', '#475569', '#0f766e', '#0e7490', '#2563eb', '#4f46e5', '#7c3aed', '#475569'], {
     colorMode: 'palette',
     segmentColor: '#475569',
     activeColor: '#bfdbfe',
@@ -147,7 +148,7 @@ export const wheelAppearancePresets: WheelAppearancePreset[] = [
     iconBackgroundColor: '#182131',
     labelColor: '#f8fafc',
   }),
-  createPreset('mono-lime', 'Mono Lime', ['#c8df9f'], {
+  createPreset('mono-lime', 'presetMonoLime', ['#c8df9f'], {
     colorMode: 'single',
     segmentColor: '#c8df9f',
     activeColor: '#e1f4bf',
@@ -157,7 +158,7 @@ export const wheelAppearancePresets: WheelAppearancePreset[] = [
     iconBackgroundColor: '#182112',
     labelColor: '#172114',
   }),
-  createPreset('mono-rose', 'Mono Rose', ['#fb7185'], {
+  createPreset('mono-rose', 'presetMonoRose', ['#fb7185'], {
     colorMode: 'single',
     segmentColor: '#fb7185',
     activeColor: '#fecdd3',
@@ -228,13 +229,13 @@ export function normalizeOpacity(value: number): number {
 
 function createPreset(
   id: string,
-  label: string,
+  labelKey: I18nKey,
   colors: string[],
   values: Omit<WheelAppearancePreset['values'], 'paletteColors'>,
 ): WheelAppearancePreset {
   return {
     id,
-    label,
+    labelKey,
     colors,
     values: {
       ...values,

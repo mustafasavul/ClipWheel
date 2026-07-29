@@ -2,7 +2,7 @@ import type { ClipboardFlagColor, ClipboardItem, ClipboardItemType, HistoryQuery
 import { languageMetadata, type I18nKey, type LanguageCode, type Translator } from '../../shared/i18n';
 import type { I18nView } from '../i18n/I18nContext';
 
-export type CleanupActionId = 'all' | 'purge_deleted';
+export type CleanupActionId = 'all';
 
 const dateTimeFormatters = new Map<string, Intl.DateTimeFormat>();
 const relativeTimeFormatters = new Map<string, Intl.RelativeTimeFormat>();
@@ -43,11 +43,6 @@ export function labelForFlag(flag: ClipboardFlagColor | null, t: Translator): st
     purple: 'purpleFlag',
   };
   return t(labels[flag]);
-}
-
-export function cleanupConfirmMessage(action: CleanupActionId, t: Translator): string {
-  if (action === 'purge_deleted') return t('cleanupConfirmPurgeDeleted');
-  return t('cleanupConfirmClearHistory');
 }
 
 export function formatInfoLabels(item: ClipboardItem, t: Translator): string[] {

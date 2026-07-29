@@ -1,0 +1,13 @@
+[
+  {
+    "date": "2026-07-29",
+    "scope": "app",
+    "macrostructure": "n/a (desktop app shell)",
+    "theme": "custom",
+    "theme_name": "Instrument",
+    "theme_axes": "dark+light dual / grotesk-sans / chromatic-sage",
+    "vibe": "flat instrument, depth by rank not decoration",
+    "enrichment": "none (typography only)",
+    "brief": "ClipWheel · Tauri clipboard manager — full app redesign, audit-driven"
+  }
+]

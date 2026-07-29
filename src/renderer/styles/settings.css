@@ -1,110 +1,133 @@
 .settings-panel {
   position: relative;
-  padding: 16px;
+  padding: var(--space-md);
 }
 
+/* Tabs read as a segmented rail — the active tab is underscored, not filled,
+   so the accent stays reserved for the one primary action per view. */
 .tabs {
   display: flex;
-  gap: 7px;
-  overflow: auto;
-  padding-bottom: 12px;
+  gap: var(--space-2xs);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border);
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tabs button {
-  border: 1px solid var(--control-edge);
-  border-radius: 999px;
+  position: relative;
+  border: 0;
+  border-radius: 0;
   min-height: 36px;
-  padding: 8px 12px;
+  padding: 0 var(--space-sm) var(--space-xs);
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: var(--space-2xs);
   color: var(--text-muted);
-  background: var(--control-fill);
+  background: transparent;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
   white-space: nowrap;
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
 }
 
 .tabs button svg {
   flex: 0 0 auto;
 }
 
+.tabs button:hover {
+  background: transparent;
+  color: var(--text-strong);
+}
+
 .tabs button.active {
-  border-color: var(--accent-border);
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: var(--accent-text);
+  color: var(--text-strong);
+}
+
+.tabs button.active::after {
+  content: "";
+  position: absolute;
+  left: var(--space-xs);
+  right: var(--space-xs);
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
 }
 
 .settings-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: var(--space-xs);
 }
 
 .cleanup-panel {
   display: grid;
   grid-template-columns: minmax(220px, 0.7fr) minmax(320px, 1fr);
-  gap: 12px;
+  gap: var(--space-sm);
 }
 
 .cleanup-actions {
   display: grid;
-  gap: 10px;
+  gap: var(--space-xs);
 }
 
 .cleanup-action {
-  min-height: 72px;
+  min-height: 64px;
   justify-content: flex-start;
-  padding: 12px;
+  padding: var(--space-sm);
   text-align: left;
-  border-color: color-mix(in srgb, var(--danger-border) 72%, var(--glass-edge));
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--danger) 14%, transparent), transparent 46%),
-    var(--danger-bg);
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
 }
 
 .cleanup-action span {
   min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: var(--space-2xs);
 }
 
 .cleanup-action strong {
-  color: color-mix(in srgb, var(--danger) 78%, var(--text-strong));
+  color: var(--danger);
+  font-size: var(--text-sm);
 }
 
 .cleanup-action small {
-  color: color-mix(in srgb, var(--danger) 48%, var(--text-muted));
-  font-size: 12px;
-  line-height: 1.25;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: 1.35;
 }
 
 .appearance-settings {
   display: grid;
-  gap: 12px;
+  gap: var(--space-sm);
 }
 
 .appearance-settings .settings-grid {
-  gap: 8px 10px;
+  gap: var(--space-xs);
 }
 
+/* Checkerboard stays: it is the only honest way to show that the wheel
+   renders over an arbitrary desktop. Ambient wash removed. */
 .wheel-preview-shell {
   min-height: 470px;
   display: grid;
   place-items: center;
   overflow: hidden;
-  padding: 28px;
-  border: 1px solid var(--glass-edge);
-  border-radius: 18px;
+  padding: var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   background:
-    radial-gradient(circle at 50% 48%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 36%),
-    linear-gradient(45deg, rgba(var(--bg-rgb), 0.16) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(var(--bg-rgb), 0.16) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(var(--bg-rgb), 0.16) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(var(--bg-rgb), 0.16) 75%),
-    var(--glass-surface);
-  background-position: center, 0 0, 0 12px, 12px -12px, -12px 0;
-  background-size: auto, 24px 24px, 24px 24px, 24px 24px, 24px 24px;
-  box-shadow: inset 0 1px 0 var(--glass-highlight), 0 18px 48px rgba(var(--bg-rgb), 0.12);
+    linear-gradient(45deg, rgba(var(--bg-rgb), 0.5) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(var(--bg-rgb), 0.5) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(var(--bg-rgb), 0.5) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(var(--bg-rgb), 0.5) 75%),
+    var(--bg-soft);
+  background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+  background-size: 24px 24px, 24px 24px, 24px 24px, 24px 24px, auto;
 }
 
 .wheel-preview-ring {
@@ -199,12 +222,9 @@
   display: grid;
   gap: 10px;
   padding: 12px 14px;
-  border: 1px solid var(--glass-edge);
-  border-radius: 16px;
-  background: var(--glass-surface);
-  -webkit-backdrop-filter: var(--glass-blur-soft);
-  backdrop-filter: var(--glass-blur-soft);
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-soft);
 }
 
 .preset-grid {
@@ -215,8 +235,8 @@
 
 .preset-section-label {
   color: var(--text-subtle);
-  font-size: 10px;
-  font-weight: 760;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -229,22 +249,21 @@
   min-height: 48px;
   padding: 8px 10px;
   border: 1px solid var(--control-edge);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--control-fill);
   color: var(--text);
   text-align: left;
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
 }
 
 .preset-button:hover {
-  border-color: var(--glass-edge-strong);
+  border-color: var(--border-strong);
   background: var(--control-fill-hover);
 }
 
 .preset-button strong {
   overflow: hidden;
   color: var(--text-strong);
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 1.2;
   overflow-wrap: anywhere;
   white-space: normal;
@@ -258,7 +277,7 @@
 
 .preset-swatches span {
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
 }
 
@@ -273,7 +292,7 @@
 
 .custom-preset-header > span:last-child {
   color: var(--text-subtle);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-variant-numeric: tabular-nums;
 }
 
@@ -293,10 +312,9 @@
   place-items: center;
   width: 34px;
   border: 1px solid var(--control-edge);
-  border-radius: 10px;
+  border-radius: var(--radius-xs);
   background: var(--control-fill);
   color: var(--text-muted);
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
 }
 
 .preset-delete-button:hover {
@@ -314,9 +332,9 @@
   margin: 0;
   padding: 10px 12px;
   border: 1px dashed var(--control-edge);
-  border-radius: 11px;
+  border-radius: var(--radius-xs);
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 1.35;
 }
 
@@ -328,8 +346,8 @@
 
 .preset-save-form > label {
   color: var(--text-strong);
-  font-size: 12px;
-  font-weight: 720;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
 }
 
 .preset-save-row {
@@ -351,7 +369,7 @@
 
 .field-error {
   color: var(--danger);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   line-height: 1.3;
 }
 
@@ -367,7 +385,7 @@
   height: 36px;
   min-height: 36px;
   padding: 4px;
-  border-radius: 10px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
 }
 
@@ -384,23 +402,22 @@
   gap: 12px;
   min-height: 52px;
   padding: 12px;
-  border-radius: 14px;
-  background: var(--control-fill);
+  border-radius: var(--radius-sm);
+  background: var(--surface-solid);
   border: 1px solid var(--control-edge);
   color: var(--text);
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
 }
 
 .appearance-settings .toggle-row,
 .appearance-settings .setting-field {
   min-height: 40px;
   padding: 9px 12px;
-  border-radius: 13px;
+  border-radius: var(--radius-sm);
 }
 
 .toggle-row:hover,
 .setting-field:hover {
-  border-color: var(--glass-edge-strong);
+  border-color: var(--border-strong);
   background: var(--control-fill-hover);
 }
 
@@ -409,11 +426,12 @@
   align-items: center;
   gap: 8px;
   color: var(--text-strong);
-  font-weight: 720;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
 }
 
 .appearance-settings .setting-label {
-  font-size: 14px;
+  font-size: var(--text-sm);
 }
 
 .setting-icon {
@@ -422,11 +440,10 @@
   flex: 0 0 auto;
   display: inline-grid;
   place-items: center;
-  border-radius: 10px;
-  color: var(--accent-strong);
-  background: linear-gradient(135deg, var(--accent-muted), var(--control-fill));
-  border: 1px solid var(--accent-border);
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  border-radius: var(--radius-xs);
+  color: var(--text-muted);
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
 }
 
 .setting-field {
@@ -452,7 +469,7 @@
 .appearance-settings .secondary-button {
   min-height: 40px;
   align-self: stretch;
-  border-radius: 13px;
+  border-radius: var(--radius-sm);
 }
 
 .app-version-card {
@@ -462,7 +479,7 @@
 
 .app-version-card strong {
   color: var(--text-strong);
-  font-size: 20px;
+  font-size: var(--text-xl);
   line-height: 1.12;
 }
 
@@ -486,8 +503,8 @@
 
 .update-card-header > div > span {
   color: var(--text);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
 }
 
 .github-link-button {
@@ -509,7 +526,7 @@
   gap: 2px;
   padding: 8px 10px;
   border: 1px solid var(--control-edge);
-  border-radius: 10px;
+  border-radius: var(--radius-xs);
   background: color-mix(in srgb, var(--control-fill) 78%, transparent);
 }
 
@@ -521,14 +538,14 @@
 
 .update-metadata dt {
   color: var(--text-subtle);
-  font-size: 10px;
-  font-weight: 780;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
   text-transform: uppercase;
 }
 
 .update-metadata dd {
   color: var(--text-strong);
-  font-size: 13px;
+  font-size: var(--text-sm);
   overflow-wrap: anywhere;
 }
 
@@ -536,7 +553,7 @@
 .update-error {
   display: block;
   padding: 8px 10px;
-  border-radius: 10px;
+  border-radius: var(--radius-xs);
 }
 
 .update-notes {
@@ -595,8 +612,8 @@
 
 .shortcut-section-title {
   color: var(--text-subtle);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -610,8 +627,8 @@
 
 .shortcut-setting > span:first-child {
   color: var(--text-strong);
-  font-size: 15px;
-  font-weight: 700;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
   line-height: 1.2;
 }
 
@@ -627,10 +644,9 @@
   min-height: 34px;
   border: 1px solid var(--border-strong);
   border-bottom-color: color-mix(in srgb, var(--border-strong) 66%, var(--text-muted));
-  border-radius: 10px;
+  border-radius: var(--radius-xs);
   background: var(--control-fill);
   color: var(--text-strong);
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
 }
 
 .shortcut-recorder {
@@ -641,9 +657,9 @@
   min-width: 0;
   overflow: hidden;
   padding: 6px 11px;
-  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 15px;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
   line-height: 1.1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -652,13 +668,13 @@
 .shortcut-recorder:hover,
 .shortcut-clear:hover {
   background: var(--control-fill-hover);
-  border-color: var(--glass-edge-strong);
+  border-color: var(--border-strong);
 }
 
 .shortcut-recorder.recording {
   border-color: var(--accent-border);
   color: var(--accent-strong);
-  box-shadow: 0 0 0 3px var(--accent-muted), inset 0 1px 0 var(--glass-highlight);
+  box-shadow: 0 0 0 3px var(--accent-muted);
 }
 
 .shortcut-recorder.invalid {
@@ -677,7 +693,7 @@
 .shortcut-error {
   grid-column: 2;
   color: var(--danger);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .shortcut-grid {
@@ -700,12 +716,12 @@
 .shortcut-setting.compact .shortcut-recorder,
 .shortcut-setting.compact .shortcut-clear {
   min-height: 32px;
-  border-radius: 9px;
+  border-radius: var(--radius-xs);
 }
 
 .shortcut-setting.compact .shortcut-recorder {
   padding: 5px 10px;
-  font-size: 14px;
+  font-size: var(--text-sm);
 }
 
 .shortcut-setting.compact .shortcut-clear {
@@ -723,8 +739,7 @@ kbd {
   padding: 5px 8px;
   background: var(--control-fill);
   color: var(--text-strong);
-  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  font-family: var(--font-mono);
 }
 
 .empty-state {
@@ -751,12 +766,11 @@ kbd {
 
 .skeleton-row {
   height: 72px;
-  border-radius: 14px;
-  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
   background: linear-gradient(90deg, var(--skeleton-a), var(--skeleton-b), var(--skeleton-a));
   background-size: 220% 100%;
   animation: shimmer 1.4s infinite;
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
 }
 
 .confirm-dialog {
@@ -765,36 +779,30 @@ kbd {
   height: fit-content;
   padding: 16px;
   border: 1px solid var(--danger-border);
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   margin: auto;
   display: grid;
   align-content: start;
   gap: 14px;
   color: var(--text);
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--danger) 16%, transparent), transparent 42%),
-    var(--glass-surface-strong);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--shadow-soft);
+  background: var(--surface-raised);
+  box-shadow: var(--level-float);
 }
 
 .confirm-dialog::backdrop {
   background: var(--modal-bg);
-  -webkit-backdrop-filter: blur(18px) saturate(1.16);
-  backdrop-filter: blur(18px) saturate(1.16);
 }
 
 .confirm-dialog h2 {
-  margin: 4px 0 0;
-  font-size: 18px;
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--text-lg);
   line-height: 1.15;
 }
 
 .confirm-dialog p:not(.eyebrow) {
   margin: 8px 0 0;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--text-sm);
   line-height: 1.45;
 }
 
@@ -808,7 +816,7 @@ kbd {
 .confirm-actions .danger-button {
   min-height: 34px;
   padding: 0 12px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: var(--radius-xs);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
 }

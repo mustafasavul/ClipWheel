@@ -72,6 +72,7 @@ fn main() {
             commands::show_window,
             commands::open_external_url,
             commands::close_wheel,
+            commands::set_locale_strings,
             app_updates::check_update,
             app_updates::install_update,
         ])

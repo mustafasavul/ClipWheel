@@ -1,181 +1,169 @@
+/* Hallmark · scope: app (Tauri desktop) · genre: modern-minimal
+ * system: Instrument — depth by rank, not by decoration
+ * paper: neutral ink · accent: sage, reserved for state · display: Space Grotesk
+ * pre-emit critique: P5 H5 E4 S5 R5 V4
+ */
+
 :root {
   color-scheme: dark;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", "Noto Sans", "Noto Sans Arabic", "Noto Sans Hebrew", "Geeza Pro", Tahoma, Arial, sans-serif;
+
+  /* Type ------------------------------------------------------------ */
+  --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", "Noto Sans", "Noto Sans Arabic", "Noto Sans Hebrew", "Geeza Pro", Tahoma, Arial, sans-serif;
+  --font-display: "Space Grotesk Variable", var(--font-ui);
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 15px;
+  --text-lg: 17px;
+  --text-xl: 21px;
+  --text-2xl: 28px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --tracking-tight: -0.015em;
+  --tracking-label: 0.06em;
+
+  /* Space — 4pt scale ------------------------------------------------ */
+  --space-3xs: 2px;
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+
+  /* Radius ----------------------------------------------------------- */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-pill: 999px;
+
+  /* Motion ----------------------------------------------------------- */
+  --dur-fast: 90ms;
+  --dur-base: 160ms;
+  --dur-slow: 260ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Paper + surface -------------------------------------------------- */
+  --bg: #0f1113;
+  --bg-rgb: 15, 17, 19;
+  --bg-soft: #131619;
+  --surface-solid: #16191c;
+  --surface-raised: #1b1f23;
+  --control-fill: #1f2429;
+  --control-fill-hover: #262c32;
+
+  --border: #23282d;
+  --border-strong: #333a41;
+  --control-edge: #2b3138;
+
+  /* Glass — only where a surface genuinely floats over the desktop --- */
+  --glass-blur: blur(24px) saturate(1.2);
+
+  /* Depth — the app is flat; only genuinely floating things cast. ----- */
+  --level-float: 0 12px 32px rgba(0, 0, 0, 0.48);
+  --glass-shadow: var(--level-float);
+
+  /* Ink -------------------------------------------------------------- */
+  --text: #dfe3e6;
+  --text-strong: #f4f6f7;
+  --text-muted: #97a0a8;
+  --text-subtle: #6e7880;
+
+  /* Accent — reserved for state (selected · active · focus) ---------- */
+  --accent: #a9d472;
+  --accent-strong: #c1e394;
+  --accent-muted: rgba(169, 212, 114, 0.14);
+  --accent-border: rgba(169, 212, 114, 0.42);
+  --accent-text: #131a0d;
+  --selection-glass: rgba(169, 212, 114, 0.13);
+  --focus-ring: #a9d472;
+
+  --danger: #f0a3a3;
+  --danger-bg: rgba(150, 52, 52, 0.2);
+  --danger-border: rgba(214, 116, 116, 0.34);
+
+  --code-bg: #101315;
+  --modal-bg: rgba(6, 8, 9, 0.66);
+  --skeleton-a: #1b1f23;
+  --skeleton-b: #262c32;
+
+  /* Wheel — defaults only; user appearance settings override these --- */
+  --wheel-ring-line: rgba(255, 255, 255, 0.18);
+  --wheel-active: rgba(169, 212, 114, 0.28);
+  --wheel-active-line: #c1e394;
+  --wheel-label: #eef1f3;
+  --wheel-panel: rgba(16, 19, 21, 0.9);
+  --wheel-icon-bg: var(--surface-solid);
+  --wheel-glass-edge: rgba(255, 255, 255, 0.16);
+
+  font-family: var(--font-ui);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --bg: #111412;
-  --bg-rgb: 17, 20, 18;
-  --bg-soft: #171b18;
-  --surface: rgba(24, 28, 25, 0.76);
-  --surface-solid: #1a1f1b;
-  --surface-raised: rgba(31, 36, 32, 0.84);
-  --surface-muted: rgba(255, 255, 255, 0.055);
-  --surface-hover: rgba(255, 255, 255, 0.085);
-  --glass-surface: rgba(27, 32, 29, 0.58);
-  --glass-surface-strong: rgba(34, 40, 36, 0.74);
-  --glass-edge: rgba(255, 255, 255, 0.17);
-  --glass-edge-strong: rgba(255, 255, 255, 0.27);
-  --glass-highlight: rgba(255, 255, 255, 0.11);
-  --glass-shade: rgba(0, 0, 0, 0.24);
-  --glass-shadow: 0 24px 70px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.16);
-  --glass-blur: blur(28px) saturate(1.45);
-  --glass-blur-soft: blur(18px) saturate(1.28);
-  --control-fill: rgba(255, 255, 255, 0.075);
-  --control-fill-hover: rgba(255, 255, 255, 0.125);
-  --control-fill-active: rgba(200, 223, 159, 0.2);
-  --control-edge: rgba(255, 255, 255, 0.14);
-  --selection-glass: linear-gradient(135deg, rgba(200, 223, 159, 0.22), rgba(255, 255, 255, 0.085));
-  --app-sheen: rgba(255, 255, 255, 0.08);
-  --text: #f2f5ef;
-  --text-strong: #fbfdf8;
-  --text-muted: #aeb7aa;
-  --text-subtle: #8e998d;
-  --border: rgba(255, 255, 255, 0.095);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --accent: #c8df9f;
-  --accent-strong: #d8ecb8;
-  --accent-muted: rgba(200, 223, 159, 0.15);
-  --accent-border: rgba(200, 223, 159, 0.34);
-  --accent-text: #172114;
-  --ambient-accent-wash: 22%;
-  --ambient-strong-wash: 13%;
-  --ambient-overlay-opacity: 0.55;
-  --danger: #ffd1d1;
-  --danger-bg: rgba(148, 54, 54, 0.25);
-  --danger-border: rgba(255, 142, 142, 0.2);
-  --code-bg: rgba(8, 10, 9, 0.42);
-  --modal-bg: rgba(10, 11, 12, 0.64);
-  --shadow-soft: 0 22px 60px rgba(0, 0, 0, 0.26);
-  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.075);
-  --focus-ring: rgba(200, 223, 159, 0.46);
-  --skeleton-a: rgba(255, 255, 255, 0.04);
-  --skeleton-b: rgba(255, 255, 255, 0.1);
-  --wheel-ring-line: rgba(255, 255, 255, 0.2);
-  --wheel-active: rgba(200, 223, 159, 0.28);
-  --wheel-active-line: rgba(216, 236, 184, 0.88);
-  --wheel-label: #eef4e9;
-  --wheel-panel: rgba(21, 25, 22, 0.82);
-  --wheel-icon-bg: var(--surface-solid);
-  --wheel-glass-edge: rgba(255, 255, 255, 0.2);
   background: var(--bg);
   color: var(--text);
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f3f4ee;
-  --bg-rgb: 243, 244, 238;
-  --bg-soft: #e8ece3;
-  --surface: rgba(250, 251, 247, 0.76);
-  --surface-solid: #fafbf7;
-  --surface-raised: rgba(250, 251, 247, 0.9);
-  --surface-muted: rgba(49, 60, 49, 0.052);
-  --surface-hover: rgba(49, 60, 49, 0.078);
-  --glass-surface: rgba(250, 251, 247, 0.56);
-  --glass-surface-strong: rgba(250, 251, 247, 0.72);
-  --glass-edge: rgba(72, 86, 70, 0.12);
-  --glass-edge-strong: rgba(72, 86, 70, 0.2);
-  --glass-highlight: rgba(255, 255, 252, 0.62);
-  --glass-shade: rgba(50, 61, 49, 0.06);
-  --glass-shadow: 0 24px 62px rgba(50, 62, 47, 0.1), inset 0 1px 0 rgba(255, 255, 252, 0.72), inset 0 -1px 0 rgba(64, 76, 61, 0.06);
-  --glass-blur: blur(28px) saturate(1.08);
-  --glass-blur-soft: blur(18px) saturate(1.04);
-  --control-fill: rgba(250, 251, 247, 0.5);
-  --control-fill-hover: rgba(250, 251, 247, 0.68);
-  --control-fill-active: rgba(91, 112, 81, 0.12);
-  --control-edge: rgba(72, 86, 70, 0.14);
-  --selection-glass: linear-gradient(135deg, rgba(91, 112, 81, 0.13), rgba(250, 251, 247, 0.62));
-  --app-sheen: rgba(255, 255, 252, 0.34);
-  --text: #202720;
-  --text-strong: #151b15;
-  --text-muted: #5f6a5d;
-  --text-subtle: #778075;
-  --border: rgba(48, 61, 48, 0.11);
-  --border-strong: rgba(48, 61, 48, 0.18);
-  --accent: #5b7051;
-  --accent-strong: #4f6447;
-  --accent-muted: rgba(91, 112, 81, 0.1);
-  --accent-border: rgba(91, 112, 81, 0.26);
-  --accent-text: #fbfcf8;
-  --ambient-accent-wash: 10%;
-  --ambient-strong-wash: 6%;
-  --ambient-overlay-opacity: 0.22;
+
+  --bg: #f5f6f4;
+  --bg-rgb: 245, 246, 244;
+  --bg-soft: #eceee9;
+  --surface-solid: #ffffff;
+  --surface-raised: #ffffff;
+  --control-fill: #ffffff;
+  --control-fill-hover: #f1f3ef;
+
+  --border: #dfe2db;
+  --border-strong: #c2c8bd;
+  --control-edge: #d6dad1;
+
+  --glass-blur: blur(24px) saturate(1.05);
+
+  --level-float: 0 12px 32px rgba(38, 46, 34, 0.14);
+
+  --text: #262b26;
+  --text-strong: #12160f;
+  --text-muted: #5d665a;
+  --text-subtle: #7c857a;
+
+  --accent: #4d6b34;
+  --accent-strong: #3d5729;
+  --accent-muted: rgba(77, 107, 52, 0.1);
+  --accent-border: rgba(77, 107, 52, 0.34);
+  --accent-text: #ffffff;
+  --selection-glass: rgba(77, 107, 52, 0.09);
+  --focus-ring: #4d6b34;
+
   --danger: #8c2727;
-  --danger-bg: rgba(196, 61, 61, 0.1);
-  --danger-border: rgba(168, 45, 45, 0.28);
-  --code-bg: rgba(245, 248, 241, 0.92);
-  --modal-bg: rgba(24, 29, 24, 0.28);
-  --shadow-soft: 0 22px 58px rgba(50, 62, 47, 0.1);
-  --shadow-inset: inset 0 1px 0 rgba(255, 255, 252, 0.66);
-  --focus-ring: rgba(91, 112, 81, 0.3);
-  --skeleton-a: rgba(35, 47, 35, 0.04);
-  --skeleton-b: rgba(35, 47, 35, 0.1);
-  --wheel-ring-line: rgba(20, 28, 20, 0.22);
-  --wheel-active: rgba(91, 112, 81, 0.17);
-  --wheel-active-line: rgba(79, 100, 71, 0.66);
-  --wheel-label: #1d241d;
-  --wheel-panel: rgba(250, 251, 247, 0.74);
-  --wheel-icon-bg: var(--surface-solid);
-  --wheel-glass-edge: rgba(72, 86, 70, 0.13);
+  --danger-bg: rgba(196, 61, 61, 0.09);
+  --danger-border: rgba(168, 45, 45, 0.3);
+
+  --code-bg: #f1f3ee;
+  --modal-bg: rgba(24, 29, 24, 0.3);
+  --skeleton-a: #e8eae4;
+  --skeleton-b: #dadfd4;
+
+  --wheel-ring-line: rgba(20, 28, 20, 0.2);
+  --wheel-active: rgba(77, 107, 52, 0.17);
+  --wheel-active-line: #3d5729;
+  --wheel-label: #1a1f18;
+  --wheel-panel: rgba(255, 255, 255, 0.88);
+  --wheel-glass-edge: rgba(38, 46, 34, 0.12);
 }
 
+/* Both surfaces set data-theme on mount; this only prevents a dark
+   flash on first paint under a light system theme. */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) {
     color-scheme: light;
-    --bg: #f3f4ee;
-    --bg-rgb: 243, 244, 238;
-    --bg-soft: #e8ece3;
-    --surface: rgba(250, 251, 247, 0.76);
-    --surface-solid: #fafbf7;
-    --surface-raised: rgba(250, 251, 247, 0.9);
-    --surface-muted: rgba(49, 60, 49, 0.052);
-    --surface-hover: rgba(49, 60, 49, 0.078);
-    --glass-surface: rgba(250, 251, 247, 0.56);
-    --glass-surface-strong: rgba(250, 251, 247, 0.72);
-    --glass-edge: rgba(72, 86, 70, 0.12);
-    --glass-edge-strong: rgba(72, 86, 70, 0.2);
-    --glass-highlight: rgba(255, 255, 252, 0.62);
-    --glass-shade: rgba(50, 61, 49, 0.06);
-    --glass-shadow: 0 24px 62px rgba(50, 62, 47, 0.1), inset 0 1px 0 rgba(255, 255, 252, 0.72), inset 0 -1px 0 rgba(64, 76, 61, 0.06);
-    --glass-blur: blur(28px) saturate(1.08);
-    --glass-blur-soft: blur(18px) saturate(1.04);
-    --control-fill: rgba(250, 251, 247, 0.5);
-    --control-fill-hover: rgba(250, 251, 247, 0.68);
-    --control-fill-active: rgba(91, 112, 81, 0.12);
-    --control-edge: rgba(72, 86, 70, 0.14);
-    --selection-glass: linear-gradient(135deg, rgba(91, 112, 81, 0.13), rgba(250, 251, 247, 0.62));
-    --app-sheen: rgba(255, 255, 252, 0.34);
-    --text: #202720;
-    --text-strong: #151b15;
-    --text-muted: #5f6a5d;
-    --text-subtle: #768273;
-    --border: rgba(48, 61, 48, 0.11);
-    --border-strong: rgba(48, 61, 48, 0.18);
-    --accent: #5b7051;
-    --accent-strong: #4f6447;
-    --accent-muted: rgba(91, 112, 81, 0.1);
-    --accent-border: rgba(91, 112, 81, 0.26);
-    --accent-text: #fbfcf8;
-    --ambient-accent-wash: 10%;
-    --ambient-strong-wash: 6%;
-    --ambient-overlay-opacity: 0.22;
-    --danger: #8c2727;
-    --danger-bg: rgba(196, 61, 61, 0.1);
-    --danger-border: rgba(168, 45, 45, 0.28);
-    --code-bg: rgba(245, 248, 241, 0.92);
-    --modal-bg: rgba(24, 29, 24, 0.28);
-    --shadow-soft: 0 22px 58px rgba(50, 62, 47, 0.1);
-    --shadow-inset: inset 0 1px 0 rgba(255, 255, 252, 0.66);
-    --focus-ring: rgba(91, 112, 81, 0.3);
-    --skeleton-a: rgba(35, 47, 35, 0.04);
-    --skeleton-b: rgba(35, 47, 35, 0.1);
-    --wheel-ring-line: rgba(20, 28, 20, 0.22);
-    --wheel-active: rgba(91, 112, 81, 0.17);
-    --wheel-active-line: rgba(79, 100, 71, 0.66);
-    --wheel-label: #1d241d;
-    --wheel-panel: rgba(250, 251, 247, 0.74);
-    --wheel-icon-bg: var(--surface-solid);
-    --wheel-glass-edge: rgba(72, 86, 70, 0.13);
+    --bg: #f5f6f4;
+    --text: #262b26;
   }
 }
 

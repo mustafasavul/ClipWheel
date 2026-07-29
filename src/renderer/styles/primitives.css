@@ -1,29 +1,27 @@
 .filters {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
 .search-field {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 12px;
+  gap: var(--space-xs);
+  padding: 0 var(--space-sm);
   color: var(--text-muted);
   background: var(--control-fill);
   border: 1px solid var(--control-edge);
-  border-radius: 12px;
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  border-radius: var(--radius-sm);
 }
 
 .filters input,
 .filters select {
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .filters .search-field {
   grid-column: 1 / -1;
-  padding: 0 10px;
 }
 
 input,
@@ -33,32 +31,20 @@ textarea {
   color: var(--text);
   background: var(--control-fill);
   border: 1px solid var(--control-edge);
-  border-radius: 12px;
-  min-height: 38px;
-  padding: 0 9px;
+  border-radius: var(--radius-sm);
+  min-height: 36px;
+  padding: 0 var(--space-sm);
   outline: none;
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
 }
 
 select {
   appearance: none;
-  color-scheme: dark;
-  padding-right: 28px;
+  padding-right: var(--space-lg);
   background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
-  background-position: calc(100% - 15px) 16px, calc(100% - 10px) 16px;
+  background-position: calc(100% - 15px) 15px, calc(100% - 10px) 15px;
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
   text-transform: capitalize;
-}
-
-:root[data-theme="light"] select {
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) select {
-    color-scheme: light;
-  }
 }
 
 select option,
@@ -76,18 +62,19 @@ input:hover,
 select:hover,
 textarea:hover,
 .search-field:focus-within {
-  border-color: var(--glass-edge-strong);
+  border-color: var(--border-strong);
   background: var(--control-fill-hover);
 }
 
 textarea {
   min-height: 92px;
-  padding: 10px;
+  padding: var(--space-sm);
   resize: vertical;
 }
 
 .search-field input {
   border: 0;
   padding: 0;
+  min-height: 34px;
   background: transparent;
 }

@@ -186,7 +186,7 @@ export interface HistoryQuery {
 }
 
 export interface CleanupRequest {
-  mode: 'all' | 'older_than' | 'between' | 'type' | 'purge_deleted';
+  mode: 'all' | 'older_than' | 'between' | 'type';
   includePinned?: boolean;
   olderThan?: string;
   startDate?: string;
@@ -229,6 +229,23 @@ export type UpdateDownloadEvent =
   | { event: 'Progress'; data: { chunkLength: number } }
   | { event: 'Finished' };
 
+export interface LocaleStrings {
+  trayOpen: string;
+  trayWheel: string;
+  traySettings: string;
+  trayQuit: string;
+  trayRecentCaptures: string;
+  trayNoRecentCaptures: string;
+  trayUntitledCapture: string;
+  image: string;
+  files: string;
+  url: string;
+  captureImageTitle: string;
+  captureImagePreview: string;
+  captureFileCountOne: string;
+  captureFileCountOther: string;
+}
+
 export interface AppApi {
   getItems(query?: HistoryQuery): Promise<ClipboardItem[]>;
   countItems(query?: HistoryQuery): Promise<number>;
@@ -245,6 +262,7 @@ export interface AppApi {
   getSettings(): Promise<Settings>;
   updateSettings(settings: Partial<Settings>): Promise<Settings>;
   setShortcutCaptureActive(active: boolean): Promise<void>;
+  setLocaleStrings(strings: LocaleStrings): Promise<void>;
   cleanup(request: CleanupRequest): Promise<CleanupJob>;
   getImageDataUrl(id: string): Promise<string | null>;
   showWindow(name: 'history' | 'settings' | 'wheel'): Promise<void>;

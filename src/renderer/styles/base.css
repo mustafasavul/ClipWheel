@@ -29,7 +29,11 @@ a,
 input,
 select,
 textarea {
-  transition: border-color .22s cubic-bezier(0.16, 1, 0.3, 1), background .22s cubic-bezier(0.16, 1, 0.3, 1), color .22s cubic-bezier(0.16, 1, 0.3, 1), filter .22s cubic-bezier(0.16, 1, 0.3, 1), transform .18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    background var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
 }
 
 button:focus-visible,
@@ -39,6 +43,19 @@ select:focus-visible,
 textarea:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
+  /* never animate the ring — it must appear instantly */
+  transition: none;
 }
 
-
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: var(--dur-fast) !important;
+    transition-property: opacity, color, background-color, border-color !important;
+    scroll-behavior: auto !important;
+  }
+}

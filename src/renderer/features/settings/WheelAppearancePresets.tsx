@@ -70,7 +70,7 @@ export function WheelAppearancePresets({ settings, updateSettings }: WheelAppear
             <span className="preset-swatches" aria-hidden="true">
               {preset.colors.slice(0, 8).map((color, index) => <span key={`${preset.id}-${color}-${index}`} style={{ background: color }} />)}
             </span>
-            <strong>{preset.label}</strong>
+            <strong>{t(preset.labelKey)}</strong>
           </button>
         ))}
       </div>
