@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Clipboard, Command, Copy, Flag, Heart, Pencil, Trash2, X } from 'lucide-react';
+import { Check, Clipboard, Command, Copy, Flag, Heart, Pencil, Trash2, Undo2, X } from 'lucide-react';
 import { clipboardFlagColors, type ClipboardFlagColor, type ClipboardItem } from '../../../shared/types';
 import { useItemMutations } from '../../data/clipwheelQueries';
 import { useI18n } from '../../i18n/I18nContext';
@@ -11,6 +11,8 @@ export function HistoryList({
   items,
   selectedId,
   wheelItemIds,
+  wheelSlotTitles = [],
+  isTrash = false,
   onSelect,
   onRefresh,
   onToggleWheelItem,
@@ -18,15 +20,18 @@ export function HistoryList({
   items: ClipboardItem[];
   selectedId: string | null;
   wheelItemIds: string[];
+  wheelSlotTitles?: Array<string | null>;
+  isTrash?: boolean;
   onSelect: (id: string) => void;
   onRefresh: () => Promise<void>;
-  onToggleWheelItem: (id: string) => Promise<void>;
+  onToggleWheelItem: (id: string, targetSlot?: number) => Promise<void>;
 }) {
   const { t } = useI18n();
   const mutations = useItemMutations();
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
   const [titleDraft, setTitleDraft] = useState('');
   const [flagPickerId, setFlagPickerId] = useState<string | null>(null);
+  const [slotPickerId, setSlotPickerId] = useState<string | null>(null);
   const [rowError, setRowError] = useState<{ id: string; message: string } | null>(null);
   const isWheelFull = wheelItemIds.every(Boolean);
 
@@ -67,9 +72,9 @@ export function HistoryList({
   if (!items.length) {
     return (
       <div className="empty-state">
-        <Clipboard size={38} />
-        <h2>{t('noClipboardItems')}</h2>
-        <p>{t('noClipboardItemsDescription')}</p>
+        {isTrash ? <Trash2 size={38} /> : <Clipboard size={38} />}
+        <h2>{isTrash ? t('trashEmpty') : t('noClipboardItems')}</h2>
+        <p>{isTrash ? t('trashEmptyDescription') : t('noClipboardItemsDescription')}</p>
       </div>
     );
   }
@@ -78,9 +83,8 @@ export function HistoryList({
       {items.map((item, index) => {
         const wheelSlot = wheelItemIds.indexOf(item.id);
         const isInWheel = wheelSlot >= 0;
-        const wheelButtonDisabled = !isInWheel && isWheelFull;
         return (
-          <div className={`history-row ${item.id === selectedId ? 'selected' : ''} ${isInWheel ? 'in-wheel' : ''} ${flagPickerId === item.id ? 'flag-editing' : ''}`} key={item.id} style={{ '--index': index } as React.CSSProperties}>
+          <div className={`history-row ${item.id === selectedId ? 'selected' : ''} ${isInWheel ? 'in-wheel' : ''} ${flagPickerId === item.id || slotPickerId === item.id ? 'flag-editing' : ''} ${item.isDeleted ? 'trashed' : ''}`} key={item.id} style={{ '--index': index } as React.CSSProperties}>
             {editingTitleId === item.id ? (
             <div className="history-select inline-editing">
               <span className="type-icon"><ClipboardTypeIcon type={item.type} /></span>
@@ -123,8 +127,15 @@ export function HistoryList({
             </button>
             )}
             <span className="row-actions" onClick={(event) => event.stopPropagation()}>
+              {item.isDeleted ? (
+              <>
+                <IconButton label={t('restore')} onClick={async () => { await mutations.restore.mutateAsync(item.id); await onRefresh(); }}><Undo2 size={16} /></IconButton>
+                <IconButton label={t('deleteForever')} onClick={async () => { if (!window.confirm(t('deleteForeverConfirm'))) return; await mutations.purge.mutateAsync(item.id); await onRefresh(); }}><Trash2 size={16} /></IconButton>
+              </>
+              ) : (
+              <>
               <span className="flag-action" data-flag={item.priorityFlag ?? 'none'}>
-                <IconButton label={item.priorityFlag ? labelForFlag(item.priorityFlag, t) : t('flag')} onClick={() => { onSelect(item.id); setEditingTitleId(null); setRowError(null); setFlagPickerId((current) => current === item.id ? null : item.id); }}><Flag size={16} fill={item.priorityFlag ? 'currentColor' : 'none'} /></IconButton>
+                <IconButton label={item.priorityFlag ? labelForFlag(item.priorityFlag, t) : t('flag')} onClick={() => { onSelect(item.id); setEditingTitleId(null); setRowError(null); setSlotPickerId(null); setFlagPickerId((current) => current === item.id ? null : item.id); }}><Flag size={16} fill={item.priorityFlag ? 'currentColor' : 'none'} /></IconButton>
                 {flagPickerId === item.id && (
                   <span className="flag-popover" role="menu" aria-label={t('flag')}>
                     <button type="button" role="menuitemradio" aria-checked={item.priorityFlag === null} className={`flag-choice no-flag ${item.priorityFlag === null ? 'active' : ''}`} aria-label={t('noFlag')} title={t('noFlag')} onClick={() => void setFlag(item, null)}><X size={14} /></button>
@@ -145,16 +156,43 @@ export function HistoryList({
                 )}
               </span>
               <IconButton label={t('editItem')} onClick={() => startTitleEdit(item)}><Pencil size={16} /></IconButton>
-              <IconButton
-                label={isInWheel ? `${t('wheel')} ${wheelSlot + 1}` : t('wheel')}
-                disabled={wheelButtonDisabled}
-                onClick={() => onToggleWheelItem(item.id)}
-              >
-                {isInWheel ? <X size={16} /> : <Command size={16} />}
-              </IconButton>
+              <span className="slot-action">
+                <IconButton
+                  label={isInWheel ? `${t('wheel')} ${wheelSlot + 1}` : t('wheel')}
+                  onClick={() => {
+                    if (isInWheel || !isWheelFull) {
+                      void onToggleWheelItem(item.id);
+                      return;
+                    }
+                    setFlagPickerId(null);
+                    setSlotPickerId((current) => current === item.id ? null : item.id);
+                  }}
+                >
+                  {isInWheel ? <X size={16} /> : <Command size={16} />}
+                </IconButton>
+                {slotPickerId === item.id && (
+                  <span className="flag-popover slot-popover" role="menu" aria-label={t('replaceWheelSlot')}>
+                    <small>{t('replaceWheelSlot')}</small>
+                    {wheelItemIds.map((_, slot) => (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="slot-choice"
+                        key={slot}
+                        onClick={async () => { setSlotPickerId(null); await onToggleWheelItem(item.id, slot); await onRefresh(); }}
+                      >
+                        <span className="slot-index">{slot + 1}</span>
+                        <span className="slot-title">{wheelSlotTitles[slot] ?? t('empty')}</span>
+                      </button>
+                    ))}
+                  </span>
+                )}
+              </span>
               <IconButton label={t('copy')} onClick={async () => { await mutations.copy.mutateAsync(item.id); await onRefresh(); }}><Copy size={16} /></IconButton>
               <IconButton label={item.isFavorite ? t('unfavorite') : t('favorite')} onClick={async () => { await mutations.toggleFavorite.mutateAsync(item.id); await onRefresh(); }}><Heart size={16} fill={item.isFavorite ? 'currentColor' : 'none'} /></IconButton>
               <IconButton label={t('delete')} onClick={async () => { if (isInWheel) await onToggleWheelItem(item.id); await mutations.remove.mutateAsync(item.id); await onRefresh(); }}><Trash2 size={16} /></IconButton>
+              </>
+              )}
             </span>
             {rowError?.id === item.id && <p className="row-inline-error" role="alert">{rowError.message}</p>}
           </div>

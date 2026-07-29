@@ -14,6 +14,8 @@ export function createClipwheelClient(dependencies: { invoke: InvokeFn; listen: 
     getRecentWheelItems: (count?: number) => invokeCommand<ClipboardItem[]>('get_recent_wheel_items', { count }),
     copyItem: (id: string) => invokeCommand<void>('copy_item', { id }),
     deleteItem: (id: string) => invokeCommand<void>('delete_item', { id }),
+    restoreItem: (id: string) => invokeCommand<ClipboardItem>('restore_item', { id }),
+    purgeItem: (id: string) => invokeCommand<void>('purge_item', { id }),
     togglePin: (id: string) => invokeCommand<ClipboardItem>('toggle_pin', { id }),
     toggleFavorite: (id: string) => invokeCommand<ClipboardItem>('toggle_favorite', { id }),
     updateItemTitle: (id: string, title: string) => invokeCommand<ClipboardItem>('update_item_title', { id, title }),

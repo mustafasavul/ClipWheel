@@ -57,6 +57,8 @@ fn main() {
             commands::get_recent_wheel_items,
             commands::copy_item,
             commands::delete_item,
+            commands::restore_item,
+            commands::purge_item,
             commands::toggle_pin,
             commands::toggle_favorite,
             commands::update_item_title,
@@ -189,7 +191,11 @@ fn fit_main_window_to_monitor(window: &WebviewWindow) -> Result<()> {
     let Some(monitor) = window.current_monitor()? else {
         return Ok(());
     };
-    let current_size = window.outer_size()?;
+    let (current_width, current_height) = scaled_outer_size(window, monitor.scale_factor())?;
+    let current_size = tauri::PhysicalSize {
+        width: current_width as u32,
+        height: current_height as u32,
+    };
     let monitor_size = monitor.size();
     let monitor_position = monitor.position();
     let (width, height) = constrain_window_size(
@@ -231,39 +237,102 @@ fn position_wheel_window(
     window: &WebviewWindow,
     wheel_position: &str,
 ) -> Result<()> {
-    let window_size = window.outer_size()?;
-    let half_width = window_size.width as i32 / 2;
-    let half_height = window_size.height as i32 / 2;
-
+    // macOS'ta tao her degeri farkli bir olcekle cevirir: cursor_position() logical x primary
+    // ekranin scale factor'i, monitor.position()/size() logical x kendi ekraninin scale factor'i,
+    // monitor_from_point() ise dogrudan logical CGDisplayBounds ile karsilastirir. Bu yuzden
+    // coklu monitorde tutarli olan tek uzay logical. Windows/Linux'ta tersi gecerli: sanal masaustu
+    // fiziksel piksellerle tanimli, logical uzay tutarsiz. Tum matematigi tek uzayda yapiyoruz.
+    let macos_space = cfg!(target_os = "macos");
     let cursor = app.cursor_position()?;
+    let cursor_scale = if macos_space {
+        app.primary_monitor()?
+            .map(|monitor| monitor.scale_factor())
+            .unwrap_or(1.0)
+    } else {
+        1.0
+    };
+    let cursor = (cursor.x / cursor_scale, cursor.y / cursor_scale);
+
     let monitor = app
-        .monitor_from_point(cursor.x, cursor.y)?
+        .monitor_from_point(cursor.0, cursor.1)?
         .or(window.current_monitor()?);
     let Some(monitor) = monitor else {
         return Ok(());
     };
 
+    let monitor_scale = monitor.scale_factor();
+    let space_scale = if macos_space { 1.0 } else { monitor_scale };
+    let to_space = |value: f64| (value / monitor_scale * space_scale).round() as i32;
+
+    let (window_width, window_height) = scaled_outer_size(window, space_scale)?;
     let monitor_size = monitor.size();
     let monitor_position = monitor.position();
-    let (x, y) = if wheel_position == "cursor" {
+    let (x, y) = wheel_target_position(
+        wheel_position,
+        cursor,
+        (window_width, window_height),
+        (
+            to_space(monitor_position.x as f64),
+            to_space(monitor_position.y as f64),
+        ),
+        (
+            to_space(monitor_size.width as f64),
+            to_space(monitor_size.height as f64),
+        ),
+    );
+
+    window.set_position(if macos_space {
+        tauri::Position::Logical(tauri::LogicalPosition {
+            x: x as f64,
+            y: y as f64,
+        })
+    } else {
+        tauri::Position::Physical(tauri::PhysicalPosition { x, y })
+    })?;
+    Ok(())
+}
+
+fn wheel_target_position(
+    wheel_position: &str,
+    cursor: (f64, f64),
+    window_size: (i32, i32),
+    monitor_origin: (i32, i32),
+    monitor_size: (i32, i32),
+) -> (i32, i32) {
+    let (window_width, window_height) = window_size;
+    if wheel_position == "cursor" {
         clamp_window_position(
             (
-                cursor.x.round() as i32 - half_width,
-                cursor.y.round() as i32 - half_height,
+                cursor.0.round() as i32 - window_width / 2,
+                cursor.1.round() as i32 - window_height / 2,
             ),
-            (window_size.width as i32, window_size.height as i32),
-            (monitor_position.x, monitor_position.y),
-            (monitor_size.width as i32, monitor_size.height as i32),
+            window_size,
+            monitor_origin,
+            monitor_size,
         )
     } else {
         (
-            monitor_position.x + (monitor_size.width as i32 / 2) - half_width,
-            monitor_position.y + (monitor_size.height as i32 / 2) - half_height,
+            monitor_origin.0 + (monitor_size.0 - window_width) / 2,
+            monitor_origin.1 + (monitor_size.1 - window_height) / 2,
         )
-    };
+    }
+}
 
-    window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }))?;
-    Ok(())
+// ponytail: outer_size() macOS'ta ilk show() oncesi logical deger dondurur (backingScaleFactor
+// henuz hedef ekranin katsayisi degil). outer_size()/window.scale_factor() her zaman dogru logical
+// boyutu verir; istenen uzayin olcegiyle carpip dogru boyutu turetiyoruz.
+fn scaled_outer_size(window: &WebviewWindow, scale: f64) -> Result<(i32, i32)> {
+    let logical = window
+        .outer_size()?
+        .to_logical::<f64>(window.scale_factor()?);
+    Ok(scale_size((logical.width, logical.height), scale))
+}
+
+fn scale_size(logical: (f64, f64), scale: f64) -> (i32, i32) {
+    (
+        (logical.0 * scale).round() as i32,
+        (logical.1 * scale).round() as i32,
+    )
 }
 
 fn clamp_window_position(
@@ -331,7 +400,36 @@ pub fn set_shortcut_capture_active(app: &AppHandle, active: bool) -> Result<()> 
 
 #[cfg(test)]
 mod tests {
-    use super::{clamp_window_position, constrain_window_size};
+    use super::{clamp_window_position, constrain_window_size, scale_size, wheel_target_position};
+
+    #[test]
+    fn centers_wheel_on_the_secondary_monitor() {
+        // Ikinci monitor logical uzayda x=1512'den basliyor; teker orada ortalanmali.
+        assert_eq!(
+            wheel_target_position("center", (1800.0, 400.0), (1500, 900), (1512, 0), (1920, 1080)),
+            (1722, 90)
+        );
+    }
+
+    #[test]
+    fn follows_cursor_onto_the_secondary_monitor() {
+        assert_eq!(
+            wheel_target_position("cursor", (2400.0, 600.0), (1500, 900), (1512, 0), (1920, 1080)),
+            (1650, 150)
+        );
+        // Monitorun sag kenarina yakin imlec pencereyi o monitorun icinde tutar.
+        assert_eq!(
+            wheel_target_position("cursor", (3400.0, 1050.0), (1500, 900), (1512, 0), (1920, 1080)),
+            (1932, 180)
+        );
+    }
+
+    #[test]
+    fn scales_logical_window_size_to_target_monitor() {
+        assert_eq!(scale_size((1500.0, 900.0), 2.0), (3000, 1800));
+        assert_eq!(scale_size((1500.0, 900.0), 1.0), (1500, 900));
+        assert_eq!(scale_size((1500.0, 900.0), 1.5), (2250, 1350));
+    }
 
     #[test]
     fn keeps_cursor_window_inside_monitor_bounds() {

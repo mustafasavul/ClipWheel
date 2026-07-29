@@ -175,7 +175,7 @@ export interface CustomWheelAppearancePreset {
 export interface HistoryQuery {
   search?: string;
   type?: ClipboardItemType | 'all';
-  collectionFilter?: 'all' | 'wheel' | 'favorites';
+  collectionFilter?: 'all' | 'wheel' | 'favorites' | 'trash';
   flagFilter?: ClipboardFlagColor | 'all' | 'none';
   dateFilter?: 'all' | 'today' | 'last7' | 'last30' | 'custom';
   startDate?: string;
@@ -235,6 +235,8 @@ export interface AppApi {
   getRecentWheelItems(count?: number): Promise<Array<ClipboardItem | null>>;
   copyItem(id: string): Promise<void>;
   deleteItem(id: string): Promise<void>;
+  restoreItem(id: string): Promise<ClipboardItem>;
+  purgeItem(id: string): Promise<void>;
   togglePin(id: string): Promise<ClipboardItem>;
   toggleFavorite(id: string): Promise<ClipboardItem>;
   updateItemTitle(id: string, title: string): Promise<ClipboardItem>;

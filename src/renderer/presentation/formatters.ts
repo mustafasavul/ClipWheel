@@ -28,6 +28,7 @@ export function labelForType(type: ClipboardItemType | 'all', t: Translator): st
 export function labelForCollectionFilter(filter: NonNullable<HistoryQuery['collectionFilter']>, t: Translator): string {
   if (filter === 'wheel') return t('wheel');
   if (filter === 'favorites') return t('favorite');
+  if (filter === 'trash') return t('trash');
   return t('all');
 }
 

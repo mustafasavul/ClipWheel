@@ -290,6 +290,27 @@ impl ClipRepository {
         Ok(())
     }
 
+    pub fn restore(&self, id: &str) -> Result<ClipboardItem> {
+        let now = now();
+        let mut conn = self.conn()?;
+        sql_query("UPDATE clipboard_items SET is_deleted = 0, deleted_at = NULL, updated_at = ? WHERE id = ?")
+            .bind::<Text, _>(&now)
+            .bind::<Text, _>(id)
+            .execute(&mut conn)?;
+        drop(conn);
+        let settings = self.get_settings()?;
+        self.enforce_history_limit(settings.max_history_items, Some(id))?;
+        self.get_item(id)
+    }
+
+    pub fn hard_delete(&self, id: &str) -> Result<()> {
+        let mut conn = self.conn()?;
+        sql_query("DELETE FROM clipboard_items WHERE id = ? AND is_deleted = 1")
+            .bind::<Text, _>(id)
+            .execute(&mut conn)?;
+        Ok(())
+    }
+
     pub fn mark_used(&self, id: &str) -> Result<()> {
         let now = now();
         let mut conn = self.conn()?;
@@ -475,7 +496,9 @@ fn select_sql(where_sql: &str) -> String {
 
 fn build_where(query: &HistoryQuery) -> String {
     let mut clauses = Vec::<String>::new();
-    if query.include_deleted != Some(true) {
+    if query.collection_filter.as_deref() == Some("trash") {
+        clauses.push("is_deleted = 1".into());
+    } else if query.include_deleted != Some(true) {
         clauses.push("is_deleted = 0".into());
     }
     if let Some(item_type) = &query.item_type {
@@ -661,6 +684,45 @@ mod tests {
         assert!(items
             .iter()
             .all(|item| item.content_hash == "duplicate-hash"));
+    }
+
+    #[test]
+    fn trash_filter_lists_only_deleted_items_and_supports_restore_and_purge() {
+        let (_dir, repo) = test_repo();
+        let kept = repo.create_item(text_input("kept", "kept-hash")).expect("kept");
+        let trashed = repo
+            .create_item(text_input("trashed", "trashed-hash"))
+            .expect("trashed");
+        repo.soft_delete(&trashed.id).expect("soft delete");
+
+        let trash_query = HistoryQuery {
+            collection_filter: Some("trash".into()),
+            ..Default::default()
+        };
+        let in_trash = repo.list_items(trash_query.clone()).expect("trash items");
+        assert_eq!(in_trash.len(), 1);
+        assert_eq!(in_trash[0].id, trashed.id);
+        assert_eq!(repo.count_items(trash_query.clone()).expect("count"), 1);
+
+        // Varsayilan sorgu yalnizca canli ogeleri gorur.
+        let live = repo.list_items(HistoryQuery::default()).expect("live items");
+        assert_eq!(live.len(), 1);
+        assert_eq!(live[0].id, kept.id);
+
+        let restored = repo.restore(&trashed.id).expect("restore");
+        assert!(!restored.is_deleted);
+        assert!(restored.deleted_at.is_none());
+        assert!(repo
+            .list_items(trash_query.clone())
+            .expect("empty trash")
+            .is_empty());
+
+        // Kalici silme yalnizca cop kutusundaki ogeyi hedefler.
+        repo.soft_delete(&trashed.id).expect("soft delete again");
+        repo.hard_delete(&kept.id).expect("hard delete live item");
+        assert!(repo.get_item(&kept.id).is_ok());
+        repo.hard_delete(&trashed.id).expect("hard delete trashed");
+        assert!(repo.get_item(&trashed.id).is_err());
     }
 
     #[test]

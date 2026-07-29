@@ -91,6 +91,28 @@ pub fn delete_item(
 }
 
 #[tauri::command]
+pub fn restore_item(
+    app: AppHandle,
+    state: tauri::State<'_, AppState>,
+    id: String,
+) -> CommandResult<ClipboardItem> {
+    let item = state.repository.restore(&id).map_err(to_string)?;
+    emit_items_changed(&app)?;
+    Ok(item)
+}
+
+#[tauri::command]
+pub fn purge_item(
+    app: AppHandle,
+    state: tauri::State<'_, AppState>,
+    id: String,
+) -> CommandResult<()> {
+    state.repository.hard_delete(&id).map_err(to_string)?;
+    emit_items_changed(&app)?;
+    Ok(())
+}
+
+#[tauri::command]
 pub fn toggle_pin(
     app: AppHandle,
     state: tauri::State<'_, AppState>,

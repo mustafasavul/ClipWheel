@@ -130,6 +130,12 @@
   background: var(--control-fill);
 }
 
+.secondary-button.active {
+  border-color: var(--accent-border);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: var(--accent-text);
+}
+
 .secondary-button:hover,
 .icon-button:hover,
 .pagination-controls button:hover:not(:disabled),

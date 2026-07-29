@@ -21,7 +21,7 @@ export function Filters({ query, onChange }: { query: HistoryQuery; onChange: (p
       <select aria-label={t('clipboard')} value={query.type ?? 'all'} onChange={(event) => updateQuery({ type: event.target.value as ClipboardItemType | 'all' })}>
         {typeOptions.map((type) => <option key={type} value={type}>{labelForType(type, t)}</option>)}
       </select>
-      <select aria-label={t('filter')} value={query.collectionFilter ?? 'all'} onChange={(event) => updateQuery({ collectionFilter: event.target.value as HistoryQuery['collectionFilter'] })}>
+      <select aria-label={t('filter')} disabled={query.collectionFilter === 'trash'} value={query.collectionFilter === 'trash' ? 'all' : query.collectionFilter ?? 'all'} onChange={(event) => updateQuery({ collectionFilter: event.target.value as HistoryQuery['collectionFilter'] })}>
         {collectionFilterOptions.map((filter) => <option key={filter} value={filter}>{labelForCollectionFilter(filter, t)}</option>)}
       </select>
       <select aria-label={t('flag')} value={query.flagFilter ?? 'all'} onChange={(event) => updateQuery({ flagFilter: event.target.value as ClipboardFlagColor | 'all' | 'none' })}>

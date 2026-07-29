@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useReducer } from 'react';
-import { CirclePause, Clipboard, Command, ExternalLink, Github, Palette, RefreshCw, Settings as SettingsIcon, Shield } from 'lucide-react';
+import { CirclePause, Clipboard, Command, ExternalLink, Github, Palette, RefreshCw, Settings as SettingsIcon, Shield, Trash2 } from 'lucide-react';
 import type { MainNavigationRequest, Settings } from '../../../shared/types';
 import { defaultSettings } from '../../../shared/settings';
 import { resolveLanguage } from '../../../shared/i18n';
@@ -7,7 +7,7 @@ import { appVersion } from '../../../shared/version';
 import { clampWheelItemCount } from '../../../shared/wheelLimits';
 import { normalizeWheelItemIds } from '../../../shared/shortcuts';
 import { useApplyLanguage, useApplyTheme, useResolvedTheme } from '../../app/documentPreferences';
-import { useClipwheelApi, useClipwheelEvents, useDesktopActions, useHistoryCountQuery, useHistoryItemsQuery, useSettingsMutation, useSettingsQuery } from '../../data/clipwheelQueries';
+import { useClipwheelApi, useClipwheelEvents, useDesktopActions, useHistoryCountQuery, useHistoryItemsQuery, useSettingsMutation, useSettingsQuery, useWheelItemsQuery } from '../../data/clipwheelQueries';
 import { I18nContext, useLocale } from '../../i18n/I18nContext';
 import { SkeletonList } from '../../ui/SkeletonList';
 import clipwheelIcon from '../../assets/clipwheel-icon-transparent.png';
@@ -24,6 +24,7 @@ export function MainSurface() {
   const desktop = useDesktopActions();
   const [ui, dispatch] = useReducer(historyUiReducer, initialHistoryUiState);
   const { page, pageSize, query, selectedId, settingsTab: tab, view } = ui;
+  const isTrash = query.collectionFilter === 'trash';
   const countQuery = useHistoryCountQuery(query);
   const totalItems = countQuery.data ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
@@ -37,6 +38,7 @@ export function MainSurface() {
   const selected = items.find((item) => item.id === selectedId) ?? items[0] ?? null;
   const wheelItemCount = clampWheelItemCount(settings.wheelItemCount);
   const activeWheelItemIds = normalizeWheelItemIds(settings.wheelItemIds).slice(0, wheelItemCount);
+  const wheelSlotTitles = (useWheelItemsQuery(wheelItemCount).data ?? []).map((item) => item?.title ?? null);
   const resolvedTheme = useResolvedTheme(settings.theme);
   const language = resolveLanguage(settings.language);
   const i18n = useLocale(language);
@@ -83,10 +85,10 @@ export function MainSurface() {
     await settingsMutation.mutateAsync(patch);
   };
 
-  const toggleWheelItem = async (itemId: string) => {
+  const toggleWheelItem = async (itemId: string, targetSlot?: number) => {
     const nextWheelItemIds = normalizeWheelItemIds(settings.wheelItemIds);
     const currentSlot = nextWheelItemIds.slice(0, wheelItemCount).indexOf(itemId);
-    if (currentSlot >= 0) {
+    if (currentSlot >= 0 && targetSlot === undefined) {
       nextWheelItemIds[currentSlot] = '';
       await updateSettings({ wheelItemIds: nextWheelItemIds });
       return;
@@ -95,9 +97,9 @@ export function MainSurface() {
       if (nextWheelItemIds[index] === itemId) nextWheelItemIds[index] = '';
     }
     const activeIds = nextWheelItemIds.slice(0, wheelItemCount);
-    const emptySlot = activeIds.findIndex((id) => !id);
-    if (emptySlot < 0) return;
-    nextWheelItemIds[emptySlot] = itemId;
+    const slot = targetSlot ?? activeIds.findIndex((id) => !id);
+    if (slot < 0 || slot >= wheelItemCount) return;
+    nextWheelItemIds[slot] = itemId;
     await updateSettings({ wheelItemIds: nextWheelItemIds });
   };
 
@@ -160,6 +162,12 @@ export function MainSurface() {
                   )}
                 </div>
                 <div className="header-actions">
+                  <button
+                    type="button"
+                    className={`secondary-button ${isTrash ? 'active' : ''}`}
+                    aria-pressed={isTrash}
+                    onClick={() => dispatch({ type: 'query', patch: { collectionFilter: isTrash ? 'all' : 'trash' } })}
+                  ><Trash2 size={18} /> {t('trash')}</button>
                   <button type="button" className="secondary-button" onClick={openWheelAppearanceSettings}><Palette size={18} /> {t('customizeWheel')}</button>
                   <button type="button" className="primary-button" onClick={() => void desktop.showWindow('wheel')}><Command size={18} /> {t('wheel')}</button>
                 </div>
@@ -171,6 +179,8 @@ export function MainSurface() {
                   items={items}
                   selectedId={selected?.id ?? null}
                   wheelItemIds={activeWheelItemIds}
+                  wheelSlotTitles={wheelSlotTitles}
+                  isTrash={isTrash}
                   onSelect={(id) => dispatch({ type: 'select', id })}
                   onRefresh={refresh}
                   onToggleWheelItem={toggleWheelItem}

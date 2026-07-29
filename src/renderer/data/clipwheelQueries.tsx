@@ -99,6 +99,8 @@ export function useItemMutations() {
   return {
     copy: useMutation({ mutationFn: (id: string) => api.copyItem(id), onSuccess: invalidateItems }),
     remove: useMutation({ mutationFn: (id: string) => api.deleteItem(id), onSuccess: invalidateItems }),
+    restore: useMutation({ mutationFn: (id: string) => api.restoreItem(id), onSuccess: invalidateItems }),
+    purge: useMutation({ mutationFn: (id: string) => api.purgeItem(id), onSuccess: invalidateItems }),
     togglePin: useMutation({ mutationFn: (id: string) => api.togglePin(id), onSuccess: invalidateItems }),
     toggleFavorite: useMutation({ mutationFn: (id: string) => api.toggleFavorite(id), onSuccess: invalidateItems }),
     updateTitle: useMutation({

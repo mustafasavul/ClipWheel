@@ -1,5 +1,6 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { defaultSettings } from '../../src/shared/settings';
 import { MainSurface } from '../../src/renderer/features/history/MainSurface';
 import { createTestApi, createTestWrapper, textItem } from './testApi';
 
@@ -57,6 +58,24 @@ describe('MainSurface', () => {
 
     await user.click(screen.getByRole('button', { name: 'Delete Focus Lime' }));
     await waitFor(() => expect(testApi.api.updateSettings).toHaveBeenLastCalledWith({ wheelAppearancePresets: [] }));
+  });
+
+  it('replaces the chosen wheel slot when the wheel is already full', async () => {
+    const occupants = Array.from({ length: 8 }, (_, index) => `occupant-${index}`);
+    const testApi = createTestApi({
+      getSettings: vi.fn(async () => ({ ...defaultSettings, wheelItemIds: occupants })),
+      getRecentWheelItems: vi.fn(async () => occupants.map((id, index) => ({ ...textItem, id, title: `Slot ${index + 1} item` }))),
+    });
+    const user = userEvent.setup();
+    render(<MainSurface />, { wrapper: createTestWrapper(testApi.api) });
+
+    expect(await screen.findAllByText('First capture')).not.toHaveLength(0);
+    const wheelButtons = await screen.findAllByRole('button', { name: 'Wheel' });
+    await user.click(wheelButtons[wheelButtons.length - 1]);
+    await user.click(await screen.findByRole('menuitem', { name: /Slot 3 item/ }));
+
+    await waitFor(() => expect(vi.mocked(testApi.api.updateSettings).mock.calls[0]?.[0].wheelItemIds?.slice(0, 8))
+      .toEqual([...occupants.slice(0, 2), 'item-1', ...occupants.slice(3)]));
   });
 
   it('inserts a clipboard event into Recent Captures before the fallback refetch completes', async () => {
