@@ -246,6 +246,7 @@ pub fn update_settings(
 ) -> CommandResult<Settings> {
     let has_shortcuts_patch = settings.get("shortcuts").is_some();
     let has_tray_patch = settings.get("showTrayIcon").is_some();
+    let has_autostart_patch = settings.get("startAtLogin").is_some();
     let next = state
         .repository
         .update_settings(settings)
@@ -255,6 +256,9 @@ pub fn update_settings(
     }
     if has_tray_patch {
         crate::tray::sync_tray_icon(&app).map_err(to_string)?;
+    }
+    if has_autostart_patch {
+        crate::sync_autostart(&app);
     }
     emit_items_changed(&app)?;
     Ok(next)

@@ -94,6 +94,7 @@ fn main() {
             register_shortcut(app.handle());
             setup_windows(app.handle())?;
             tray::sync_tray_icon(app.handle())?;
+            sync_autostart(app.handle());
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -113,6 +114,31 @@ fn main() {
                 }
             }
         });
+}
+
+/// Kaydedilen `startAtLogin` ayarini isletim sisteminin oturum acilis kaydina uygular.
+/// macOS LaunchAgent, Windows Run kaydi ve Linux .desktop girdisi plugin tarafindan yonetilir.
+pub fn sync_autostart(app: &AppHandle) {
+    use tauri_plugin_autostart::ManagerExt;
+    let Some(state) = app.try_state::<AppState>() else {
+        return;
+    };
+    let Ok(settings) = state.repository.get_settings() else {
+        return;
+    };
+    let manager = app.autolaunch();
+    // Zaten istenen durumdaysa dokunma: enable() tekrari bazi platformlarda kaydi cogaltir.
+    if manager.is_enabled().unwrap_or(false) == settings.start_at_login {
+        return;
+    }
+    let result = if settings.start_at_login {
+        manager.enable()
+    } else {
+        manager.disable()
+    };
+    if let Err(error) = result {
+        eprintln!("Unable to sync ClipWheel autostart: {error}");
+    }
 }
 
 pub fn show_window(app: &AppHandle, name: &str) -> Result<()> {
