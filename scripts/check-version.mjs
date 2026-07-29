@@ -27,7 +27,7 @@ const [version] = unique;
 
 // tauri-action derives the release tag from tauri.conf.json (`v__VERSION__`), not
 // from the tag that triggered the workflow. If the two disagree, pushing `v0.2.0`
-// silently publishes to `v0.1.1` instead. Fail loudly rather than mis-release.
+// silently publishes to `v0.2.0` instead. Fail loudly rather than mis-release.
 if (process.env.GITHUB_REF_TYPE === 'tag') {
   const tag = process.env.GITHUB_REF_NAME;
   if (tag !== `v${version}`) {

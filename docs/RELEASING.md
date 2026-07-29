@@ -36,7 +36,7 @@ pnpm package:ci
 2. Tag the exact commit:
 
 ```bash
-git tag v0.1.1
+git tag v0.2.0
 git push origin main --tags
 ```
 

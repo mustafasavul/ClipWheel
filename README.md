@@ -1,164 +1,229 @@
-# ClipWheel
+<div align="center">
 
-ClipWheel is a privacy-first desktop clipboard manager for macOS, Windows, and Linux. It captures copied text, code, URLs, images, and file references locally, then lets you restore recent items through a radial clipboard wheel or a full history window.
+<img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel logo" width="128" />
 
-## Privacy Model
+# ClipWheel — The Ultimate Radial Clipboard Manager
 
-- Local-first storage only.
-- SQLite database and image assets live in the local Tauri app data folder.
-- No telemetry, analytics, accounts, cloud sync, or external services.
-- The updater only checks the public GitHub Releases metadata URL configured in the app.
-- Clipboard content is stored as copied; no cloud service, external classifier, or masking layer is applied.
+**Stop scrolling through clipboard history lists. Discover the fastest way to access your clipboard with a pie menu interface. Press one shortcut, flick to the slice you want, paste.**
 
-## Current Features
+ClipWheel is a free, open-source, privacy-first clipboard manager for **macOS, Windows, and Linux** — featuring a stunning radial wheel (also known as a circular menu, marking menu, or hotbox) that puts your last 4–12 copies just one gesture away, with zero data ever leaving your machine.
 
-- Radial wheel for recent captures with keyboard selection and Shift quicklook.
-- Quicklook image previews for copied screenshots and images.
-- Full history with search, type filters, date filters, scrolling, and pagination.
-- Right-side preview panel for text, code, rich text, URLs, images, and file references.
-- Item metadata including byte size, readable KB/MB size, text length, line count, file count, creation time, and last-used time.
-- Local image asset storage with thumbnails.
-- Text transformations, pinning, favorites, and soft delete cleanup.
-- System, dark, and light theme support. New installs default to the operating system theme, and users can override the theme in Settings.
-- Modern Settings UI with icon-backed controls and the app version shown in the sidebar footer.
+[![Release](https://img.shields.io/github/v/release/mustafasavul/ClipWheel?style=flat-square)](https://github.com/mustafasavul/ClipWheel/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+[![Tauri v2](https://img.shields.io/badge/Tauri-2-24C8DB?style=flat-square&logo=tauri&logoColor=white)](https://tauri.app)
+[![Rust](https://img.shields.io/badge/Rust-000000?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org)
+[![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev)
+[![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white)](https://sqlite.org)
+[![Platforms](https://img.shields.io/badge/macOS%20%7C%20Windows%20%7C%20Linux-lightgrey?style=flat-square)](#-installation--quick-start)
+[![Telemetry: none](https://img.shields.io/badge/telemetry-none-brightgreen?style=flat-square)](#-privacy-model)
 
-## Supported Clipboard Types
+![ClipWheel demo — fast and fluid radial clipboard wheel in action](docs/media/clipwhell-entry.gif)
 
-- Plain text
-- Rich text / HTML / RTF when available
-- Images and screenshots
-- File and folder path references
-- URLs
-- Code snippets with simple language detection
-- Command and terminal snippets
+</div>
 
-## Development
+---
+
+## 🎡 Why a wheel, not another list?
+
+Every other clipboard manager gives you a **vertical list**: open a window, read top to bottom, find the right row, click. That is a *search* task — your eyes do the work, every single time.
+
+ClipWheel makes it a **muscle-memory** task.
+
+- **Fixed positions.** Your last N copies sit in the same slices every time. "The one before last" is always the same direction — up-right, not "somewhere around row 2".
+- **Radial means equidistant.** In a list, item 8 is eight rows farther than item 1. On a wheel, every slice is the same flick away.
+- **One gesture, no reading.** Open the wheel, move toward the slice, select. Or press `1`–`8`. The wheel closes and the item is back on your clipboard.
+- **Peek before you commit.** Hold `Shift` for **Quicklook** — a full preview of the text, code, or image in that slice without leaving the wheel.
+- **Sized to your recall, not your archive.** 4 to 12 slices, your choice. The wheel handles the last few things you copied — the 90% case, in under a second. The history window handles the other 10%, with search, filters, and previews.
+
+---
+
+## ✨ Key Features
+
+### The Wheel
+- **Radial overlay** on a global shortcut, at screen center or at your cursor.
+- **4–12 configurable slices**, keyboard selection (`1`–`8`, `Enter`), `Esc` to dismiss.
+  <br/>
+  <a href="docs/media/clipwhell-whell-customize-whell-items.png" target="_blank"><img src="docs/media/clipwhell-whell-customize-whell-items.png" width="600" alt="Customize Wheel Items" /></a>
+- **Shift-to-Quicklook** — inline preview of text, code, and image slices.
+  <br/>
+  <a href="docs/media/clipwhell-whell-quicklook.png" target="_blank"><img src="docs/media/clipwhell-whell-quicklook.png" width="600" alt="Quicklook Preview" /></a>
+- **Keyboard Shortcuts** — Lightning fast selection utilizing your muscle memory.
+  <br/>
+  <a href="docs/media/clipwhell-whell-shortcuts.png" target="_blank"><img src="docs/media/clipwhell-whell-shortcuts.png" width="600" alt="Shortcuts Configuration" /></a>
+- **Fully themeable** — color presets, per-segment palettes, and custom colors for segments, the active slice, rings, labels, and panel; up to 24 saved custom presets.
+  <br/>
+  <p align="center">
+    <a href="docs/media/clipwhell-apperance-color-1.png" target="_blank"><img src="docs/media/clipwhell-apperance-color-1.png" width="30%" alt="Theme Color 1" /></a>
+    <a href="docs/media/clipwhell-apperance-color-2.png" target="_blank"><img src="docs/media/clipwhell-apperance-color-2.png" width="30%" alt="Theme Color 2" /></a>
+    <a href="docs/media/clipwhell-apperance-color-3.png" target="_blank"><img src="docs/media/clipwhell-apperance-color-3.png" width="30%" alt="Theme Color 3" /></a>
+  </p>
+  <p align="center">
+    <a href="docs/media/clipwhell-apperance.png" target="_blank"><img src="docs/media/clipwhell-apperance.png" width="48%" alt="Appearance Settings" /></a>
+    <a href="docs/media/clipwhell-apperance-2.png" target="_blank"><img src="docs/media/clipwhell-apperance-2.png" width="48%" alt="Appearance Customization" /></a>
+  </p>
+
+### History & Search
+- Full history window with **search, type filters, date filters, and pagination**.
+- **Rich preview panel** for text, code, rich text, URLs, images, and file references.
+- **Metadata per item**: byte size, readable size, text length, line count, file count, created and last-used time.
+- **Pin, favorite, and text transformations** on any entry.
+- **Trash with soft delete**, restore, and explicit permanent purge.
+
+### Capture
+- Plain text · rich text / HTML / RTF · images and screenshots · file & folder references · URLs · code snippets with language detection · terminal commands.
+- Local image asset storage with generated thumbnails.
+- Per-type capture toggles and duplicate handling.
+
+### Privacy & Control
+- **Pause capture**, **ignored source apps**, and **clear-on-quit**.
+- System / dark / light theme, following the OS by default.
+- **24 languages** shipped, including RTL (Arabic, Persian).
+- Tray icon, autostart, and signed in-place updates from GitHub Releases.
+
+---
+
+## 🔒 Privacy Model
+
+ClipWheel is **local-first by design, not by promise**:
+
+- Everything lives in a local **SQLite** database and an image asset folder inside the Tauri app data directory.
+- **No telemetry. No analytics. No accounts. No cloud sync. No external services.**
+- The only network call the app makes is the update check against the public GitHub Releases metadata URL.
+- Clipboard content is stored exactly as copied — no cloud classifier, no OCR, no masking layer shipping anything off-device.
+
+Your clipboard is often your most sensitive data: passwords, tokens, private messages. That is why it never leaves the machine.
+
+---
+
+## 📦 Installation & Quick Start
+
+### macOS
+
+```bash
+brew install --cask mustafasavul/tap/clipwheel
+```
+
+Or grab the `.dmg` for your chip from the [latest release](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.2.0_aarch64.dmg` (Apple Silicon) or `ClipWheel_0.2.0_x64.dmg` (Intel).
+
+### Windows
+
+Download and run from the [latest release](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.2.0_x64-setup.exe` (NSIS installer) or `ClipWheel_0.2.0_x64_en-US.msi`.
+
+### Linux
+
+```bash
+sudo apt install ./ClipWheel_0.2.0_amd64.deb
+```
+
+```bash
+chmod +x ClipWheel_0.2.0_amd64.AppImage && ./ClipWheel_0.2.0_amd64.AppImage
+```
+
+> Early releases may be unsigned or ad-hoc signed. macOS Gatekeeper and Windows SmartScreen may warn until Apple notarization and Windows trusted signing are configured.
+
+### First 30 seconds
+
+1. Launch ClipWheel — it lives in your tray / menu bar.
+2. Copy a few things.
+3. Press **`Cmd+Shift+V`** (macOS) or **`Ctrl+Shift+V`** (Windows/Linux).
+4. Move toward a slice, or press `1`–`8`. Hold `Shift` to preview first.
+5. Paste.
+
+| Action | Shortcut |
+| --- | --- |
+| Open wheel | `Cmd+Shift+V` / `Ctrl+Shift+V` |
+| Select item | `1`–`8` or `Enter` |
+| Quicklook preview | Hold `Shift` |
+| Close wheel | `Esc` |
+
+---
+
+## 🧱 Tech Stack
+
+| Layer | Technology |
+| --- | --- |
+| Desktop runtime | Tauri v2 |
+| Native backend | Rust — clipboard polling, global shortcuts, tray, OS APIs |
+| Storage | SQLite via Diesel ORM and migrations |
+| Frontend | React 19, TypeScript, Vite |
+| Async state | TanStack React Query |
+| UI | `lucide-react`, `highlight.js`, `sanitize-html`, semantic CSS tokens |
+| Quality | Vitest, ESLint, `tsc --noEmit` |
+| Packaging | Tauri CLI — dmg, msi, nsis, AppImage, deb |
+
+Native binary, small footprint, no Electron.
+
+---
+
+## 🛠 Development
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-The renderer uses React and Vite. Tauri/Rust owns OS APIs, global shortcuts, tray behavior, clipboard polling, SQLite, cleanup, and restore-to-clipboard behavior. Renderer code talks to Rust through the typed Tauri client in `src/renderer/api/clipwheelClient.ts`.
-
-Theme resolution is renderer-owned and testable through shared utilities in `src/shared/theme.ts`. The CSS theme system uses semantic tokens in `src/renderer/styles/app.css`; avoid hard-coded one-off dark or light colors when adding UI.
-
-## Project Structure
-
-ClipWheel was refactored into clear ownership boundaries so future work stays maintainable instead of collecting one-off UI and platform code in the same files.
-
-- `src-tauri/src`: Rust-owned desktop behavior, including OS APIs, clipboard access, tray, shortcuts, SQLite persistence, cleanup, and Tauri commands.
-- `src/shared`: pure TypeScript domain types, constants, i18n bundles, and utilities that can be tested without React or Tauri.
-- `src/renderer/api`: typed Tauri command and event boundary. Renderer features must call desktop behavior through `clipwheelClient.ts`.
-- `src/renderer/data`: async state, React Query hooks, cache invalidation, and app API provider wiring.
-- `src/renderer/features`: feature-level React surfaces such as history, preview, wheel, and settings.
-- `src/renderer/presentation`: formatting and display helpers that are not tied to a specific component tree.
-- `src/renderer/ui`: reusable, small UI primitives shared across features.
-- `src/renderer/styles`: semantic tokens, layout CSS, feature CSS, and responsive rules.
-
-## Agent Architecture Rules
-
-Agents working on this repository must treat the refactored structure as a product architecture contract, not a suggestion. Write code as a senior architect would: small, typed, scoped, readable, and easy to maintain after the task is finished.
-
-- Respect ownership boundaries. Do not put OS, filesystem, clipboard, database, tray, shortcut, or restore logic in the renderer. That work belongs in `src-tauri/src`.
-- Keep the renderer free of direct Node.js APIs. UI code should depend on typed app APIs, not desktop internals.
-- Add or change Tauri commands through `src/renderer/api/clipwheelClient.ts`, then consume them from `src/renderer/data` or feature hooks.
-- Keep shared behavior in `src/shared` when it is pure, cross-feature, or worth testing independently.
-- Keep feature components focused on feature behavior. Move reusable controls to `src/renderer/ui`, formatting to `src/renderer/presentation`, and async/query logic to `src/renderer/data`.
-- Prefer extending existing modules over creating parallel systems. A new abstraction should reduce real duplication or clarify an existing boundary.
-- Use semantic CSS tokens from `src/renderer/styles/tokens.css` and feature-scoped CSS files. Avoid scattered hard-coded theme colors.
-- Preserve local-first behavior. Do not add telemetry, analytics, cloud sync, accounts, external services, content masking, or image text extraction unless there is an explicit product decision.
-- Preserve soft-delete defaults and data safety. Destructive cleanup must stay explicit.
-- Keep UI changes responsive and verify that added controls do not break list rows, filters, preview panes, or smaller window layouts.
-- Update tests in proportion to the risk of the change, especially when touching shared types, Tauri command contracts, query hooks, or user-facing flows.
-- Before handing off, run the relevant validation commands and document any command that could not be run.
-
-## Tech Stack
-
-- Desktop runtime: Tauri v2
-- Native backend: Rust
-- Database: SQLite with Diesel ORM and Diesel migrations
-- Frontend: React 19, TypeScript, Vite
-- Server state / async state: TanStack React Query
-- Desktop API bridge: `@tauri-apps/api` through `src/renderer/api/clipwheelClient.ts`
-- UI icons: `lucide-react`
-- Code highlighting: `highlight.js`
-- HTML sanitization: `sanitize-html`
-- Testing: Vitest
-- Linting and type checks: ESLint, TypeScript
-- Packaging: Tauri CLI
-
-## Build
+Validate before opening a PR:
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm version:check
-pnpm test
+pnpm lint && pnpm typecheck && pnpm version:check && pnpm test
+```
+
+Build installers:
+
+```bash
 pnpm tauri build
 ```
 
-Tauri is configured for local desktop bundle outputs and updater artifacts. Release builds require `TAURI_SIGNING_PRIVATE_KEY` and optionally `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. CI smoke packaging uses `pnpm package:ci` so pull requests can build without release signing secrets.
+Release builds require `TAURI_SIGNING_PRIVATE_KEY` (and optionally `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`). CI smoke packaging uses `pnpm package:ci`, so pull requests build without release signing secrets.
 
-## Installers
+### Project structure
 
-GitHub Releases provide draft-reviewed desktop installers for each public version:
-
-| Asset | Platform |
+| Path | Owns |
 | --- | --- |
-| `ClipWheel_VERSION_aarch64.dmg` | macOS Apple Silicon |
-| `ClipWheel_VERSION_x64.dmg` | macOS Intel |
-| `ClipWheel_VERSION_x64_en-US.msi` | Windows x64 MSI |
-| `ClipWheel_VERSION_x64-setup.exe` | Windows x64 NSIS installer |
-| `ClipWheel_VERSION_amd64.AppImage` | Linux universal AppImage |
-| `ClipWheel_VERSION_amd64.deb` | Debian/Ubuntu |
+| `src-tauri/src` | OS APIs, clipboard, tray, shortcuts, SQLite, cleanup, Tauri commands |
+| `src/shared` | Pure TypeScript domain types, constants, i18n bundles, utilities |
+| `src/renderer/api` | Typed Tauri command/event boundary (`clipwheelClient.ts`) |
+| `src/renderer/data` | React Query hooks, cache invalidation, API provider wiring |
+| `src/renderer/features` | Feature surfaces: `wheel`, `history`, `preview`, `settings` |
+| `src/renderer/presentation` | Formatting and display helpers |
+| `src/renderer/ui` | Reusable UI primitives |
+| `src/renderer/styles` | Semantic tokens, layout and feature CSS |
 
-Homebrew uses a custom tap:
+Architecture rules for contributors and coding agents: [AGENTS.md](AGENTS.md). Workflow: [CONTRIBUTING.md](CONTRIBUTING.md). Release and versioning docs: [docs/](docs).
 
-```bash
-brew install --cask mustafasavul/tap/clipwheel
-```
+---
 
-## Versioning
+## 🗺 Roadmap
 
-Current app version: `0.1.1`
-
-Version sources are kept in sync across `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json`, and `src/shared/version.ts`.
-
-```bash
-pnpm version:check
-```
-
-ClipWheel checks `https://github.com/mustafasavul/ClipWheel/releases/latest/download/latest.json` for signed release updates. It does not use telemetry, accounts, cloud sync, or a custom update server.
-
-## Shortcuts
-
-- macOS: `Cmd+Shift+V`
-- Windows: `Ctrl+Shift+V`
-- Wheel selection: number keys `1-8` or `Enter`
-- Close wheel: `Escape`
-
-## Settings
-
-- Theme: `System`, `Dark`, or `Light`. `System` follows the current operating system color scheme.
-- Wheel position: center of the screen or cursor position.
-- Capture controls for plain text, rich text, images, file references, code, and duplicate handling.
-- Privacy controls for pause capture, ignored source apps, and clear-on-quit behavior.
-- Cleanup actions use soft delete by default, with explicit purge for deleted records.
-- Update controls for checking GitHub Releases and installing signed updates in place.
-
-## Roadmap
-
-- Apple notarized and Windows trusted release builds
+- Apple notarized and Windows trusted-signed builds
 - Configurable global shortcut recording
 - Native file clipboard restore
-- Import/export for local backups
+- Import / export for local backups
 - More syntax languages and preview types
 
-## Known Limitations
+## ⚠️ Known Limitations
 
-- Auto paste is present as a setting but disabled by default and not simulated yet.
-- File references initially restore as text paths.
-- Source app detection is a placeholder because cross-platform active-app APIs differ.
-- Existing installs that already saved `dark` or `light` keep that user choice. New default settings use `system`.
-- The first public OS installers may be unsigned or ad-hoc signed. macOS Gatekeeper and Windows SmartScreen may warn until Apple notarization and Windows trusted signing are configured.
+- Auto paste exists as a setting but is disabled and not simulated yet.
+- File references restore as text paths for now.
+- Source app detection is a placeholder — cross-platform active-app APIs differ.
+- Installs that already chose `dark` or `light` keep that choice; new installs default to `system`.
+
+---
+
+## 🤝 Contributing
+
+Issues and pull requests welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). If ClipWheel saves you time, a ⭐ helps other people find it.
+
+## 📄 License
+
+[MIT](LICENSE) © ClipWheel Contributors
+
+---
+
+<div align="center">
+
+<sub><b>Keywords:</b> clipboard manager · radial menu · pie menu · circular menu · round menu · wheel menu · rotary menu · marking menu · ring menu · arc menu · compass menu · spinner menu · hotbox · clipboard history · macOS clipboard manager · Windows clipboard manager · Linux clipboard manager · open source clipboard manager · privacy-first · offline · Tauri · Rust · React · Ditto alternative · Paste alternative · Maccy alternative · CopyQ alternative</sub>
+
+</div>
