@@ -80,6 +80,9 @@ jobs:
           tagName: v__VERSION__
           releaseName: ClipWheel v__VERSION__
           releaseBody: ${{ steps.notes.outputs.body }}
-          releaseDraft: false
+          # Draft first, as docs/RELEASING.md requires. Publishing is manual, after the
+          # platform artifacts and latest.json are verified. Once latest.json is public
+          # the in-app updater starts serving it, and that cannot be walked back.
+          releaseDraft: true
           prerelease: ${{ contains(github.ref_name, '-rc.') || contains(github.ref_name, '-beta.') || contains(github.ref_name, '-alpha.') }}
           args: ${{ matrix.args }}
