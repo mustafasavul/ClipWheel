@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel logo" width="128" />
-
 <img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
 
 # ClipWheel — Eşsiz Radyal Pano Yöneticisi
@@ -9,6 +7,10 @@
 **Pano geçmişi listelerinde gezinmeyi bırakın. Dairesel menü arayüzü ile panonuza erişmenin en hızlı yolunu keşfedin. Tek bir kısayola basın, istediğiniz dilime kaydırın ve yapıştırın.**
 
 ClipWheel; **macOS, Windows ve Linux** için ücretsiz, açık kaynaklı ve gizlilik odaklı bir pano yöneticisidir. Son 4–12 kopyanıza yalnızca tek bir hareketle ulaşmanızı sağlayan ve verilerinizin makinenizden asla çıkmadığı çarpıcı bir radyal tekerleğe (dairesel menü veya işaretleme menüsü olarak da bilinir) sahiptir.
+
+<div style="margin-bottom: 20px;">
+<img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel logo" width="128" />
+</div>
 
 [![Release](https://img.shields.io/github/v/release/mustafasavul/ClipWheel?style=flat-square)](https://github.com/mustafasavul/ClipWheel/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)

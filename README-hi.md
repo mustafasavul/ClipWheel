@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel logo" width="128" />
-
 <img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
 
 # ClipWheel — अद्वितीय रेडियल क्लिपबोर्ड मैनेजर
@@ -9,6 +7,10 @@
 **क्लिपबोर्ड इतिहास की सूचियों को स्क्रॉल करना बंद करें। पाई मेनू इंटरफ़ेस के साथ अपने क्लिपबोर्ड तक पहुँचने का सबसे तेज़ तरीका खोजें। एक शॉर्टकट दबाएं, मनचाहे स्लाइस (हिस्से) की ओर फ़्लिक करें, और पेस्ट करें।**
 
 ClipWheel **macOS, Windows और Linux** के लिए एक मुफ़्त, ओपन-सोर्स, प्राइवेसी-फ़र्स्ट (गोपनीयता-प्रथम) क्लिपबोर्ड मैनेजर है — जिसमें एक शानदार रेडियल व्हील (जिसे सर्कुलर मेनू, मार्किंग मेनू या हॉटबॉक्स भी कहा जाता है) शामिल है। यह आपके पिछले 4–12 कॉपी किए गए आइटम को केवल एक जेस्चर (इशारे) की दूरी पर रखता है, और आपका डेटा कभी भी आपकी मशीन से बाहर नहीं जाता है।
+
+<div style="margin-bottom: 20px;">
+<img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel logo" width="128" />
+</div>
 
 [![Release](https://img.shields.io/github/v/release/mustafasavul/ClipWheel?style=flat-square)](https://github.com/mustafasavul/ClipWheel/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)

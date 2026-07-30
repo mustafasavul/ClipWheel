@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel Logo" width="128" />
-
 <img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
 
 # ClipWheel — Der einzigartige radiale Zwischenablage-Manager
@@ -9,6 +7,10 @@
 **Schluss mit dem Scrollen durch Listen des Zwischenablage-Verlaufs. Entdecken Sie den schnellsten Weg zu Ihrer Zwischenablage mit einer Ringmenü-Oberfläche. Drücken Sie eine Tastenkombination, wischen Sie zu dem gewünschten Segment und fügen Sie ein.**
 
 ClipWheel ist ein kostenloser, quelloffener, datenschutzorientierter Zwischenablage-Manager für **macOS, Windows und Linux** — mit einem atemberaubenden radialen Rad (auch bekannt als Ringmenü, Marking Menu oder Hotbox), das Ihre letzten 4–12 kopierten Elemente nur eine Geste entfernt hält, wobei Ihre Daten Ihr Gerät niemals verlassen.
+
+<div style="margin-bottom: 20px;">
+<img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel Logo" width="128" />
+</div>
 
 [![Release](https://img.shields.io/github/v/release/mustafasavul/ClipWheel?style=flat-square)](https://github.com/mustafasavul/ClipWheel/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)

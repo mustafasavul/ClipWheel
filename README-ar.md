@@ -1,7 +1,5 @@
 <div align="center" dir="rtl">
 
-<img src="assets/brand/clipwheel-logo-transparent.png" alt="شعار ClipWheel" width="128" />
-
 <img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
 
 # ClipWheel — مدير الحافظة الدائري الفريد
@@ -9,6 +7,10 @@
 **توقف عن التمرير عبر قوائم تاريخ الحافظة. اكتشف أسرع طريقة للوصول إلى حافظتك من خلال واجهة القائمة الدائرية. اضغط على اختصار واحد، ومرر سريعًا نحو الشريحة التي تريدها، والصق.**
 
 ClipWheel هو مدير حافظة مجاني ومفتوح المصدر يركز على الخصوصية لأنظمة **macOS و Windows و Linux** — يتميز بعجلة دائرية مذهلة (تُعرف أيضًا باسم القائمة الدائرية، أو قائمة التأشير، أو صندوق الاختصارات) تضع آخر 4 إلى 12 عملية نسخ على بعد إيماءة واحدة فقط، دون أن تغادر بياناتك جهازك أبدًا.
+
+<div style="margin-bottom: 20px;">
+<img src="assets/brand/clipwheel-logo-transparent.png" alt="شعار ClipWheel" width="128" />
+</div>
 
 [![Release](https://img.shields.io/github/v/release/mustafasavul/ClipWheel?style=flat-square)](https://github.com/mustafasavul/ClipWheel/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)

@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="assets/brand/clipwheel-logo-transparent.png" alt="Logo ClipWheel" width="128" />
-
 <img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
 
 # ClipWheel — L'unico gestore radiale degli appunti
@@ -9,6 +7,10 @@
 **Smettila di scorrere gli elenchi della cronologia degli appunti. Scopri il modo più veloce per accedere ai tuoi appunti con un'interfaccia a menu circolare. Premi una scorciatoia, scorri verso lo spicchio che desideri e incolla.**
 
 ClipWheel è un gestore degli appunti gratuito, open source e incentrato sulla privacy per **macOS, Windows e Linux**, dotato di una straordinaria ruota radiale (nota anche come menu circolare, marking menu o hotbox) che mette le tue ultime 4–12 copie a portata di un solo gesto, con nessun dato che lascia mai la tua macchina.
+
+<div style="margin-bottom: 20px;">
+<img src="assets/brand/clipwheel-logo-transparent.png" alt="Logo ClipWheel" width="128" />
+</div>
 
 [![Release](https://img.shields.io/github/v/release/mustafasavul/ClipWheel?style=flat-square)](https://github.com/mustafasavul/ClipWheel/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)

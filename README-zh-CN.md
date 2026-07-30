@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel logo" width="128" />
-
 <img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
 
 # ClipWheel — 独特放射状剪贴板管理器
@@ -9,6 +7,10 @@
 **停止在剪贴板历史列表中无休止地滚动。体验通过环形菜单界面访问剪贴板的最快方式。按下一个快捷键，滑动到你想要的扇区，然后粘贴。**
 
 ClipWheel 是一款免费、开源、隐私优先的剪贴板管理器，适用于 **macOS、Windows 和 Linux** — 它具有令人惊叹的放射状滚轮（也称为环形菜单、标记菜单或 hotbox），只需一个手势即可调出你最近的 4-12 次复制内容，并且你的数据永远不会离开你的设备。
+
+<div style="margin-bottom: 20px;">
+<img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel logo" width="128" />
+</div>
 
 [![Release](https://img.shields.io/github/v/release/mustafasavul/ClipWheel?style=flat-square)](https://github.com/mustafasavul/ClipWheel/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)

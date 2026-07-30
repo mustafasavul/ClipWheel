@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="assets/brand/clipwheel-logo-transparent.png" alt="Logo de ClipWheel" width="128" />
-
 <img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
 
 # ClipWheel — Le gestionnaire de presse-papiers radial unique
@@ -9,6 +7,10 @@
 **Arrêtez de faire défiler les listes d'historique du presse-papiers. Découvrez le moyen le plus rapide d'accéder à votre presse-papiers avec une interface de menu circulaire. Appuyez sur un raccourci, balayez vers la tranche que vous voulez, et collez.**
 
 ClipWheel est un gestionnaire de presse-papiers gratuit, open-source et axé sur la confidentialité pour **macOS, Windows et Linux** — doté d'une superbe roue radiale (également connue sous le nom de menu circulaire, menu de marquage ou hotbox) qui met vos 4 à 12 dernières copies à portée d'un seul geste, sans qu'aucune donnée ne quitte jamais votre machine.
+
+<div style="margin-bottom: 20px;">
+<img src="assets/brand/clipwheel-logo-transparent.png" alt="Logo de ClipWheel" width="128" />
+</div>
 
 [![Release](https://img.shields.io/github/v/release/mustafasavul/ClipWheel?style=flat-square)](https://github.com/mustafasavul/ClipWheel/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)

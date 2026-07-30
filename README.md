@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel logo" width="128" />
-
 <img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
 
 # ClipWheel — The Unique Radial Clipboard Manager
@@ -9,6 +7,10 @@
 **Stop scrolling through clipboard history lists. Discover the fastest way to access your clipboard with a pie menu interface. Press one shortcut, flick to the slice you want, paste.**
 
 ClipWheel is a free, open-source, privacy-first clipboard manager for **macOS, Windows, and Linux** — featuring a stunning radial wheel (also known as a circular menu, marking menu, or hotbox) that puts your last 4–12 copies just one gesture away, with zero data ever leaving your machine.
+
+<div style="margin-bottom: 20px;">
+<img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel logo" width="128" />
+</div>
 
 [![Release](https://img.shields.io/github/v/release/mustafasavul/ClipWheel?style=flat-square)](https://github.com/mustafasavul/ClipWheel/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
