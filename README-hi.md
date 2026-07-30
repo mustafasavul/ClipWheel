@@ -2,7 +2,9 @@
 
 <img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel logo" width="128" />
 
-# ClipWheel — अल्टीमेट रेडियल क्लिपबोर्ड मैनेजर
+<img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
+
+# ClipWheel — अद्वितीय रेडियल क्लिपबोर्ड मैनेजर
 
 **क्लिपबोर्ड इतिहास की सूचियों को स्क्रॉल करना बंद करें। पाई मेनू इंटरफ़ेस के साथ अपने क्लिपबोर्ड तक पहुँचने का सबसे तेज़ तरीका खोजें। एक शॉर्टकट दबाएं, मनचाहे स्लाइस (हिस्से) की ओर फ़्लिक करें, और पेस्ट करें।**
 

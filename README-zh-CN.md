@@ -2,7 +2,9 @@
 
 <img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel logo" width="128" />
 
-# ClipWheel — 终极放射状剪贴板管理器
+<img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
+
+# ClipWheel — 独特放射状剪贴板管理器
 
 **停止在剪贴板历史列表中无休止地滚动。体验通过环形菜单界面访问剪贴板的最快方式。按下一个快捷键，滑动到你想要的扇区，然后粘贴。**
 

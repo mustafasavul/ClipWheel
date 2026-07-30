@@ -2,7 +2,9 @@
 
 <img src="assets/brand/clipwheel-logo-transparent.png" alt="شعار ClipWheel" width="128" />
 
-# ClipWheel — مدير الحافظة الدائري المطلق
+<img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
+
+# ClipWheel — مدير الحافظة الدائري الفريد
 
 **توقف عن التمرير عبر قوائم تاريخ الحافظة. اكتشف أسرع طريقة للوصول إلى حافظتك من خلال واجهة القائمة الدائرية. اضغط على اختصار واحد، ومرر سريعًا نحو الشريحة التي تريدها، والصق.**
 

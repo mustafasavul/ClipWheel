@@ -2,7 +2,9 @@
 
 <img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel logo" width="128" />
 
-# ClipWheel — Nihai Radyal Pano Yöneticisi
+<img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
+
+# ClipWheel — Eşsiz Radyal Pano Yöneticisi
 
 **Pano geçmişi listelerinde gezinmeyi bırakın. Dairesel menü arayüzü ile panonuza erişmenin en hızlı yolunu keşfedin. Tek bir kısayola basın, istediğiniz dilime kaydırın ve yapıştırın.**
 

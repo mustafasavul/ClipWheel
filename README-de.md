@@ -2,7 +2,9 @@
 
 <img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel Logo" width="128" />
 
-# ClipWheel — Der ultimative radiale Zwischenablage-Manager
+<img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
+
+# ClipWheel — Der einzigartige radiale Zwischenablage-Manager
 
 **Schluss mit dem Scrollen durch Listen des Zwischenablage-Verlaufs. Entdecken Sie den schnellsten Weg zu Ihrer Zwischenablage mit einer Ringmenü-Oberfläche. Drücken Sie eine Tastenkombination, wischen Sie zu dem gewünschten Segment und fügen Sie ein.**
 

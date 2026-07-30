@@ -2,7 +2,9 @@
 
 <img src="assets/brand/clipwheel-logo-transparent.png" alt="Logo ClipWheel" width="128" />
 
-# ClipWheel — L'ultimo gestore radiale degli appunti
+<img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
+
+# ClipWheel — L'unico gestore radiale degli appunti
 
 **Smettila di scorrere gli elenchi della cronologia degli appunti. Scopri il modo più veloce per accedere ai tuoi appunti con un'interfaccia a menu circolare. Premi una scorciatoia, scorri verso lo spicchio che desideri e incolla.**
 

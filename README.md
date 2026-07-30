@@ -2,7 +2,9 @@
 
 <img src="assets/brand/clipwheel-logo-transparent.png" alt="ClipWheel logo" width="128" />
 
-# ClipWheel — The Ultimate Radial Clipboard Manager
+<img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
+
+# ClipWheel — The Unique Radial Clipboard Manager
 
 **Stop scrolling through clipboard history lists. Discover the fastest way to access your clipboard with a pie menu interface. Press one shortcut, flick to the slice you want, paste.**
 

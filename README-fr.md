@@ -2,7 +2,9 @@
 
 <img src="assets/brand/clipwheel-logo-transparent.png" alt="Logo de ClipWheel" width="128" />
 
-# ClipWheel — Le gestionnaire de presse-papiers radial ultime
+<img src="docs/media/whell.gif" alt="ClipWheel Action" width="600" />
+
+# ClipWheel — Le gestionnaire de presse-papiers radial unique
 
 **Arrêtez de faire défiler les listes d'historique du presse-papiers. Découvrez le moyen le plus rapide d'accéder à votre presse-papiers avec une interface de menu circulaire. Appuyez sur un raccourci, balayez vers la tranche que vous voulez, et collez.**
 
