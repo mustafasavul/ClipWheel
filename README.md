@@ -109,20 +109,20 @@ Your clipboard is often your most sensitive data: passwords, tokens, private mes
 brew install --cask mustafasavul/tap/clipwheel
 ```
 
-Or grab the `.dmg` for your chip from the [latest release](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.2.0_aarch64.dmg` (Apple Silicon) or `ClipWheel_0.2.0_x64.dmg` (Intel).
+Or grab the `.dmg` for your chip from the [latest release](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.3.0_aarch64.dmg` (Apple Silicon) or `ClipWheel_0.3.0_x64.dmg` (Intel).
 
 ### Windows
 
-Download and run from the [latest release](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.2.0_x64-setup.exe` (NSIS installer) or `ClipWheel_0.2.0_x64_en-US.msi`.
+Download and run from the [latest release](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.3.0_x64-setup.exe` (NSIS installer) or `ClipWheel_0.3.0_x64_en-US.msi`.
 
 ### Linux
 
 ```bash
-sudo apt install ./ClipWheel_0.2.0_amd64.deb
+sudo apt install ./ClipWheel_0.3.0_amd64.deb
 ```
 
 ```bash
-chmod +x ClipWheel_0.2.0_amd64.AppImage && ./ClipWheel_0.2.0_amd64.AppImage
+chmod +x ClipWheel_0.3.0_amd64.AppImage && ./ClipWheel_0.3.0_amd64.AppImage
 ```
 
 > Early releases may be unsigned or ad-hoc signed. macOS Gatekeeper and Windows SmartScreen may warn until Apple notarization and Windows trusted signing are configured.

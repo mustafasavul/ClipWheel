@@ -109,20 +109,20 @@ Panonuz genellikle en hassas verilerinizi barındırır: şifreler, belirteçler
 brew install --cask mustafasavul/tap/clipwheel
 ```
 
-Veya yonganız için `.dmg` dosyasını [en son sürümden](https://github.com/mustafasavul/ClipWheel/releases/latest) edinin: `ClipWheel_0.2.0_aarch64.dmg` (Apple Silicon) veya `ClipWheel_0.2.0_x64.dmg` (Intel).
+Veya yonganız için `.dmg` dosyasını [en son sürümden](https://github.com/mustafasavul/ClipWheel/releases/latest) edinin: `ClipWheel_0.3.0_aarch64.dmg` (Apple Silicon) veya `ClipWheel_0.3.0_x64.dmg` (Intel).
 
 ### Windows
 
-[En son sürümden](https://github.com/mustafasavul/ClipWheel/releases/latest) indirip çalıştırın: `ClipWheel_0.2.0_x64-setup.exe` (NSIS yükleyici) veya `ClipWheel_0.2.0_x64_en-US.msi`.
+[En son sürümden](https://github.com/mustafasavul/ClipWheel/releases/latest) indirip çalıştırın: `ClipWheel_0.3.0_x64-setup.exe` (NSIS yükleyici) veya `ClipWheel_0.3.0_x64_en-US.msi`.
 
 ### Linux
 
 ```bash
-sudo apt install ./ClipWheel_0.2.0_amd64.deb
+sudo apt install ./ClipWheel_0.3.0_amd64.deb
 ```
 
 ```bash
-chmod +x ClipWheel_0.2.0_amd64.AppImage && ./ClipWheel_0.2.0_amd64.AppImage
+chmod +x ClipWheel_0.3.0_amd64.AppImage && ./ClipWheel_0.3.0_amd64.AppImage
 ```
 
 > Erken sürümler imzasız veya geçici olarak imzalanmış olabilir. macOS Gatekeeper ve Windows SmartScreen, Apple noter onayı ve Windows güvenilir imzası yapılandırılana kadar uyarabilir.

@@ -109,20 +109,20 @@ ClipWheel **создан с приоритетом локального хран
 brew install --cask mustafasavul/tap/clipwheel
 ```
 
-Или скачайте `.dmg` для вашего процессора из [последнего релиза](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.2.0_aarch64.dmg` (Apple Silicon) или `ClipWheel_0.2.0_x64.dmg` (Intel).
+Или скачайте `.dmg` для вашего процессора из [последнего релиза](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.3.0_aarch64.dmg` (Apple Silicon) или `ClipWheel_0.3.0_x64.dmg` (Intel).
 
 ### Windows
 
-Скачайте и запустите из [последнего релиза](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.2.0_x64-setup.exe` (установщик NSIS) или `ClipWheel_0.2.0_x64_en-US.msi`.
+Скачайте и запустите из [последнего релиза](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.3.0_x64-setup.exe` (установщик NSIS) или `ClipWheel_0.3.0_x64_en-US.msi`.
 
 ### Linux
 
 ```bash
-sudo apt install ./ClipWheel_0.2.0_amd64.deb
+sudo apt install ./ClipWheel_0.3.0_amd64.deb
 ```
 
 ```bash
-chmod +x ClipWheel_0.2.0_amd64.AppImage && ./ClipWheel_0.2.0_amd64.AppImage
+chmod +x ClipWheel_0.3.0_amd64.AppImage && ./ClipWheel_0.3.0_amd64.AppImage
 ```
 
 > Ранние версии могут быть неподписанными или иметь временную подпись. macOS Gatekeeper и Windows SmartScreen могут выдавать предупреждения до тех пор, пока не будут настроены нотаризация Apple и доверенная подпись Windows.

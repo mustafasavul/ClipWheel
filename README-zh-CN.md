@@ -109,20 +109,20 @@ ClipWheel 在 **设计上坚持本地优先，而不仅仅是承诺**：
 brew install --cask mustafasavul/tap/clipwheel
 ```
 
-或者从 [最新版本 (latest release)](https://github.com/mustafasavul/ClipWheel/releases/latest) 获取适合你芯片的 `.dmg` 文件：`ClipWheel_0.2.0_aarch64.dmg` (Apple Silicon) 或 `ClipWheel_0.2.0_x64.dmg` (Intel)。
+或者从 [最新版本 (latest release)](https://github.com/mustafasavul/ClipWheel/releases/latest) 获取适合你芯片的 `.dmg` 文件：`ClipWheel_0.3.0_aarch64.dmg` (Apple Silicon) 或 `ClipWheel_0.3.0_x64.dmg` (Intel)。
 
 ### Windows
 
-从 [最新版本 (latest release)](https://github.com/mustafasavul/ClipWheel/releases/latest) 下载并运行：`ClipWheel_0.2.0_x64-setup.exe` (NSIS 安装程序) 或 `ClipWheel_0.2.0_x64_en-US.msi`。
+从 [最新版本 (latest release)](https://github.com/mustafasavul/ClipWheel/releases/latest) 下载并运行：`ClipWheel_0.3.0_x64-setup.exe` (NSIS 安装程序) 或 `ClipWheel_0.3.0_x64_en-US.msi`。
 
 ### Linux
 
 ```bash
-sudo apt install ./ClipWheel_0.2.0_amd64.deb
+sudo apt install ./ClipWheel_0.3.0_amd64.deb
 ```
 
 ```bash
-chmod +x ClipWheel_0.2.0_amd64.AppImage && ./ClipWheel_0.2.0_amd64.AppImage
+chmod +x ClipWheel_0.3.0_amd64.AppImage && ./ClipWheel_0.3.0_amd64.AppImage
 ```
 
 > 早期版本可能未签名或使用 ad-hoc 签名。在配置好 Apple 公证和 Windows 信任签名之前，macOS Gatekeeper 和 Windows SmartScreen 可能会发出警告。

@@ -1,9 +1,9 @@
 export const appVersion = {
   name: 'ClipWheel',
-  version: '0.2.0',
+  version: '0.3.0',
   channel: 'stable',
   updateMode: 'github',
-  releaseDate: '2026-07-29',
+  releaseDate: '2026-07-30',
 } as const;
 
 export type AppVersion = typeof appVersion;

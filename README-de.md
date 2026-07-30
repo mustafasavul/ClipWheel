@@ -109,20 +109,20 @@ Ihre Zwischenablage enthält oft Ihre sensibelsten Daten: Passwörter, Token, pr
 brew install --cask mustafasavul/tap/clipwheel
 ```
 
-Oder holen Sie sich das `.dmg` für Ihren Chip aus dem [neuesten Release](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.2.0_aarch64.dmg` (Apple Silicon) oder `ClipWheel_0.2.0_x64.dmg` (Intel).
+Oder holen Sie sich das `.dmg` für Ihren Chip aus dem [neuesten Release](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.3.0_aarch64.dmg` (Apple Silicon) oder `ClipWheel_0.3.0_x64.dmg` (Intel).
 
 ### Windows
 
-Herunterladen und ausführen aus dem [neuesten Release](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.2.0_x64-setup.exe` (NSIS-Installer) oder `ClipWheel_0.2.0_x64_en-US.msi`.
+Herunterladen und ausführen aus dem [neuesten Release](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.3.0_x64-setup.exe` (NSIS-Installer) oder `ClipWheel_0.3.0_x64_en-US.msi`.
 
 ### Linux
 
 ```bash
-sudo apt install ./ClipWheel_0.2.0_amd64.deb
+sudo apt install ./ClipWheel_0.3.0_amd64.deb
 ```
 
 ```bash
-chmod +x ClipWheel_0.2.0_amd64.AppImage && ./ClipWheel_0.2.0_amd64.AppImage
+chmod +x ClipWheel_0.3.0_amd64.AppImage && ./ClipWheel_0.3.0_amd64.AppImage
 ```
 
 > Frühe Veröffentlichungen können unsigniert oder ad-hoc signiert sein. macOS Gatekeeper und Windows SmartScreen warnen möglicherweise, bis Apple-Notarisierung und Windows-Trusted-Signing konfiguriert sind.

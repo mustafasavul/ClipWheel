@@ -109,20 +109,20 @@ ClipWheel **वादे से नहीं, बल्कि डिज़ाइ
 brew install --cask mustafasavul/tap/clipwheel
 ```
 
-या [latest release](https://github.com/mustafasavul/ClipWheel/releases/latest) से अपनी चिप के लिए `.dmg` फ़ाइल प्राप्त करें: `ClipWheel_0.2.0_aarch64.dmg` (Apple Silicon) या `ClipWheel_0.2.0_x64.dmg` (Intel)।
+या [latest release](https://github.com/mustafasavul/ClipWheel/releases/latest) से अपनी चिप के लिए `.dmg` फ़ाइल प्राप्त करें: `ClipWheel_0.3.0_aarch64.dmg` (Apple Silicon) या `ClipWheel_0.3.0_x64.dmg` (Intel)।
 
 ### Windows
 
-[latest release](https://github.com/mustafasavul/ClipWheel/releases/latest) से डाउनलोड करें और चलाएं: `ClipWheel_0.2.0_x64-setup.exe` (NSIS इंस्टॉलर) या `ClipWheel_0.2.0_x64_en-US.msi`।
+[latest release](https://github.com/mustafasavul/ClipWheel/releases/latest) से डाउनलोड करें और चलाएं: `ClipWheel_0.3.0_x64-setup.exe` (NSIS इंस्टॉलर) या `ClipWheel_0.3.0_x64_en-US.msi`।
 
 ### Linux
 
 ```bash
-sudo apt install ./ClipWheel_0.2.0_amd64.deb
+sudo apt install ./ClipWheel_0.3.0_amd64.deb
 ```
 
 ```bash
-chmod +x ClipWheel_0.2.0_amd64.AppImage && ./ClipWheel_0.2.0_amd64.AppImage
+chmod +x ClipWheel_0.3.0_amd64.AppImage && ./ClipWheel_0.3.0_amd64.AppImage
 ```
 
 > शुरुआती रिलीज़ पर हस्ताक्षर नहीं किए जा सकते हैं या तदर्थ (ad-hoc) हस्ताक्षर हो सकते हैं। macOS Gatekeeper और Windows SmartScreen तब तक चेतावनी दे सकते हैं जब तक Apple नोटरीकरण और Windows विश्वस्त हस्ताक्षर कॉन्फ़िगर नहीं हो जाते।

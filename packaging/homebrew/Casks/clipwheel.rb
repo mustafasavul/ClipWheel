@@ -1,7 +1,7 @@
 cask "clipwheel" do
   arch arm: "aarch64", intel: "x64"
 
-  version "0.1.0"
+  version "0.3.0"
   sha256 arm: "<sha256-aarch64-dmg>",
          intel: "<sha256-x64-dmg>"
 

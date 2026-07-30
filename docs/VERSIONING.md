@@ -4,11 +4,11 @@ ClipWheel uses semantic versioning: `MAJOR.MINOR.PATCH`.
 
 Current versions:
 
-- App version: `0.2.0`
-- Package version: `0.2.0`
-- Rust crate version: `0.2.0`
-- Tauri bundle version: `0.2.0`
-- Release date: `2026-07-29`
+- App version: `0.3.0`
+- Package version: `0.3.0`
+- Rust crate version: `0.3.0`
+- Tauri bundle version: `0.3.0`
+- Release date: `2026-07-30`
 - Update mode: GitHub Releases `latest.json`
 
 ## Version Sources

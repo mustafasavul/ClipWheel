@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 - 2026-07-30
+
+- Added a Content Security Policy to the webview, which previously ran with `csp: null` and no restriction on outbound requests. `connect-src` is now limited to the app itself and the Tauri IPC channel, so no renderer code path can reach the network.
+- Fixed rich-text previews loading remote images. A tracking pixel inside copied HTML would fetch on preview, revealing that the item had been viewed; `img-src` is now restricted to the app and `data:` URLs.
+- Added a separate development CSP so the Vite dev server and HMR socket keep working without weakening the shipped policy.
+- Added translated README files for Arabic, Chinese, French, German, Hindi, Italian, Russian, and Turkish.
+
 ## 0.2.0 - 2026-07-29
 
 - Redesigned both surfaces around a flat, token-driven visual system: hairline-separated history rows replace floating glass cards, and depth is reserved for elements that genuinely float.

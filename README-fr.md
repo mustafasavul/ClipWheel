@@ -109,20 +109,20 @@ Votre presse-papiers contient souvent vos données les plus sensibles : mots de 
 brew install --cask mustafasavul/tap/clipwheel
 ```
 
-Ou récupérez le fichier `.dmg` pour votre puce à partir de la [dernière version](https://github.com/mustafasavul/ClipWheel/releases/latest) : `ClipWheel_0.2.0_aarch64.dmg` (Apple Silicon) ou `ClipWheel_0.2.0_x64.dmg` (Intel).
+Ou récupérez le fichier `.dmg` pour votre puce à partir de la [dernière version](https://github.com/mustafasavul/ClipWheel/releases/latest) : `ClipWheel_0.3.0_aarch64.dmg` (Apple Silicon) ou `ClipWheel_0.3.0_x64.dmg` (Intel).
 
 ### Windows
 
-Téléchargez et exécutez à partir de la [dernière version](https://github.com/mustafasavul/ClipWheel/releases/latest) : `ClipWheel_0.2.0_x64-setup.exe` (installateur NSIS) ou `ClipWheel_0.2.0_x64_en-US.msi`.
+Téléchargez et exécutez à partir de la [dernière version](https://github.com/mustafasavul/ClipWheel/releases/latest) : `ClipWheel_0.3.0_x64-setup.exe` (installateur NSIS) ou `ClipWheel_0.3.0_x64_en-US.msi`.
 
 ### Linux
 
 ```bash
-sudo apt install ./ClipWheel_0.2.0_amd64.deb
+sudo apt install ./ClipWheel_0.3.0_amd64.deb
 ```
 
 ```bash
-chmod +x ClipWheel_0.2.0_amd64.AppImage && ./ClipWheel_0.2.0_amd64.AppImage
+chmod +x ClipWheel_0.3.0_amd64.AppImage && ./ClipWheel_0.3.0_amd64.AppImage
 ```
 
 > Les premières versions peuvent ne pas être signées ou être signées ad hoc. macOS Gatekeeper et Windows SmartScreen peuvent émettre des avertissements jusqu'à ce que la notarisation Apple et la signature de confiance Windows soient configurées.

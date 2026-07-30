@@ -111,20 +111,20 @@ ClipWheel يجعلها مهمة **ذاكرة عضلية**.
 brew install --cask mustafasavul/tap/clipwheel
 ```
 
-أو احصل على ملف `.dmg` لشريحتك من [أحدث إصدار](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.2.0_aarch64.dmg` (Apple Silicon) أو `ClipWheel_0.2.0_x64.dmg` (Intel).
+أو احصل على ملف `.dmg` لشريحتك من [أحدث إصدار](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.3.0_aarch64.dmg` (Apple Silicon) أو `ClipWheel_0.3.0_x64.dmg` (Intel).
 
 ### Windows
 
-قم بالتنزيل والتشغيل من [أحدث إصدار](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.2.0_x64-setup.exe` (مثبت NSIS) أو `ClipWheel_0.2.0_x64_en-US.msi`.
+قم بالتنزيل والتشغيل من [أحدث إصدار](https://github.com/mustafasavul/ClipWheel/releases/latest): `ClipWheel_0.3.0_x64-setup.exe` (مثبت NSIS) أو `ClipWheel_0.3.0_x64_en-US.msi`.
 
 ### Linux
 
 ```bash
-sudo apt install ./ClipWheel_0.2.0_amd64.deb
+sudo apt install ./ClipWheel_0.3.0_amd64.deb
 ```
 
 ```bash
-chmod +x ClipWheel_0.2.0_amd64.AppImage && ./ClipWheel_0.2.0_amd64.AppImage
+chmod +x ClipWheel_0.3.0_amd64.AppImage && ./ClipWheel_0.3.0_amd64.AppImage
 ```
 
 > قد تكون الإصدارات المبكرة غير موقعة أو موقعة بشكل مخصص. قد تحذر Gatekeeper في macOS و SmartScreen في Windows حتى يتم تكوين التوثيق من Apple والتوقيع الموثوق من Windows.
